@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aws-system
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: aws-load-balancer-controller
+  namespace: flux-system
+spec:
+  releaseName: aws-load-balancer-controller
+  targetNamespace: aws-system
+  storageNamespace: aws-system
+  interval: 10m0s
+  chart:
+    spec:
+      chart: aws-load-balancer-controller
+      version: 1.5.3
+      sourceRef:
+        kind: HelmRepository
+        name: eks-charts
+  values:
+    clusterName: eks-saas-gitops
+    serviceAccount:
+      create: true
+      name: aws-load-balancer-controller
+      annotations:
+        eks.amazonaws.com/role-arn: {LB_CONTROLLER_IRSA}
+  install: {}

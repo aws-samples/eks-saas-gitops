@@ -1,0 +1,7 @@
+# Define here your GitHub credentials
+secret:
+  create: true
+  data:
+    identity: {FLUX_PRIVATE_KEY}
+    identity.pub: {FLUX_PUBLIC_KEY}
+    known_hosts: {KNOWN_HOSTS}

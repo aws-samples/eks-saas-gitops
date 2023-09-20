@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pool-1
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pooled-tenants-role
+  namespace: pool-1
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pooled-tenants-role-binding
+  namespace: pool-1
+subjects:
+- kind: ServiceAccount
+  name: pooled-tenants
+  namespace: pool-1
+roleRef:
+  kind: Role
+  name: pooled-tenants-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: pooled-tenants
+  namespace: flux-system
+spec:
+  releaseName: pooled-tenants
+  targetNamespace: pool-1
+  storageNamespace: pool-1
+  interval: 1m0s
+  chart:
+    spec:
+      chart: helm-tenant-chart
+      version: 0.x.x
+      sourceRef:
+        kind: HelmRepository
+        name: helm-tenant-chart
+  values:
+    tenantId: pool-1
+    # Define where to go, based on Karpenter provisioner
+    nodeSelector:
+      node-type: applications
+    tolerations:
+      - key: "applications"
+        operator: "Exists"
+        effect: "NoSchedule"
+    deployApps: true
+    deployIngress: false

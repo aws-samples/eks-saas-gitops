@@ -1,0 +1,33 @@
+{{- if .Values.deployApps -}}
+{{ range .Values.apps }}
+  {{- if (index $.Values .name).autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "tenant-chart.fullname" . }}
+  labels:
+    {{- include "tenant-chart.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .name }}
+  minReplicas: {{ (index $.Values .name).autoscaling.minReplicas }}
+  maxReplicas: {{ (index $.Values .name).autoscaling.maxReplicas }}
+  metrics:
+    {{- if (index $.Values .name).autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ (index $.Values .name).autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if (index $.Values .name).autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ (index $.Values .name).autoscaling.targetMemoryUtilizationPercentage }}
+      {{- end }}
+  {{- end }}
+{{ end }}
+{{ end }}

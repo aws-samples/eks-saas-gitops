@@ -1,0 +1,25 @@
+{{- if .Values.deployApps -}}
+{{ range .Values.apps }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  labels:
+    app.kubernetes.io/name: "{{$.Chart.Name}}-{{$.Chart.Version }}"
+    app.kubernetes.io/instance: "{{ $.Release.Name }}"
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion  }}"
+    app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
+spec:
+  type: {{ (index $.Values .name).service.type }}
+  ports:
+    - port: {{ (index $.Values .name).service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .name }}
+    # app.kubernetes.io/name: "{{$.Chart.Name}}-{{$.Chart.Version }}"
+    # app.kubernetes.io/instance: "{{ $.Release.Name }}"
+{{ end }}
+{{ end }}

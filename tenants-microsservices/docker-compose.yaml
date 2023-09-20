@@ -1,0 +1,26 @@
+version: '3.3'
+services:
+
+  microsservice-1:
+    build: microsservice-1/
+    container_name: microsservice-1
+    networks:
+      - project-network
+    environment:
+        TENANT_ID: "1"
+        MICROSSERVICE_2_URL: http://172.19.0.2:5000
+    ports:
+        - "8080:80"
+  microsservice-2:
+    build: microsservice-2/
+    container_name: microsservice-2
+    networks:
+      - project-network
+    environment:
+        TENANT_ID: "1"
+    ports:
+        - "8081:5000"
+
+networks:
+  project-network:
+    driver: bridge

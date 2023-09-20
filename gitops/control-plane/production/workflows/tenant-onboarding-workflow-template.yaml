@@ -1,0 +1,63 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: tenant-onboarding-template
+  namespace: argo-workflows
+spec:
+  serviceAccountName: full-permissions-service-account # SA with IRSA permissions
+  templates:
+    - name: clone-repository
+      container:
+        image: "{ARGO_WORKFLOW_CONTAINER}"
+        command: ["/bin/sh","-c"]
+        args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && cp -r eks-saas-gitops-aws /mnt/vol/eks-saas-gitops'] # Create Tenant infra script
+        volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+        - name: ssh-key
+          mountPath: /tmp/
+        env:
+          - name: GIT_SSH_COMMAND
+            value: "ssh -i /root/.ssh/id_rsa"
+    - name: create-tenant-infrastructure
+      container:
+        image: "{ARGO_WORKFLOW_CONTAINER}"
+        command: ["/bin/sh","-c"]
+        args: ['cp /mnt/ssh/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./02-tenant-onboarding-infra.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.TENANT_MODEL}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}'] # Create Tenant infra script
+        volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+        - name: ssh-key
+          mountPath: /mnt/ssh
+        env:
+          - name: GIT_SSH_COMMAND
+            value: "ssh -i /root/.ssh/id_rsa"
+    - name: create-tenant-helm-release
+      container:
+        image: "{ARGO_WORKFLOW_CONTAINER}"
+        command: ["/bin/sh","-c"]
+        args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./03-tenant-onboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.TENANT_MODEL}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}'] # Create Tenant infra script
+        volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+        - name: ssh-key
+          mountPath: /tmp/
+        env:
+          - name: GIT_SSH_COMMAND
+            value: "ssh -i /root/.ssh/id_rsa"
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+  volumes:
+  - name: ssh-key
+    secret:
+      secretName: github-ssh-key # Secret need to be created to run this workflow
+      items:
+        - key: ssh-privatekey
+          path: id_rsa

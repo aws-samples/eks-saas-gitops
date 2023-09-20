@@ -1,0 +1,423 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This stack creates a AWS Cloud9 environment with the container tooling needed for workshops.
+
+Parameters:  
+  # Cloud9 Variables
+  EnvironmentNameC9:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: "eks-saas-gitops"
+  C9InstanceType:
+    Description: AWS Cloud9 instance type
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+    ConstraintDescription: Must be a valid Cloud9 instance type
+  C9EnvType: 
+    Description: Environment type.
+    Default: event-engine
+    Type: String
+    AllowedValues: 
+      - self
+      - 3rdParty
+      - event-engine
+    ConstraintDescription: must specify self or 3rdParty.
+  OwnerArn: 
+    Type: String
+    Description: The Arn of the Cloud9 Owner to be set if 3rdParty deployment.
+    Default: ""
+  LatestAmiId:
+    Type:  'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: "Cloud9 Configuration"
+      Parameters:
+      - EnvironmentNameC9
+      - C9InstanceType
+      - C9EnvType
+      - OwnerArn
+
+Conditions: 
+  Create3rdPartyResources: !Equals [ !Ref C9EnvType, 3rdParty ]
+  CreateEventEngineResources: !Equals [ !Ref C9EnvType, event-engine ]
+
+Resources:
+################## PERMISSIONS AND ROLES #################
+  C9Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: eks-saas-gitops-admin
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentNameC9}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+            - ssm.amazonaws.com
+            - eks.amazonaws.com
+            - codebuild.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: "/"
+      Policies:
+      - PolicyName:
+          Fn::Join:
+          - ''
+          - - C9InstanceDenyPolicy-
+            - Ref: AWS::Region
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Deny
+            Action:
+            - cloud9:UpdateEnvironment
+            Resource: "*"
+  C9LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+      - PolicyName:
+          Fn::Join:
+          - ''
+          - - C9LambdaPolicy-
+            - Ref: AWS::Region
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStackResource
+            - cloudformation:DescribeStackResources
+            Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+          - Effect: Allow
+            Action:
+            - ec2:AssociateIamInstanceProfile
+            - ec2:ModifyInstanceAttribute
+            - ec2:ReplaceIamInstanceProfileAssociation
+            Resource: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+          - Effect: Allow
+            Action:
+            - ec2:DescribeInstances
+            - ec2:DescribeVolumes
+            - ec2:DescribeIamInstanceProfileAssociations
+            Resource: "*"  
+          - Effect: Allow
+            Action:
+            - ec2:ModifyVolume
+            Resource: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+          - Effect: Allow
+            Action:
+            - iam:ListInstanceProfiles
+            Resource: !Sub arn:aws:iam::${AWS::AccountId}:instance-profile/*
+          - Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: 
+              Fn::GetAtt:
+                - C9Role
+                - Arn
+
+################## LAMBDA BOOTSTRAP FUNCTION ################
+
+  C9BootstrapInstanceLambda:
+    Type: Custom::C9BootstrapInstanceLambda
+    DependsOn:
+    - C9LambdaExecutionRole
+    Properties:
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentNameC9}
+      ServiceToken:
+        Fn::GetAtt:
+        - C9BootstrapInstanceLambdaFunction
+        - Arn
+      REGION:
+        Ref: AWS::Region
+      StackName:
+        Ref: AWS::StackName
+      EnvironmentId:
+        Ref: C9Instance
+      LabIdeInstanceProfileName:
+        Ref: C9InstanceProfile
+      LabIdeInstanceProfileArn:
+        Fn::GetAtt:
+        - C9InstanceProfile
+        - Arn
+  C9BootstrapInstanceLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Tags:
+        - Key: Environment
+          Value: AWS Example
+      Handler: index.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - C9LambdaExecutionRole
+        - Arn
+      Runtime: python3.9
+      MemorySize: 256
+      Timeout: 600
+      Code:
+        ZipFile: |
+          from __future__ import print_function
+          import boto3
+          import json
+          import os
+          import time
+          import traceback
+          import cfnresponse
+          
+          def lambda_handler(event, context):
+              # logger.info('event: {}'.format(event))
+              # logger.info('context: {}'.format(context))
+              responseData = {}
+
+              status = cfnresponse.SUCCESS
+              
+              if event['RequestType'] == 'Delete':
+                  responseData = {'Success': 'Custom Resource removed'}
+                  cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')              
+          
+              if event['RequestType'] == 'Create':
+                  try:
+                      # Open AWS clients
+                      ec2 = boto3.client('ec2')
+          
+                      # Get the InstanceId of the Cloud9 IDE
+                      instance = ec2.describe_instances(Filters=[{'Name': 'tag:SSMBootstrap','Values': ['Active']}])['Reservations'][0]['Instances'][0]
+                      # logger.info('instance: {}'.format(instance))
+          
+                      # Create the IamInstanceProfile request object
+                      iam_instance_profile = {
+                          'Arn': event['ResourceProperties']['LabIdeInstanceProfileArn'],
+                          'Name': event['ResourceProperties']['LabIdeInstanceProfileName']
+                      }
+                      # logger.info('iam_instance_profile: {}'.format(iam_instance_profile))
+          
+                      # Wait for Instance to become ready before adding Role
+                      instance_state = instance['State']['Name']
+                      # logger.info('instance_state: {}'.format(instance_state))
+                      while instance_state != 'running':
+                          time.sleep(5)
+                          instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
+                          # logger.info('instance_state: {}'.format(instance_state))
+          
+                      # attach instance profile
+                      response = ec2.associate_iam_instance_profile(IamInstanceProfile=iam_instance_profile, InstanceId=instance['InstanceId'])
+                      # logger.info('response - associate_iam_instance_profile: {}'.format(response))
+                      r_ec2 = boto3.resource('ec2')
+  
+                      responseData = {'Success': 'Started bootstrapping for instance: '+instance['InstanceId']}
+                      cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
+                      
+                  except Exception as e:
+                      status = cfnresponse.FAILED
+                      print(traceback.format_exc())
+                      responseData = {'Error': traceback.format_exc(e)}
+                  finally:
+                      cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
+################## ARTIFACTS BUCKET ###############
+  C9OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  C9OutputBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref C9OutputBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:PutObject'
+              - 's3:PutObjectAcl'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref C9OutputBucket
+                - /*
+            Principal:
+              AWS: 
+                Fn::GetAtt:
+                - C9LambdaExecutionRole
+                - Arn
+################## SSM Bootstrap for Cloud9 ##################
+  C9SSMDocument: 
+    Type: AWS::SSM::Document
+    Properties: 
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentNameC9}
+      DocumentType: Command
+      Content:
+        schemaVersion: '2.2'
+        description: Bootstrap Cloud9 Instance
+        mainSteps:
+        - action: aws:runShellScript
+          name: C9bootstrap
+          inputs:
+            runCommand:
+            - "#!/bin/bash"
+            - date
+            - echo LANG=en_US.utf-8 >> /etc/environment
+            - echo LC_ALL=en_US.UTF-8 >> /etc/environment
+            - . /home/ec2-user/.bashrc
+            - echo '=== UPDATE system packages and INSTALL dependencies ==='
+            - yum update -y; yum install -y vim git jq bash-completion moreutils gettext yum-utils perl-Digest-SHA tree
+            - echo '=== ENABLE Amazon Extras EPEL Repository and INSTALL Git LFS ==='
+            - yum install -y amazon-linux-extras
+            - amazon-linux-extras install epel -y
+            - yum install -y git-lfs
+            - echo '=== INSTALL AWS CLI v2 ==='
+            - curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'
+            - unzip awscliv2.zip -d /tmp
+            - /tmp/aws/install --update
+            - rm -rf aws awscliv2.zip
+            - echo '=== INSTALL Kubernetes CLI ==='
+            - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            - chmod +x kubectl && mv kubectl /usr/local/bin/
+            - /usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl
+            - echo '=== INSTALL Helm CLI ==='
+            - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            - /usr/local/bin/helm completion bash > /etc/bash_completion.d/helm
+            - echo '=== INSTALL Eksctl CLI ==='
+            - curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            - mv /tmp/eksctl /usr/local/bin
+            - /usr/local/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
+            - echo '=== INSTALL Flux CLI ==='
+            - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v0.41.2/flux_0.41.2_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            - mv /tmp/flux /usr/local/bin
+            - /usr/local/bin/flux completion bash > /etc/bash_completion.d/flux
+            - echo '=== INSTALL PLUTO ==='
+            - curl --silent --location "https://github.com/FairwindsOps/pluto/releases/download/v5.16.1/pluto_5.16.1_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            - mv /tmp/pluto /usr/local/bin
+            - echo '=== INSTALL KUBENT ==='
+            - curl --silent --location "https://github.com/doitintl/kube-no-trouble/releases/download/0.7.0/kubent-0.7.0-$(uname -s)-amd64.tar.gz" | tar xz -C /tmp
+            - mv /tmp/kubent /usr/local/bin
+            - echo '=== INSTALL kubectl convert plugin ==='
+            - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert"
+            - sudo install -o root -g root -m 0755 kubectl-convert /usr/local/bin/kubectl-convert
+            - echo '=== INSTALL Terraform CLI ==='
+            - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+            - yum -y install terraform
+            - echo '=== Exporting ENV Vars ==='
+            - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)" && echo "export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" >> /home/ec2-user/.bashrc
+            - export AWS_REGION="$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | cut -d'"' -f4)" && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
+            - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE' >> /home/ec2-user/.bashrc
+            - echo '====== Provision Terraform ======'
+            - git clone https://github.com/lusoal/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
+            - /home/ec2-user/environment/install.sh
+            - echo "Bootstrap completed with return code $?"
+            - shutdown -r +1
+
+  C9BootstrapAssociation: 
+    Type: AWS::SSM::Association
+    Properties: 
+      Name: !Ref C9SSMDocument
+      OutputLocation: 
+        S3Location:
+          OutputS3BucketName: !Ref C9OutputBucket
+          OutputS3KeyPrefix: bootstrapoutput
+      Targets:
+        - Key: tag:SSMBootstrap
+          Values:
+          - Active
+
+
+################## C9 Instance Profile ##################
+  C9InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - Ref: C9Role
+
+  C9Instance:
+    DependsOn: C9BootstrapAssociation
+    Type: AWS::Cloud9::EnvironmentEC2
+    Properties:
+      Description: !Sub  AWS Cloud9 instance for ${EnvironmentNameC9}
+      AutomaticStopTimeMinutes: 3600
+      ImageId: amazonlinux-2-x86_64
+      InstanceType:
+        Ref: C9InstanceType
+      Name: eks-saas-gitops
+      OwnerArn: !If [Create3rdPartyResources, !Ref OwnerArn, !If [CreateEventEngineResources, !Join ['',['arn:aws:iam::',!Ref 'AWS::AccountId',':assumed-role/WSParticipantRole/Participant']],!Ref "AWS::NoValue"]]
+      Tags: 
+        - Key: SSMBootstrap
+          Value: Active
+        - Key: Environment
+          Value: !Sub ${EnvironmentNameC9}
+
+  WorkshopUser:
+    Type: 'AWS::IAM::User'
+    Properties:
+      UserName: workshop-user
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AdministratorAccess
+
+  WorkshopUserCredentials:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      Status: Active
+      UserName: !Ref WorkshopUser
+
+Outputs:
+  Cloud9IDE:
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: AWS::Region
+        - ".console.aws.amazon.com/cloud9/ide/"
+        - Ref: C9Instance
+        - "?region="
+        - Ref: AWS::Region
+    Export:
+      Name: Cloud9IDE
+  WorkshopUserKeyId:
+    Value: !Ref WorkshopUserCredentials
+  WorkshopUserKeySecret:
+    Value: !GetAtt WorkshopUserCredentials.SecretAccessKey

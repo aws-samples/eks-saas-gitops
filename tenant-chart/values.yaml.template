@@ -1,0 +1,84 @@
+# Default values for tenant-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+tenantId:
+nodeSelector: {}
+tolerations: []
+
+apps:
+  - name: producer
+  - name: consumer
+
+deployApps: true
+deployIngress: true
+
+producer:
+  imagePullSecrets: []
+  replicaCount: 3
+  image:
+    repository: {PRODUCER_ECR}
+    pullPolicy: Always
+    tag: 0.1
+  serviceAccount:
+    create: true
+    annotations: {}
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+  affinity: {}
+  ingress:
+    enabled: true
+    className: "alb"
+    pathType: Prefix
+    tls: []
+
+consumer:
+    imagePullSecrets: []
+    replicaCount: 3
+    image:
+      repository: {CONSUMER_ECR}
+      pullPolicy: Always
+      tag: 0.1
+    serviceAccount:
+      create: true
+      annotations: {}
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+    affinity: {}
+    ingress:
+      enabled: true
+      className: "alb"
+      pathType: Prefix
+      tls: [ ]

@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: dataplane-tenants
+  namespace: flux-system
+spec:
+  timeout: 1m0s
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/application-plane/production/tenants
+  prune: true
+  validation: client

@@ -1,0 +1,13 @@
+# DEFINE HERE FIRST TIME WHERE TO DEPLOY
+
+terraform {
+  backend "s3" {
+    bucket = "{TERRAFORM_STATE_BUCKET}" # Replace during install.sh
+    key    = "tenants-infra/tenants-infra.json"
+    region = "{AWS_REGION}" # Replace during install.sh
+  }
+}
+
+provider "aws" {
+  region = "{AWS_REGION}"
+}

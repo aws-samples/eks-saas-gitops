@@ -346,7 +346,7 @@ Resources:
             - export AWS_REGION="$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | cut -d'"' -f4)" && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
-            - git clone https://github.com/lusoal/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
             - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
             - /home/ec2-user/environment/install.sh
             - echo "Bootstrap completed with return code $?"

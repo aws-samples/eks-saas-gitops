@@ -33,7 +33,7 @@ Execute the following AWS CLI command to deploy the stack. Make sure to replace 
 aws cloudformation create-stack \
 --stack-name eks-saas-gitops \
 --template-body file://helpers/cloudformation.yaml \
---parameters ParameterKey=C9EnvType,ParameterValue=YOUR_CHOICE_HERE \
+--parameters ParameterKey=C9EnvType,ParameterValue=self \
 --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
 ```
 - `YOUR_CHOICE_HERE`: Use either `self` or `event-engine` based on your specific installation requirement.

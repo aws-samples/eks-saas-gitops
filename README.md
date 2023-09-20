@@ -14,7 +14,7 @@ This repository offers a sample pattern to manage multi-tenancy in a Kubernetes 
 Clone this repository to your local machine to get the CloudFormation template and other helper scripts.
 
 ```bash
-git clone <repository_url>
+git clone https://github.com/aws-samples/eks-saas-gitops.git
 ```
 
 ### Step 2: Navigate to the Directory
@@ -22,7 +22,7 @@ git clone <repository_url>
 Open your terminal and navigate to the directory where your CloudFormation template is saved.
 
 ```bash
-cd path/to/repo
+cd eks-saas-gitops/
 ```
 
 ### Step 3: Create the CloudFormation Stack
@@ -31,7 +31,7 @@ Execute the following AWS CLI command to deploy the stack. Make sure to replace 
 
 ```bash
 aws cloudformation create-stack \
---stack-name YourStackName \
+--stack-name eks-saas-gitops \
 --template-body file://helpers/cloudformation.yaml \
 --parameters ParameterKey=C9EnvType,ParameterValue=YOUR_CHOICE_HERE \
 --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
@@ -55,3 +55,12 @@ To access your newly created Cloud9 environment:
 1. Go to the [AWS Cloud9 Console](https://console.aws.amazon.com/cloud9/).
 2. Find your Cloud9 instance listed under "Your environments."
 3. Click "Open IDE" to start working in your Cloud9 environment.
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This library is licensed under the MIT-0 License. See the LICENSE file.
+

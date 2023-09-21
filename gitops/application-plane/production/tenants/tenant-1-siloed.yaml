@@ -3,37 +3,13 @@ kind: Namespace
 metadata:
   name: tenant-1
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: tenant-1-role
-  namespace: tenant-1
-rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "create", "delete"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: tenant-1-role-binding
-  namespace: tenant-1
-subjects:
-- kind: ServiceAccount
-  name: tenant-1
-  namespace: tenant-1
-roleRef:
-  kind: Role
-  name: tenant-1-role
-  apiGroup: rbac.authorization.k8s.io
----
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: tenant-1
   namespace: flux-system
 spec:
-  releaseName: tenant-1
+  releaseName: tenant-1-silo
   targetNamespace: tenant-1
   storageNamespace: tenant-1
   interval: 1m0s
@@ -45,14 +21,6 @@ spec:
         kind: HelmRepository
         name: helm-tenant-chart
   values:
-    # replicaCount: 3 --> not being used
     tenantId: tenant-1
-    # Define where to go, based on Karpenter provisioner
-    nodeSelector:
-      node-type: applications
-    tolerations:
-      - key: "applications"
-        operator: "Exists"
-        effect: "NoSchedule"
     deployApps: true
     deployIngress: true

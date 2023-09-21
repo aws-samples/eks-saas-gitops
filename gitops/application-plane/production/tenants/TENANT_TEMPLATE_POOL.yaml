@@ -4,7 +4,7 @@ metadata:
   name: TENANT_ID
   namespace: flux-system
 spec:
-  releaseName: TENANT_ID
+  releaseName: TENANT_ID-pool
   targetNamespace: pool-1
   storageNamespace: pool-1
   interval: 1m0s

@@ -143,11 +143,10 @@ module "argo_workflows_eks_role" {
   oidc_providers = {
     one = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["argo-workflows:full-permissions-service-account", "argo-workflows:argo-workflows-server"]
+      namespace_service_accounts = ["argo-workflows:argoworkflows-sa", "argo-workflows:argo-workflows-server"]
     }
   }
 }
-
 
 resource "random_uuid" "uuid" {}
 
@@ -163,6 +162,23 @@ resource "aws_s3_bucket" "argo-artifacts" {
 # SQS Queue to Trigger ArgoWorkflows
 resource "aws_sqs_queue" "argoworkflows_queue" {
   name = "argoworkflows-queue"
+}
+
+module "argo_events_eks_role" {
+  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  role_name = "argo-events-irsa"
+
+  # TODO: Change to specific policy
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+
+  oidc_providers = {
+    one = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["argo-events:argo-events-sa"]
+    }
+  }
 }
 
 ################################################################################

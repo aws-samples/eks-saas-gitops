@@ -15,7 +15,7 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: full-permissions-service-account
+  name: argoworkflows-sa
   namespace: argo-workflows
   annotations:
     eks.amazonaws.com/role-arn: {ARGO_WORKFLOW_IRSA}
@@ -30,29 +30,8 @@ roleRef:
   name: full-permissions-cluster-role
 subjects:
   - kind: ServiceAccount
-    name: full-permissions-service-account
+    name: argoworkflows-sa
     namespace: argo-workflows
----
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: argo-events
-  namespace: flux-system
-  labels:
-    self-managed-add-on: "true"
-    add-on-version: "2.4.1"
-spec:
-  releaseName: argo-workflows
-  targetNamespace: argo-workflows
-  storageNamespace: argo-workflows
-  interval: 1m0s
-  chart:
-    spec:
-      chart: argo-events
-      version: 2.4.1
-      sourceRef:
-        kind: HelmRepository
-        name: argo
 ---
 # TODO: Configure s3 artifact output
 apiVersion: helm.toolkit.fluxcd.io/v2beta1

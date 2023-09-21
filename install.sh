@@ -174,11 +174,12 @@ sed -e "s|{KARPENTER_CONTROLLER_IRSA}|${KARPENTER_IRSA}|g" "${GITOPS_FOLDER}/inf
 sed -i "s|{EKS_CLUSTER_ENDPOINT}|${CLUSTER_ENDPOINT}|g" "${GITOPS_FOLDER}/infrastructure/production/02-karpenter.yaml"
 sed -i "s|{KARPENTER_INSTANCE_PROFILE}|${KARPENTER_INSTANCE_PROFILE}|g" "${GITOPS_FOLDER}/infrastructure/production/02-karpenter.yaml"
 sed -e "s|{ARGO_WORKFLOW_IRSA}|${ARGO_WORKFLOWS_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml.template" > "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml"
+sed -e "s|{ARGO_WORKFLOW_IRSA}|${ARGO_WORKFLOWS_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/06-argo-events.yaml.template" > "${GITOPS_FOLDER}/infrastructure/production/06-argo-events.yaml"
 sed -i "s|{ARGO_WORKFLOW_BUCKET}|${ARGO_WORKFLOWS_BUCKET_NAME}|g" "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml"
 sed -e "s|{LB_CONTROLLER_IRSA}|${LB_CONTROLLER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
-sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
-sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
+sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
+sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
 sed -i "s|{PRODUCER_ECR}|${ECR_PRODUCER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml"

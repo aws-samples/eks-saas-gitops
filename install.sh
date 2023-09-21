@@ -37,6 +37,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=module.argo_workflows_eks_role \
      -target=random_uuid.uuid \
      -target=aws_s3_bucket.argo-artifacts \
+     -target=aws_sqs_queue.argoworkflows_queue \
      -target=module.lb-controller-irsa \
      -target=aws_ecr_repository.tenant_helm_chart \
      -target=aws_ecr_repository.argoworkflow_container \
@@ -67,7 +68,8 @@ echo "Exporting terraform output to environment variables"
 
 # Exporting terraform outputs to bashrc
 outputs=("argo_workflows_bucket_name" 
-         "argo_workflows_irsa" 
+         "argo_workflows_irsa"
+         "argo_workflows_sqs_url"
          "aws_codecommit_clone_url_http" 
          "aws_codecommit_clone_url_ssh" 
          "aws_vpc_id" 
@@ -175,6 +177,8 @@ sed -e "s|{ARGO_WORKFLOW_IRSA}|${ARGO_WORKFLOWS_IRSA}|g" "${GITOPS_FOLDER}/infra
 sed -i "s|{ARGO_WORKFLOW_BUCKET}|${ARGO_WORKFLOWS_BUCKET_NAME}|g" "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml"
 sed -e "s|{LB_CONTROLLER_IRSA}|${LB_CONTROLLER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
+sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
+sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
 sed -i "s|{PRODUCER_ECR}|${ECR_PRODUCER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml"
@@ -249,11 +253,6 @@ cat /home/ec2-user/environment/temp_known_hosts | sed 's/^/      /' >> ${TERRAFO
 cd $TERRAFORM_CLUSTER_FOLDER
 
 export TENANT_ONBOARDING_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/tenant-onboarding"
-
-# Changing Workflow Call manifest
-sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${TENANT_ONBOARDING_FOLDER}/create-new-tenant.yaml"
-sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${TENANT_ONBOARDING_FOLDER}/create-new-tenant.yaml"
-sed -i "s|{CODECOMMIT_USER}|${CODECOMMIT_USER_ID}|g" "${TENANT_ONBOARDING_FOLDER}/create-new-tenant.yaml"
 
 echo "Applying Terraform to deploy flux"
 

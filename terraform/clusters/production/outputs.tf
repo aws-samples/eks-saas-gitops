@@ -51,6 +51,10 @@ output "argo_workflows_bucket_name" {
   value = aws_s3_bucket.argo-artifacts.id
 }
 
+output "argo_workflows_sqs_url" {
+  value = aws_sqs_queue.argoworkflows_queue.url
+}
+
 ################
 # LB Controller
 ################

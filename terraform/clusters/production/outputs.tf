@@ -55,6 +55,10 @@ output "argo_workflows_sqs_url" {
   value = aws_sqs_queue.argoworkflows_queue.url
 }
 
+output "argo_events_irsa" {
+  value = module.argo_events_eks_role.iam_role_arn
+}
+
 ################
 # LB Controller
 ################

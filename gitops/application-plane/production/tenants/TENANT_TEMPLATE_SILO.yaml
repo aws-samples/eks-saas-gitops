@@ -3,37 +3,13 @@ kind: Namespace
 metadata:
   name: TENANT_ID
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: TENANT_ID-role
-  namespace: TENANT_ID
-rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "create", "delete"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: TENANT_ID-role-binding
-  namespace: TENANT_ID
-subjects:
-- kind: ServiceAccount
-  name: TENANT_ID
-  namespace: TENANT_ID
-roleRef:
-  kind: Role
-  name: TENANT_ID-role
-  apiGroup: rbac.authorization.k8s.io
----
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: TENANT_ID
   namespace: flux-system
 spec:
-  releaseName: TENANT_ID
+  releaseName: TENANT_ID-silo
   targetNamespace: TENANT_ID
   storageNamespace: TENANT_ID
   interval: 1m0s
@@ -48,9 +24,5 @@ spec:
     tenantId: TENANT_ID
     nodeSelector:
       node-type: applications
-    tolerations:
-      - key: "applications"
-        operator: "Exists"
-        effect: "NoSchedule"
     deployApps: true
     deployIngress: true

@@ -160,6 +160,11 @@ resource "aws_s3_bucket" "argo-artifacts" {
   }
 }
 
+# SQS Queue to Trigger ArgoWorkflows
+resource "aws_sqs_queue" "argoworkflows_queue" {
+  name = "argoworkflows-queue"
+}
+
 ################################################################################
 # LB Controller IRSA
 ################################################################################

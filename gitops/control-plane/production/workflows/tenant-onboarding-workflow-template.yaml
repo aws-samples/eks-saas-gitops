@@ -1,5 +1,111 @@
 ---
 apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: default
+  namespace: argo-workflows
+spec:
+  nats:
+    native:
+      replicas: 3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: aws-sqs
+  namespace: argo-workflows
+spec:
+  template:
+    serviceAccountName: full-permissions-service-account
+  sqs:
+    tenant-provisioning:
+      jsonBody: true
+      region: "us-west-2"
+      queue: "argoworkflows-queue"
+      waitTimeSeconds: 20
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: aws-sqs
+  namespace: argo-workflows
+spec:
+  template:
+    serviceAccountName: full-permissions-service-account
+  dependencies:
+    - name: tenant-provisioning-dep
+      eventSourceName: aws-sqs
+      eventName: tenant-provisioning
+  triggers:
+    - template:
+        name: tenant-onboarding-template
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: tenant-onboarding-
+                namespace: argo-workflows
+              spec:
+                serviceAccountName: full-permissions-service-account
+                entrypoint: tenant-provisioning
+                arguments:
+                  parameters:
+                    - name: TENANT_ID
+                      value: "" # ID of your tenant, use this patter eg. tenant-xx (tenant-10, tenant-11)
+                    - name: TENANT_MODEL
+                      value: "" # Valid values are: siloed, pooled, hybrid
+                    - name: REPO_URL
+                      value: "{REPO_URL}"
+                    - name: GIT_USER_EMAIL
+                      value: "{CODECOMMIT_USER_ID}"
+                    - name: GIT_USERNAME
+                      value: "{CODECOMMIT_USER_ID}"
+                    - name: GIT_BRANCH
+                      value: "main" # Can change based on your configs
+                templates:
+                  - name: tenant-provisioning
+                    steps:
+                      - - name: clone-repository
+                          templateRef:
+                            name: tenant-onboarding-template
+                            template: clone-repository
+                      - - name: create-tenant-infrastructure
+                          templateRef:
+                            name: tenant-onboarding-template
+                            template: create-tenant-infrastructure
+                      - - name: create-tenant-helm-release
+                          templateRef:
+                            name: tenant-onboarding-template
+                            template: create-tenant-helm-release
+                volumeClaimTemplates:
+                  - metadata:
+                      name: workdir
+                    spec:
+                      accessModes: [ "ReadWriteOnce" ]
+                      resources:
+                        requests:
+                          storage: 1Gi
+                volumes:
+                  - name: ssh-key
+                    secret:
+                      secretName: github-ssh-key # Secret created earlier
+                      items:
+                        - key: ssh-privatekey
+                          path: id_rsa
+          parameters:
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.tenant_id
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.tenant_model
+              dest: spec.arguments.parameters.1.value
+---
+apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: tenant-onboarding-template

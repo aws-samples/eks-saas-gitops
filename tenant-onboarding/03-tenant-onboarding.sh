@@ -22,21 +22,21 @@ if [ "$tenant_model" == "pool" ]; then
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_POOL_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
     sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
     # append a new line in kustomization.yaml file using $TENANT_MANIFEST_FILE
-    printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> kustomization.yaml
+    printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 
 elif [ "$tenant_model" == "silo" ]; then
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_SILO_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
     sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-    printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> kustomization.yaml
+    printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 
 elif [ "$tenant_model" == "hybrid" ]; then
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_HYBRID_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
     sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-    printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> kustomization.yaml
+    printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 fi
 

@@ -158,8 +158,9 @@ echo "Create pool-1 application infra"
 
 # Creating pool-1 application infra
 export APPLICATION_PLANE_INFRA_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/terraform/application-plane/production/environments"
+export APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/terraform/application-plane/templates"
 
-sed -e "s|{AWS_REGION}|${AWS_REGION}|g" "${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf.template" > ${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf
+sed -e "s|{AWS_REGION}|${AWS_REGION}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/providers.tf.template" > ${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf
 sed -i "s|{TERRAFORM_STATE_BUCKET}|${TENANT_TERRAFORM_STATE_BUCKET_NAME}|g" "${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf"
 
 cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve

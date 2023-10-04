@@ -35,6 +35,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=aws_iam_policy.karpenter-policy \
      -target=aws_iam_policy_attachment.karpenter_policy_attach \
      -target=module.argo_workflows_eks_role \
+     -target=module.argo_events_eks_role \
      -target=random_uuid.uuid \
      -target=aws_s3_bucket.argo-artifacts \
      -target=aws_sqs_queue.argoworkflows_queue \

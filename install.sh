@@ -7,7 +7,8 @@ catch_error() {
      echo "Error $1 occurred on $2" >> /home/ec2-user/environment/install_errors.txt
 }
 
-export AWS_REGION="$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | cut -d'"' -f4)"
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
 echo "export AWS_REGION=${AWS_REGION}" >> /root/.bashrc
 
 # APPLY TERRAFORM NO FLUX

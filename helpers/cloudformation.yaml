@@ -196,8 +196,8 @@ Resources:
           import cfnresponse
           
           def lambda_handler(event, context):
-              # logger.info('event: {}'.format(event))
-              # logger.info('context: {}'.format(context))
+              logger.info('event: {}'.format(event))
+              logger.info('context: {}'.format(context))
               responseData = {}
 
               status = cfnresponse.SUCCESS
@@ -213,26 +213,26 @@ Resources:
           
                       # Get the InstanceId of the Cloud9 IDE
                       instance = ec2.describe_instances(Filters=[{'Name': 'tag:SSMBootstrap','Values': ['Active']}])['Reservations'][0]['Instances'][0]
-                      # logger.info('instance: {}'.format(instance))
+                      logger.info('instance: {}'.format(instance))
           
                       # Create the IamInstanceProfile request object
                       iam_instance_profile = {
                           'Arn': event['ResourceProperties']['LabIdeInstanceProfileArn'],
                           'Name': event['ResourceProperties']['LabIdeInstanceProfileName']
                       }
-                      # logger.info('iam_instance_profile: {}'.format(iam_instance_profile))
+                      logger.info('iam_instance_profile: {}'.format(iam_instance_profile))
           
                       # Wait for Instance to become ready before adding Role
                       instance_state = instance['State']['Name']
-                      # logger.info('instance_state: {}'.format(instance_state))
+                      logger.info('instance_state: {}'.format(instance_state))
                       while instance_state != 'running':
                           time.sleep(5)
                           instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
-                          # logger.info('instance_state: {}'.format(instance_state))
+                          logger.info('instance_state: {}'.format(instance_state))
           
                       # attach instance profile
                       response = ec2.associate_iam_instance_profile(IamInstanceProfile=iam_instance_profile, InstanceId=instance['InstanceId'])
-                      # logger.info('response - associate_iam_instance_profile: {}'.format(response))
+                      logger.info('response - associate_iam_instance_profile: {}'.format(response))
                       r_ec2 = boto3.resource('ec2')
   
                       responseData = {'Success': 'Started bootstrapping for instance: '+instance['InstanceId']}
@@ -346,7 +346,7 @@ Resources:
             - export AWS_REGION="$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep region | cut -d'"' -f4)" && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
-            - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            - git clone https://github.com/somensi-aws/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
             - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
             - /home/ec2-user/environment/install.sh
             - echo "Bootstrap completed with return code $?"

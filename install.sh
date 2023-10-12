@@ -2,6 +2,7 @@
 set -e
 trap 'catch_error $? $LINENO' ERR
 touch /home/ec2-user/environment/install_errors.txt
+touch /home/ec2-user/environment/debug.txt
 
 catch_error() {
      echo "Error $1 occurred on $2" >> /home/ec2-user/environment/install_errors.txt
@@ -10,6 +11,8 @@ catch_error() {
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
 AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
 echo "export AWS_REGION=${AWS_REGION}" >> /root/.bashrc
+echo "aws_region=${AWS_REGION}" > /home/ec2-user/environment/debug.txt
+exit
 
 # APPLY TERRAFORM NO FLUX
 cd /home/ec2-user/environment/eks-saas-gitops/terraform/clusters/production

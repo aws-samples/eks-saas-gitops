@@ -6,7 +6,14 @@ touch /home/ec2-user/environment/install_errors.txt
 catch_error() {
      echo "Error $1 occurred on $2" >> /home/ec2-user/environment/install_errors.txt
      #send response back to cloudformation
-     export JSON_DATA="{\"Status\" : \"ERROR\", \"Reason\" : \"Error $1 occurred on $2\"}",
+     export JSON_DATA="{
+          \"Status\" : \"FAILED\",
+          \"Reason\" : \"Error $1 occurred on $2\",
+          \"StackId\" : \"$EVENT_STACK_ID\",
+          \"PhysicalResourceId\" : \"$PHYSICAL_RESOURCE_ID\",
+          \"RequestId\" : \"$EVENT_REQUEST_ID\",
+          \"LogicalResourceId\" : \"$EVENT_LOGICAL_RESOURCE_ID\"
+     }"
      curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"
 }
 
@@ -21,5 +28,13 @@ terraform destroy -var "aws_region=${AWS_REGION}" --auto-approve -force
 cd $APPLICATION_PLANE_INFRA_FOLDER || exit 
 terraform destroy --auto-approve
 
-export JSON_DATA='{"Status" : "SUCCESS", "Reason" : "cleanup.sh execution complete!"}',
+export JSON_DATA="{
+     \"Status\" : \"SUCCESS\",
+     \"Reason\" : \"install completed\",
+     \"StackId\" : \"$EVENT_STACK_ID\",
+     \"PhysicalResourceId\" : \"$PHYSICAL_RESOURCE_ID\",
+     \"RequestId\" : \"$EVENT_REQUEST_ID\",
+     \"LogicalResourceId\" : \"$EVENT_LOGICAL_RESOURCE_ID\"
+}"
+
 curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"

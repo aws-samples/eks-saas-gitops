@@ -187,111 +187,120 @@ Resources:
       Timeout: 600
       Code:
         ZipFile: |
-        from __future__ import print_function
-        import boto3
-        import json
-        import os
-        import time
-        import traceback
-        import cfnresponse
-        import logging
+          from __future__ import print_function
+          import boto3
+          import json
+          import os
+          import time
+          import traceback
+          import cfnresponse
+          import logging
 
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        aws_region = os.environ['AWS_REGION']
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          aws_region = os.environ['AWS_REGION']
 
-        def run_ssm_command(target_user, c9_pid, ssm_command, cfn_response_url):
-            ssm = boto3.client('ssm', region_name=aws_region)  
+          def run_ssm_command(target_user, c9_pid, ssm_command, event):
+              ssm = boto3.client('ssm', region_name=aws_region)  
 
-            # Include the variable in the command as an environment variable
-            ssm_command_with_variable = f'runuser -l "{target_user}" -c "export EVENT_RESPONSE_URL={cfn_response_url} && {ssm_command}"'
+              logger.info('ssm command response: {}'.format(response))    
 
-            parameters = {
-                "executionTimeout": ["600"],
-                "commands": [ssm_command_with_variable]
-            }
+              # Include the variable in the command as an environment variable
+              ssm_command_with_variable = (
+                f'runuser -l "{target_user}" -c '
+                f'"export EVENT_RESPONSE_URL={event["ResponseURL"]} && '
+                f'export EVENT_STACK_ID={event["StackId"]} && '
+                f'export PHYSICAL_RESOURCE_ID={event["LogicalResourceId"]} && '
+                f'export EVENT_REQUEST_ID={event["RequestId"]} && '
+                f'export EVENT_LOGICAL_RESOURCE_ID={event["LogicalResourceId"]} && '
+                f'{ssm_command}"'
+              )
+              parameters = {
+                  "executionTimeout": ["600"],
+                  "commands": [ssm_command_with_variable]
+              }
+              
+              # Send SSM command to the instance specified by C9_PID
+              response = ssm.send_command(
+                  InstanceIds=[c9_pid],
+                  DocumentName="AWS-RunShellScript",
+                  Parameters=parameters,
+                  TimeoutSeconds=600,
+                  Comment=ssm_command[:100],  # Truncate to 100 characters for comment
+                  OutputS3BucketName='',  # You can specify an S3 bucket for output
+                  OutputS3KeyPrefix=''
+              )
+              logger.info('ssm command response: {}'.format(response))    
 
-            # Send SSM command to the instance specified by C9_PID
-            response = ssm.send_command(
-                InstanceIds=[c9_pid],
-                DocumentName="AWS-RunShellScript",
-                Parameters=parameters,
-                TimeoutSeconds=600,
-                Comment=ssm_command[:100],  # Truncate to 100 characters for comment
-                OutputS3BucketName='',  # You can specify an S3 bucket for output
-                OutputS3KeyPrefix=''
-            )
-            logger.info('event: {}'.format(response))    
+          def get_instance():
+              # Get the InstanceId of the Cloud9 IDE
+              ec2 = boto3.client('ec2')
+              response = ec2.describe_instances(Filters=[{'Name': 'tag:SSMBootstrap','Values': ['Active']}])
+              for reservation in response['Reservations']:
+                  for instance in reservation['Instances']:    
+                      if instance['State']['Name'] != 'terminated':
+                          return instance
+              raise Exception("no instance found") 
 
-        def get_instance():
-            # Get the InstanceId of the Cloud9 IDE
-            ec2 = boto3.client('ec2')
-            response = ec2.describe_instances(Filters=[{'Name': 'tag:SSMBootstrap','Values': ['Active']}])
-            for reservation in response['Reservations']:
-                for instance in reservation['Instances']:    
-                    if instance['State']['Name'] != 'terminated':
-                        return instance
-            raise Exception("no instance found") 
+          def lambda_handler(event, context):
+              try:
+                  logger.info('event: {}'.format(event))
+                  logger.info('context: {}'.format(context))
+                  responseData = {}
+                  status = cfnresponse.SUCCESS
+                  if event['RequestType'] == 'Delete':
+                      responseData = {'Success': 'Custom Resource removed'}
+                      instance = get_instance()
+                      logger.info('instance: {}'.format(instance))
+                      instance_state = instance['State']['Name']
+                      logger.info('instance_state: {}'.format(instance_state))
+                      while instance_state != 'running':
+                          time.sleep(5)
+                          instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
+                          logger.info('instance_state: {}'.format(instance_state))
+                      
+                      #invoke ssm to run the delete stack script
+                      run_ssm_command('ec2-user', instance['InstanceId'], 'cd ~/environment/eks-saas-gitops && ./cleanup.sh', event)
 
-        def lambda_handler(event, context):
-            try:
-                logger.info('event: {}'.format(event))
-                logger.info('context: {}'.format(context))
-                responseData = {}
-                status = cfnresponse.SUCCESS
-                if event['RequestType'] == 'Delete':
-                    responseData = {'Success': 'Custom Resource removed'}
-                    instance = get_instance()
-                    logger.info('instance: {}'.format(instance))
-                    instance_state = instance['State']['Name']
-                    logger.info('instance_state: {}'.format(instance_state))
-                    while instance_state != 'running':
-                        time.sleep(5)
-                        instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
-                        logger.info('instance_state: {}'.format(instance_state))
-                    
-                    #invoke ssm to run the delete stack script
-                    run_ssm_command('ec2-user', instance['InstanceId'], 'cd ~/environment/eks-saas-gitops && ./cleanup.sh', event.ResponseURL)
+                      ## response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
+                      #cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
 
-                    ## response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
-                    #cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
-
-                if event['RequestType'] == 'Create':                  
-                    # Open AWS clients
-                    ec2 = boto3.client('ec2')
-                    instance = get_instance()
-                    logger.info('instance: {}'.format(instance))  
-                    
-                    # Create the IamInstanceProfile request object
-                    iam_instance_profile = {
-                        'Arn': event['ResourceProperties']['LabIdeInstanceProfileArn'],
-                        'Name': event['ResourceProperties']['LabIdeInstanceProfileName']
-                    }
-                    logger.info('iam_instance_profile: {}'.format(iam_instance_profile))
-                    
-                    # Wait for Instance to become ready before adding Role
-                    instance_state = instance['State']['Name']
-                    logger.info('instance_state: {}'.format(instance_state))
-                    while instance_state != 'running':
-                        time.sleep(5)
-                        instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
-                        logger.info('instance_state: {}'.format(instance_state))
-                                
-                    # attach instance profile
-                    response = ec2.associate_iam_instance_profile(IamInstanceProfile=iam_instance_profile, InstanceId=instance['InstanceId'])
-                    logger.info('response - associate_iam_instance_profile: {}'.format(response))
-                    
-                    #invoke setup script through ssm            
-                    run_ssm_command('ec2-user', instance['InstanceId'], 'cd ~/environment/eks-saas-gitops && ./setup.sh', event.ResponseURL)
-                                
-                    ## response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
-                    ##responseData = {'Success': 'Started bootstrapping for instance: '+ instance['InstanceId']}
-                    ##cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                      
-            except Exception as e:
-                status = cfnresponse.FAILED
-                print(traceback.format_exc())
-                responseData = {'Error': traceback.format_exc(e)}
-                cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
+                  if event['RequestType'] == 'Create':                  
+                      # Open AWS clients
+                      ec2 = boto3.client('ec2')
+                      instance = get_instance()
+                      logger.info('instance: {}'.format(instance))  
+                      
+                      # Create the IamInstanceProfile request object
+                      iam_instance_profile = {
+                          'Arn': event['ResourceProperties']['LabIdeInstanceProfileArn'],
+                          'Name': event['ResourceProperties']['LabIdeInstanceProfileName']
+                      }
+                      logger.info('iam_instance_profile: {}'.format(iam_instance_profile))
+                      
+                      # Wait for Instance to become ready before adding Role
+                      instance_state = instance['State']['Name']
+                      logger.info('instance_state: {}'.format(instance_state))
+                      while instance_state != 'running':
+                          time.sleep(5)
+                          instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
+                          logger.info('instance_state: {}'.format(instance_state))
+                                  
+                      # attach instance profile
+                      response = ec2.associate_iam_instance_profile(IamInstanceProfile=iam_instance_profile, InstanceId=instance['InstanceId'])
+                      logger.info('response - associate_iam_instance_profile: {}'.format(response))
+                      
+                      #invoke setup script through ssm            
+                      run_ssm_command('ec2-user', instance['InstanceId'], 'cd ~/environment/eks-saas-gitops && ./setup.sh', event)
+                                  
+                      ## response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
+                      ##responseData = {'Success': 'Started bootstrapping for instance: '+ instance['InstanceId']}
+                      ##cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                      
+              except Exception as e:
+                  status = cfnresponse.FAILED
+                  logger.error(e)
+                  responseData = {'Error': e}
+                  cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
 
 ################## ARTIFACTS BUCKET ###############
   C9OutputBucket:
@@ -425,7 +434,7 @@ Resources:
       - Ref: C9Role
 
   C9Instance:
-    DependsOn: C9BootstrapAssociation
+    #DependsOn: C9BootstrapAssociation
     Type: AWS::Cloud9::EnvironmentEC2
     Properties:
       Description: !Sub  AWS Cloud9 instance for ${EnvironmentNameC9}

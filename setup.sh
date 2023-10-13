@@ -4,7 +4,14 @@ trap 'catch_error $? $LINENO' ERR
 
 catch_error() {
     #send response back to cloudformation
-    export JSON_DATA="{\"Status\" : \"ERROR\", \"Reason\" : \"Error $1 occurred on $2\"}",
+    export JSON_DATA="{
+        \"Status\" : \"FAILED\",
+        \"Reason\" : \"Error $1 occurred on $2\",
+        \"StackId\" : \"$EVENT_STACK_ID\",
+        \"PhysicalResourceId\" : \"$PHYSICAL_RESOURCE_ID\",
+        \"RequestId\" : \"$EVENT_REQUEST_ID\",
+        \"LogicalResourceId\" : \"$EVENT_LOGICAL_RESOURCE_ID\"
+    }"
     curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"
 }
 
@@ -89,5 +96,13 @@ chmod +x /home/ec2-user/environment/eks-saas-gitops/install.sh
 #shutdown -r +1
 
 #send response back to cloudformation
-export JSON_DATA='{"Status" : "SUCCESS", "Reason" : "Install.sh execution complete!"}',
+export JSON_DATA="{
+    \"Status\" : \"SUCCESS\",
+    \"Reason\" : \"install completed\",
+    \"StackId\" : \"$EVENT_STACK_ID\",
+    \"PhysicalResourceId\" : \"$PHYSICAL_RESOURCE_ID\",
+    \"RequestId\" : \"$EVENT_REQUEST_ID\",
+    \"LogicalResourceId\" : \"$EVENT_LOGICAL_RESOURCE_ID\"
+}"
+
 curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"

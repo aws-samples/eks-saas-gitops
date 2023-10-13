@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 trap 'catch_error $? $LINENO' ERR
-touch /home/ec2-user/environment/install_errors.txt
-touch /home/ec2-user/environment/debug.txt
+#touch /home/ec2-user/environment/install_errors.txt
 
 catch_error() {
-     echo "Error $1 occurred on $2" >> /home/ec2-user/environment/install_errors.txt
+     #echo "Error $1 occurred on $2" >> /home/ec2-user/environment/install_errors.txt
+     #send response back to cloudformation
+     export JSON_DATA="{\"Status\" : \"ERROR\", \"Reason\" : \"Error $1 occurred on $2\"}",
+     curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"
 }
 
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
 AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
 echo "export AWS_REGION=${AWS_REGION}" >> /root/.bashrc
-echo "aws_region=${AWS_REGION}" > /home/ec2-user/environment/debug.txt
-exit
 
 # APPLY TERRAFORM NO FLUX
 cd /home/ec2-user/environment/eks-saas-gitops/terraform/clusters/production
@@ -73,28 +73,28 @@ echo "Exporting terraform output to environment variables"
 
 # Exporting terraform outputs to bashrc
 outputs=("argo_workflows_bucket_name" 
-         "argo_workflows_irsa"
-         "argo_events_irsa"
-         "argo_workflows_sqs_url"
-         "aws_codecommit_clone_url_http" 
-         "aws_codecommit_clone_url_ssh" 
-         "aws_vpc_id" 
-         "cluster_endpoint" 
-         "cluster_iam_role_name" 
-         "cluster_primary_security_group_id" 
-         "ecr_argoworkflow_container" 
-         "ecr_consumer_container" 
-         "ecr_helm_chart_url" 
-         "ecr_producer_container" 
-         "karpenter_instance_profile" 
-         "karpenter_irsa" 
-         "lb_controller_irsa"
-         "tenant_terraform_state_bucket_name")
+     "argo_workflows_irsa"
+     "argo_events_irsa"
+     "argo_workflows_sqs_url"
+     "aws_codecommit_clone_url_http" 
+     "aws_codecommit_clone_url_ssh" 
+     "aws_vpc_id" 
+     "cluster_endpoint" 
+     "cluster_iam_role_name" 
+     "cluster_primary_security_group_id" 
+     "ecr_argoworkflow_container" 
+     "ecr_consumer_container" 
+     "ecr_helm_chart_url" 
+     "ecr_producer_container" 
+     "karpenter_instance_profile" 
+     "karpenter_irsa" 
+     "lb_controller_irsa"
+     "tenant_terraform_state_bucket_name")
 
 for output in "${outputs[@]}"; do
-    value=$(terraform output -raw $output)
-    echo "export ${output^^}=$value" >> /home/ec2-user/.bashrc
-    echo "export ${output^^}=$value" >> /root/.bashrc
+     value=$(terraform output -raw $output)
+     echo "export ${output^^}=$value" >> /home/ec2-user/.bashrc
+     echo "export ${output^^}=$value" >> /root/.bashrc
 done
 
 source /root/.bashrc

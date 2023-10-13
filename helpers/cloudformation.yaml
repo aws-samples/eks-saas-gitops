@@ -202,9 +202,7 @@ Resources:
 
           def run_ssm_command(target_user, c9_pid, ssm_command, event):
               ssm = boto3.client('ssm', region_name=aws_region)  
-
-              logger.info('ssm command response: {}'.format(response))    
-
+              
               # Include the variable in the command as an environment variable
               ssm_command_with_variable = (
                 f'runuser -l "{target_user}" -c '
@@ -221,7 +219,7 @@ Resources:
               }
               
               # Send SSM command to the instance specified by C9_PID
-              response = ssm.send_command(
+              ssm_command_response = ssm.send_command(
                   InstanceIds=[c9_pid],
                   DocumentName="AWS-RunShellScript",
                   Parameters=parameters,
@@ -230,7 +228,7 @@ Resources:
                   OutputS3BucketName='',  # You can specify an S3 bucket for output
                   OutputS3KeyPrefix=''
               )
-              logger.info('ssm command response: {}'.format(response))    
+              logger.info('ssm command response: {}'.format(ssm_command_response))
 
           def get_instance():
               # Get the InstanceId of the Cloud9 IDE
@@ -245,9 +243,7 @@ Resources:
           def lambda_handler(event, context):
               try:
                   logger.info('event: {}'.format(event))
-                  logger.info('context: {}'.format(context))
-                  responseData = {}
-                  status = cfnresponse.SUCCESS
+                  logger.info('context: {}'.format(context))                  
                   if event['RequestType'] == 'Delete':
                       responseData = {'Success': 'Custom Resource removed'}
                       instance = get_instance()
@@ -299,7 +295,7 @@ Resources:
               except Exception as e:
                   status = cfnresponse.FAILED
                   logger.error(e)
-                  responseData = {'Error': e}
+                  responseData = {'Error': 'error'}
                   cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
 
 ################## ARTIFACTS BUCKET ###############

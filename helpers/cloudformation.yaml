@@ -144,6 +144,19 @@ Resources:
               Fn::GetAtt:
                 - C9Role
                 - Arn
+          - Effect: Allow
+            Action:
+            - ssm:SendCommand
+            Resource: !Sub "arn:aws:ssm:*:*:document/*"
+          - Effect: Allow
+            Action:
+            - ssm:SendCommand
+            Resource: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"            
+          - Effect: Allow
+            Action:
+            - ssm:*
+            Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:*"
+
 
 ################## LAMBDA BOOTSTRAP FUNCTION ################
 
@@ -214,19 +227,38 @@ Resources:
                 f'{ssm_command}"'
               )
               parameters = {
-                  "executionTimeout": ["600"],
+                  "executionTimeout": ["3600"],
                   "commands": [ssm_command_with_variable]
-              }
-              
+              }              
+
+              ssm_instance_info = ssm.describe_instance_information(
+                  InstanceInformationFilterList=[
+                      {
+                          'key': 'InstanceIds',
+                          'valueSet': [c9_pid]
+                      }
+                  ]
+              )
+              logger.info('ssm_instance_info: {}'.format(ssm_instance_info))
+              while not ssm_instance_info['InstanceInformationList']:
+                  time.sleep(10)
+                  ssm_instance_info = ssm.describe_instance_information(
+                      InstanceInformationFilterList=[
+                          {
+                              'key': 'InstanceIds',
+                              'valueSet': [c9_pid]
+                          }
+                      ]
+                  )
+                  logger.info('ssm_instance_info: {}'.format(ssm_instance_info))
+
               # Send SSM command to the instance specified by C9_PID
               ssm_command_response = ssm.send_command(
                   InstanceIds=[c9_pid],
                   DocumentName="AWS-RunShellScript",
                   Parameters=parameters,
-                  TimeoutSeconds=600,
-                  Comment=ssm_command[:100],  # Truncate to 100 characters for comment
-                  OutputS3BucketName='',  # You can specify an S3 bucket for output
-                  OutputS3KeyPrefix=''
+                  TimeoutSeconds=3600,
+                  Comment=ssm_command[:100],               
               )
               logger.info('ssm command response: {}'.format(ssm_command_response))
 
@@ -258,9 +290,6 @@ Resources:
                       #invoke ssm to run the delete stack script
                       run_ssm_command('ec2-user', instance['InstanceId'], 'cd ~/environment/eks-saas-gitops && ./cleanup.sh', event)
 
-                      ## response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
-                      #cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
-
                   if event['RequestType'] == 'Create':                  
                       # Open AWS clients
                       ec2 = boto3.client('ec2')
@@ -278,7 +307,7 @@ Resources:
                       instance_state = instance['State']['Name']
                       logger.info('instance_state: {}'.format(instance_state))
                       while instance_state != 'running':
-                          time.sleep(5)
+                          time.sleep(10)
                           instance_state = ec2.describe_instances(InstanceIds=[instance['InstanceId']])
                           logger.info('instance_state: {}'.format(instance_state))
                                   
@@ -287,15 +316,12 @@ Resources:
                       logger.info('response - associate_iam_instance_profile: {}'.format(response))
                       
                       #invoke setup script through ssm            
+                      # response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
                       run_ssm_command('ec2-user', instance['InstanceId'], 'cd ~/environment/eks-saas-gitops && ./setup.sh', event)
-                                  
-                      ## response to cloud formation is sent by the cleanup.sh script which is invoked by ssm
-                      ##responseData = {'Success': 'Started bootstrapping for instance: '+ instance['InstanceId']}
-                      ##cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                      
               except Exception as e:
-                  status = cfnresponse.FAILED
-                  logger.error(e)
-                  responseData = {'Error': 'error'}
+                  status = cfnresponse.SUCCESS
+                  logger.error('{}'.format(traceback.print_exc()))
+                  responseData = {'Error': traceback.print_exc()}
                   cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
 
 ################## ARTIFACTS BUCKET ###############
@@ -337,88 +363,88 @@ Resources:
                 - C9LambdaExecutionRole
                 - Arn
 ################## SSM Bootstrap for Cloud9 ##################
-  # C9SSMDocument: 
-  #   Type: AWS::SSM::Document
-  #   Properties: 
-  #     Tags:
-  #       - Key: Environment
-  #         Value: !Sub ${EnvironmentNameC9}
-  #     DocumentType: Command
-  #     Content:
-  #       schemaVersion: '2.2'
-  #       description: Bootstrap Cloud9 Instance
-  #       mainSteps:
-  #       - action: aws:runShellScript
-  #         name: C9bootstrap
-  #         inputs:
-  #           runCommand:            
-  #           - "#!/bin/bash"
-  #           - date
-  #           - echo LANG=en_US.utf-8 >> /etc/environment
-  #           - echo LC_ALL=en_US.UTF-8 >> /etc/environment
-  #           - . /home/ec2-user/.bashrc
-  #           - echo '=== UPDATE system packages and INSTALL dependencies ==='
-  #           - yum update -y; yum install -y vim git jq bash-completion moreutils gettext yum-utils perl-Digest-SHA tree
-  #           - echo '=== ENABLE Amazon Extras EPEL Repository and INSTALL Git LFS ==='
-  #           - yum install -y amazon-linux-extras
-  #           - amazon-linux-extras install epel -y
-  #           - yum install -y git-lfs
-  #           - echo '=== INSTALL AWS CLI v2 ==='
-  #           - curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'
-  #           - unzip awscliv2.zip -d /tmp
-  #           - /tmp/aws/install --update
-  #           - rm -rf aws awscliv2.zip
-  #           - echo '=== INSTALL Kubernetes CLI ==='
-  #           - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-  #           - chmod +x kubectl && mv kubectl /usr/local/bin/
-  #           - /usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl
-  #           - echo '=== INSTALL Helm CLI ==='
-  #           - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-  #           - /usr/local/bin/helm completion bash > /etc/bash_completion.d/helm
-  #           - echo '=== INSTALL Eksctl CLI ==='
-  #           - curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-  #           - mv /tmp/eksctl /usr/local/bin
-  #           - /usr/local/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
-  #           - echo '=== INSTALL Flux CLI ==='
-  #           - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v0.41.2/flux_0.41.2_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-  #           - mv /tmp/flux /usr/local/bin
-  #           - /usr/local/bin/flux completion bash > /etc/bash_completion.d/flux
-  #           - echo '=== INSTALL PLUTO ==='
-  #           - curl --silent --location "https://github.com/FairwindsOps/pluto/releases/download/v5.16.1/pluto_5.16.1_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-  #           - mv /tmp/pluto /usr/local/bin
-  #           - echo '=== INSTALL KUBENT ==='
-  #           - curl --silent --location "https://github.com/doitintl/kube-no-trouble/releases/download/0.7.0/kubent-0.7.0-$(uname -s)-amd64.tar.gz" | tar xz -C /tmp
-  #           - mv /tmp/kubent /usr/local/bin
-  #           - echo '=== INSTALL kubectl convert plugin ==='
-  #           - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert"
-  #           - sudo install -o root -g root -m 0755 kubectl-convert /usr/local/bin/kubectl-convert
-  #           - echo '=== INSTALL Terraform CLI ==='
-  #           - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-  #           - yum -y install terraform
-  #           - echo '=== Exporting ENV Vars ==='
-  #           - export TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds:60")
-  #           - export AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/') && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
-  #           - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)" && echo "export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" >> /home/ec2-user/.bashrc
-  #           - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE' >> /home/ec2-user/.bashrc
-  #           - echo '====== Provision Terraform ======'
-  #           - git clone https://github.com/somensi-aws/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
-  #           - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
-  #           - /home/ec2-user/environment/install.sh
-  #           - echo "Bootstrap completed with return code $?"
-  #           - shutdown -r +1
+  C9SSMDocument: 
+    Type: AWS::SSM::Document
+    Properties: 
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentNameC9}
+      DocumentType: Command
+      Content:
+        schemaVersion: '2.2'
+        description: Bootstrap Cloud9 Instance
+        mainSteps:
+        - action: aws:runShellScript
+          name: C9bootstrap
+          inputs:
+            runCommand:            
+            - "#!/bin/bash"
+            # - date
+            # - echo LANG=en_US.utf-8 >> /etc/environment
+            # - echo LC_ALL=en_US.UTF-8 >> /etc/environment
+            # - . /home/ec2-user/.bashrc
+            # - echo '=== UPDATE system packages and INSTALL dependencies ==='
+            # - yum update -y; yum install -y vim git jq bash-completion moreutils gettext yum-utils perl-Digest-SHA tree
+            # - echo '=== ENABLE Amazon Extras EPEL Repository and INSTALL Git LFS ==='
+            # - yum install -y amazon-linux-extras
+            # - amazon-linux-extras install epel -y
+            # - yum install -y git-lfs
+            # - echo '=== INSTALL AWS CLI v2 ==='
+            # - curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'
+            # - unzip awscliv2.zip -d /tmp
+            # - /tmp/aws/install --update
+            # - rm -rf aws awscliv2.zip
+            # - echo '=== INSTALL Kubernetes CLI ==='
+            # - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            # - chmod +x kubectl && mv kubectl /usr/local/bin/
+            # - /usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl
+            # - echo '=== INSTALL Helm CLI ==='
+            # - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            # - /usr/local/bin/helm completion bash > /etc/bash_completion.d/helm
+            # - echo '=== INSTALL Eksctl CLI ==='
+            # - curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            # - mv /tmp/eksctl /usr/local/bin
+            # - /usr/local/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
+            # - echo '=== INSTALL Flux CLI ==='
+            # - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v0.41.2/flux_0.41.2_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            # - mv /tmp/flux /usr/local/bin
+            # - /usr/local/bin/flux completion bash > /etc/bash_completion.d/flux
+            # - echo '=== INSTALL PLUTO ==='
+            # - curl --silent --location "https://github.com/FairwindsOps/pluto/releases/download/v5.16.1/pluto_5.16.1_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            # - mv /tmp/pluto /usr/local/bin
+            # - echo '=== INSTALL KUBENT ==='
+            # - curl --silent --location "https://github.com/doitintl/kube-no-trouble/releases/download/0.7.0/kubent-0.7.0-$(uname -s)-amd64.tar.gz" | tar xz -C /tmp
+            # - mv /tmp/kubent /usr/local/bin
+            # - echo '=== INSTALL kubectl convert plugin ==='
+            # - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl-convert"
+            # - sudo install -o root -g root -m 0755 kubectl-convert /usr/local/bin/kubectl-convert
+            # - echo '=== INSTALL Terraform CLI ==='
+            # - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+            # - yum -y install terraform
+            # - echo '=== Exporting ENV Vars ==='
+            # - export TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds:60")
+            # - export AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/') && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
+            # - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)" && echo "export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" >> /home/ec2-user/.bashrc
+            # - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE' >> /home/ec2-user/.bashrc
+            # - echo '====== Provision Terraform ======'
+            # - git clone https://github.com/somensi-aws/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            # - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
+            # - /home/ec2-user/environment/install.sh
+            # - echo "Bootstrap completed with return code $?"
+            # - shutdown -r +1
 
-  # C9BootstrapAssociation: 
-  #   Type: AWS::SSM::Association
-  #   Properties: 
-  #     Name: !Ref C9SSMDocument
-  #     OutputLocation: 
-  #       S3Location:
-  #         OutputS3BucketName: !Ref C9OutputBucket
-  #         OutputS3KeyPrefix: bootstrapoutput
-  #     Targets:
-  #       - Key: tag:SSMBootstrap
-  #         Values:
-  #         - Active
+  C9BootstrapAssociation: 
+    Type: AWS::SSM::Association
+    Properties: 
+      Name: !Ref C9SSMDocument
+      OutputLocation: 
+        S3Location:
+          OutputS3BucketName: !Ref C9OutputBucket
+          OutputS3KeyPrefix: bootstrapoutput
+      Targets:
+        - Key: tag:SSMBootstrap
+          Values:
+          - Active
 
 
 ################## C9 Instance Profile ##################
@@ -430,11 +456,12 @@ Resources:
       - Ref: C9Role
 
   C9Instance:
-    #DependsOn: C9BootstrapAssociation
+    DependsOn: C9BootstrapAssociation
     Type: AWS::Cloud9::EnvironmentEC2
     Properties:
       Description: !Sub  AWS Cloud9 instance for ${EnvironmentNameC9}
       AutomaticStopTimeMinutes: 3600
+      ConnectionType: CONNECT_SSM
       ImageId: amazonlinux-2-x86_64
       InstanceType:
         Ref: C9InstanceType

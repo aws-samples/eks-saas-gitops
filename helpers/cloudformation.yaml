@@ -101,7 +101,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
       Policies:
       - PolicyName:
           Fn::Join:
@@ -243,13 +243,23 @@ Resources:
                       logger.info('instance_state: {}'.format(instance_state))
                       while instance_state != 'running':
                           time.sleep(5)
-                          instance_state = get_instance(InstanceIds=[instance['InstanceId']])
+                          instance_state = get_instance(InstanceIds=[instance['InstanceId']])['State']['Name']    
                           logger.info('instance_state: {}'.format(instance_state))
+
+                      response = ec2.describe_iam_instance_profile_associations(Filters=[{'Name': 'instance-id','Values': [instance['InstanceId']]}])            
+                      associations = response.get('IamInstanceProfileAssociations', [])
+
+                      # Loop through the associations and disassociate them
+                      for association in associations:
+                          association_id = association['AssociationId']            
+                          # Disassociate the IAM instance profile
+                          ec2.disassociate_iam_instance_profile(AssociationId=association_id)
 
                       # attach instance profile
                       attach_instance_response = ec2.associate_iam_instance_profile(IamInstanceProfile=iam_instance_profile, InstanceId=instance['InstanceId'])
                       logger.info('response - associate_iam_instance_profile: {}'.format(attach_instance_response))
                       
+                      #CFN response will be sent by install.sh after all bootstrapping is complete            
                       #send event to ssm to continue process through ssm
                       ssm_client = boto3.client('ssm')
                       ssm_client.put_parameter(
@@ -258,15 +268,13 @@ Resources:
                           Value=json.dumps(event),
                           Type='String'
                       )
-
-                      #CFN response will be sent by install.sh after all bootstrapping is complete
-                      #responseData = {'Success': 'Started bootstrapping for instance: '+instance['InstanceId']}
-                      #cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                      
+                      logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running install.sh')
+                      
               except Exception as e:
                   status = cfnresponse.FAILED
                   logger.error(traceback.format_exc())
                   responseData = {'Error': traceback.format_exc()}
-                  cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                 
+                  cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')             
                       
 ################## ARTIFACTS BUCKET ###############
   C9OutputBucket:
@@ -401,8 +409,9 @@ Resources:
 
   C9Instance:
     DependsOn: C9BootstrapAssociation
-    Type: AWS::Cloud9::EnvironmentEC2
+    Type: AWS::Cloud9::EnvironmentEC2     
     Properties:
+      ConnectionType: CONNECT_SSM
       Description: !Sub  AWS Cloud9 instance for ${EnvironmentNameC9}
       AutomaticStopTimeMinutes: 3600
       ImageId: amazonlinux-2-x86_64

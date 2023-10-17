@@ -1,5 +1,5 @@
 variable "name" {
-  default = "eks-saas-gitops-workshop"
+  default = "eks-saas-gitops"
 }
 
 variable "aws_region" {}

@@ -158,6 +158,7 @@ Resources:
     Type: Custom::C9BootstrapInstanceLambda
     DependsOn:
     - C9LambdaExecutionRole
+    - C9ProfileCreation
     Properties:
       Tags:
         - Key: Environment
@@ -437,6 +438,120 @@ Resources:
     Properties:
       Status: Active
       UserName: !Ref WorkshopUser
+
+################## LAMBDA CREATE CLOUD9 IAM ROLES FUNCTION ################
+
+  C9ProfileCreation:
+    Type: Custom::C9ProfileCreation
+    DependsOn:
+    - C9LambdaExecutionRole
+    Properties:
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentNameC9}
+      ServiceToken:
+        Fn::GetAtt:
+        - C9ProfileCreationLambdaFunction
+        - Arn
+      REGION:
+        Ref: AWS::Region
+      StackName:
+        Ref: AWS::StackName
+  C9ProfileCreationLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Tags:
+        - Key: Environment
+          Value: AWS Example
+      Handler: index.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - C9LambdaExecutionRole
+        - Arn
+      Runtime: python3.9
+      MemorySize: 256
+      Timeout: 600
+      Code:
+        ZipFile: |
+          from __future__ import print_function
+          import boto3
+          import json
+          import os
+          import traceback
+          import cfnresponse
+          import logging
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          aws_region = os.environ['AWS_REGION']          
+
+          def lambda_handler(event, context):
+              try:
+                  logger.info('event: {}'.format(event))
+                  logger.info('context: {}'.format(context))
+                  
+                  if event['RequestType'] == 'Delete':                      
+                      status = cfnresponse.SUCCESS
+                      responseData = {'Success': 'Custom Resource removed'}
+                      cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
+
+                  if event['RequestType'] == 'Create':
+                      # Initialize the IAM client
+                      iam = boto3.client('iam')
+
+                      # Specify the IAM role name and instance profile name
+                      role_name = 'AWSCloud9SSMAccessRole'
+                      instance_profile_name = 'AWSCloud9SSMInstanceProfile'
+
+                      try:
+                          # Attempt to create the IAM role
+                          iam.create_role(
+                              RoleName=role_name,
+                              Path='/service-role/',
+                              AssumeRolePolicyDocument=json.dumps({
+                                  "Version": "2012-10-17",
+                                  "Statement": [
+                                      {
+                                          "Effect": "Allow",
+                                          "Principal": {
+                                              "Service": ["ec2.amazonaws.com", "cloud9.amazonaws.com"]
+                                          },
+                                          "Action": "sts:AssumeRole"
+                                      }
+                                  ]
+                              })
+                          )
+                          iam.attach_role_policy(
+                              RoleName=role_name,
+                              PolicyArn='arn:aws:iam::aws:policy/AWSCloud9SSMInstanceProfile'
+                          )
+                      except iam.exceptions.EntityAlreadyExistsException:                
+                          logger.info("Role already exists, no need to create it")
+                          pass
+                      
+                      try:
+                          iam.create_instance_profile(
+                              InstanceProfileName=instance_profile_name,
+                              Path='/cloud9/'
+                          )
+
+                          iam.add_role_to_instance_profile(
+                              InstanceProfileName=instance_profile_name,
+                              RoleName=role_name
+                          )
+                      except iam.exceptions.EntityAlreadyExistsException:                
+                          logger.info("Instance profile or role already exists, no need to create or associate them")
+                          pass                      
+
+                      status = cfnresponse.SUCCESS
+                      responseData = {'Success': 'Custom Resource created'}
+                      cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')
+                      
+              except Exception as e:
+                  status = cfnresponse.FAILED
+                  logger.error(traceback.format_exc())
+                  responseData = {'Error': traceback.format_exc()}              
+                  cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')         
 
 Outputs:
   Cloud9IDE:

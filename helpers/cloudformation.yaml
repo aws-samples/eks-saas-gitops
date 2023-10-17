@@ -380,7 +380,7 @@ Resources:
             - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)" && echo "export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" >> /home/ec2-user/.bashrc
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE 2> /dev/null' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
-            - git clone https://github.com/somensi-aws/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
             - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
             - /home/ec2-user/environment/install.sh
             - echo "Bootstrap completed with return code $?"

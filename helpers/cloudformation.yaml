@@ -101,6 +101,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
       Policies:
       - PolicyName:
           Fn::Join:
@@ -148,6 +149,7 @@ Resources:
             Action:
             - ssm:DescribeParameters
             - ssm:GetParameters
+            - ssm:PutParameter 
             Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/eks-saas-gitops-*"
 
 ################## LAMBDA BOOTSTRAP FUNCTION ################
@@ -205,9 +207,9 @@ Resources:
           logger.setLevel(logging.INFO)
           aws_region = os.environ['AWS_REGION']
 
-          def get_instance(filter):    
+          def get_instance(**kwargs):    
               ec2 = boto3.client('ec2')
-              response = ec2.describe_instances(filter)
+              response = ec2.describe_instances(**kwargs)
               for reservation in response['Reservations']:
                   for instance in reservation['Instances']:    
                       if instance['State']['Name'] != 'terminated':
@@ -253,7 +255,8 @@ Resources:
                       ssm_client.put_parameter(
                           Name='eks-saas-gitops-custom-resource-event',
                           Overwrite=True,
-                          Value=event,
+                          Value=json.dumps(event),
+                          Type='String'
                       )
 
                       #CFN response will be sent by install.sh after all bootstrapping is complete
@@ -261,8 +264,8 @@ Resources:
                       #cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                      
               except Exception as e:
                   status = cfnresponse.FAILED
-                  logger.error(traceback.format_exc(e))
-                  responseData = {'Error': traceback.format_exc(e)}
+                  logger.error(traceback.format_exc())
+                  responseData = {'Error': traceback.format_exc()}
                   cfnresponse.send(event, context, status, responseData, 'CustomResourcePhysicalID')                 
                       
 ################## ARTIFACTS BUCKET ###############
@@ -368,7 +371,7 @@ Resources:
             - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)" && echo "export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" >> /home/ec2-user/.bashrc
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE 2> /dev/null' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
-            - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            - git clone https://github.com/somensi-aws/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
             - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
             - /home/ec2-user/environment/install.sh
             - echo "Bootstrap completed with return code $?"

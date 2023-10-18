@@ -1,10 +1,29 @@
 #!/bin/bash
 set -e
 trap 'catch_error $? $LINENO' ERR
-touch /home/ec2-user/environment/install_errors.txt
 
 catch_error() {
-     echo "Error $1 occurred on $2" >> /home/ec2-user/environment/install_errors.txt
+     #get cfn parameter from ssm
+     CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
+     
+     #set variables
+     STATUS="SUCCESS"
+     EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)
+     EVENT_REQUEST_ID=$(echo "$CFN_PARAMETER" | jq -r .RequestId)
+     EVENT_LOGICAL_RESOURCE_ID=$(echo "$CFN_PARAMETER" | jq -r .LogicalResourceId)
+     EVENT_RESPONSE_URL=$(echo "$CFN_PARAMETER" | jq -r .ResponseURL)
+
+     JSON_DATA='{
+          "Status": "'"$STATUS"'",
+          "Reason": "Error "'"$1"'" occurred on "'"$2"'",
+          "StackId": "'"$EVENT_STACK_ID"'",
+          "PhysicalResourceId": "Terraform",
+          "RequestId": "'"$EVENT_REQUEST_ID"'",
+          "LogicalResourceId": "'"$EVENT_LOGICAL_RESOURCE_ID"'"
+     }'
+
+     # Send the JSON data using curl
+     curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"          
 }
 
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
@@ -13,7 +32,6 @@ echo "export AWS_REGION=${AWS_REGION}" >> /root/.bashrc
 
 # APPLY TERRAFORM NO FLUX
 cd /home/ec2-user/environment/eks-saas-gitops/terraform/clusters/production
-
 terraform init
 
 MAX_RETRIES=3
@@ -70,28 +88,28 @@ echo "Exporting terraform output to environment variables"
 
 # Exporting terraform outputs to bashrc
 outputs=("argo_workflows_bucket_name" 
-         "argo_workflows_irsa"
-         "argo_events_irsa"
-         "argo_workflows_sqs_url"
-         "aws_codecommit_clone_url_http" 
-         "aws_codecommit_clone_url_ssh" 
-         "aws_vpc_id" 
-         "cluster_endpoint" 
-         "cluster_iam_role_name" 
-         "cluster_primary_security_group_id" 
-         "ecr_argoworkflow_container" 
-         "ecr_consumer_container" 
-         "ecr_helm_chart_url" 
-         "ecr_producer_container" 
-         "karpenter_instance_profile" 
-         "karpenter_irsa" 
-         "lb_controller_irsa"
-         "tenant_terraform_state_bucket_name")
+          "argo_workflows_irsa"
+          "argo_events_irsa"
+          "argo_workflows_sqs_url"
+          "aws_codecommit_clone_url_http" 
+          "aws_codecommit_clone_url_ssh" 
+          "aws_vpc_id" 
+          "cluster_endpoint" 
+          "cluster_iam_role_name" 
+          "cluster_primary_security_group_id" 
+          "ecr_argoworkflow_container" 
+          "ecr_consumer_container" 
+          "ecr_helm_chart_url" 
+          "ecr_producer_container" 
+          "karpenter_instance_profile" 
+          "karpenter_irsa" 
+          "lb_controller_irsa"
+          "tenant_terraform_state_bucket_name")
 
 for output in "${outputs[@]}"; do
-    value=$(terraform output -raw $output)
-    echo "export ${output^^}=$value" >> /home/ec2-user/.bashrc
-    echo "export ${output^^}=$value" >> /root/.bashrc
+     value=$(terraform output -raw $output)
+     echo "export ${output^^}=$value" >> /home/ec2-user/.bashrc
+     echo "export ${output^^}=$value" >> /root/.bashrc
 done
 
 source /root/.bashrc
@@ -123,8 +141,8 @@ ssh-keyscan "git-codecommit.${AWS_REGION}.amazonaws.com" > /home/ec2-user/enviro
 cp /home/ec2-user/environment/flux /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
 cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com
-  User ${CODECOMMIT_USER_ID}
-  IdentityFile /root/.ssh/id_rsa
+     User ${CODECOMMIT_USER_ID}
+     IdentityFile /root/.ssh/id_rsa
 EOF
 chmod 600 /root/.ssh/config
 ssh-keyscan "git-codecommit.${AWS_REGION}.amazonaws.com" > /root/.ssh/known_hosts
@@ -133,8 +151,8 @@ ssh-keyscan "git-codecommit.${AWS_REGION}.amazonaws.com" > /root/.ssh/known_host
 cp /home/ec2-user/environment/flux /home/ec2-user/.ssh/id_rsa && chmod 600 /home/ec2-user/.ssh/id_rsa
 cat <<EOF > /home/ec2-user/.ssh/config
 Host git-codecommit.*.amazonaws.com
-  User ${CODECOMMIT_USER_ID}
-  IdentityFile /home/ec2-user/.ssh/id_rsa
+     User ${CODECOMMIT_USER_ID}
+     IdentityFile /home/ec2-user/.ssh/id_rsa
 EOF
 chmod 600 /home/ec2-user/.ssh/config
 ssh-keyscan "git-codecommit.${AWS_REGION}.amazonaws.com" > /home/ec2-user/known_hosts
@@ -295,3 +313,25 @@ chown -R ec2-user:ec2-user /home/ec2-user/environment/
 echo "Creating Argo Workflows secret ssh"
 
 kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config
+
+#get cfn parameter from ssm
+CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
+
+#set variables
+STATUS="SUCCESS"
+EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)
+EVENT_REQUEST_ID=$(echo "$CFN_PARAMETER" | jq -r .RequestId)
+EVENT_LOGICAL_RESOURCE_ID=$(echo "$CFN_PARAMETER" | jq -r .LogicalResourceId)
+EVENT_RESPONSE_URL=$(echo "$CFN_PARAMETER" | jq -r .ResponseURL)
+
+JSON_DATA='{
+     "Status": "'"$STATUS"'",
+     "Reason": "Terraform executed successfully from Cloud9",
+     "StackId": "'"$EVENT_STACK_ID"'",
+     "PhysicalResourceId": "Terraform",
+     "RequestId": "'"$EVENT_REQUEST_ID"'",
+     "LogicalResourceId": "'"$EVENT_LOGICAL_RESOURCE_ID"'"
+}'
+
+# Send the JSON data using curl
+curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"

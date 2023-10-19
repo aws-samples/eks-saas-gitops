@@ -20,7 +20,7 @@ spec:
   sqs:
     tenant-provisioning:
       jsonBody: true
-      region: "${AWS_REGION}"
+      region: "{AWS_REGION}"
       queue: "argoworkflows-queue"
       waitTimeSeconds: 20
 ---

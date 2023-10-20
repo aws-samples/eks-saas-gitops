@@ -23,4 +23,4 @@ spec:
   values:
     tenantId: pool-1
     deployApps: true
-    deployIngress: false
+    deployIngress: true # to simplify cleaning the stack

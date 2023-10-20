@@ -306,6 +306,9 @@ flux reconcile helmrelease kubecost -nflux-system --kubeconfig /root/.kube/confi
 helm uninstall karpenter -nkarpenter --kubeconfig /root/.kube/config
 flux reconcile helmrelease karpenter -nflux-system --kubeconfig /root/.kube/config
 
+helm uninstall metrics-server -nkube-system --kubeconfig /root/.kube/config
+flux reconcile helmrelease metrics-server -nflux-system --kubeconfig /root/.kube/config
+
 echo "Changing permissions for ec2-user"
 chown -R ec2-user:ec2-user /home/ec2-user/environment/
 

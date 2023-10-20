@@ -23,12 +23,18 @@ aws ecr delete-repository --repository-name "$APPLICATIONHELMCHARTECR" --force -
 aws ecr delete-repository --repository-name "$CONSUMERSERVICEECR" --force --region "$AWS_REGION"
 aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force --region "$AWS_REGION"
 
-#remove tenant application stack
+# remove tenant application stack
 cd $APPLICATION_PLANE_INFRA_FOLDER || exit 
 terraform destroy --auto-approve
 
-#remove s3 state file
+# remove s3 state file
 aws s3 rm "s3://$TENANT_TERRAFORM_STATE_BUCKET_NAME" --recursive
+
+# remove flux controlled components - to avoid orphan dependencies
+flux suspend hr argo-workflows
+helm uninstall argo-workflows -n argo-workflows
+flux suspend hr pool-1
+helm uninstall pool-1 -n pool-1
 
 MAX_RETRIES=3
 COUNT=0

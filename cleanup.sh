@@ -1,37 +1,34 @@
 #!/bin/bash
-set -e
-trap 'catch_error $? $LINENO' ERR
-
-catch_error() {     
-     #get cfn parameter from ssm
-     CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
-
-     STATUS="FAILURE"
-     EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)
-     EVENT_REQUEST_ID=$(echo "$CFN_PARAMETER" | jq -r .RequestId)
-     EVENT_LOGICAL_RESOURCE_ID=$(echo "$CFN_PARAMETER" | jq -r .LogicalResourceId)
-     EVENT_RESPONSE_URL=$(echo "$CFN_PARAMETER" | jq -r .ResponseURL)
-
-     JSON_DATA='{
-          "Status": "'"$STATUS"'",
-          "Reason": "Error "'"$1"'" occurred on "'"$2"'",
-          "StackId": "'"$EVENT_STACK_ID"'",
-          "PhysicalResourceId": "Terraform",
-          "RequestId": "'"$EVENT_REQUEST_ID"'",
-          "LogicalResourceId": "'"$EVENT_LOGICAL_RESOURCE_ID"'"
-     }'
-
-     # Send the JSON data using curl
-     curl -X PUT --data-binary "$JSON_DATA" "$EVENT_RESPONSE_URL"          
-}
-
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
 AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
-export TERRAFORM_CLUSTER_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/terraform/clusters/production"
-export APPLICATION_PLANE_INFRA_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/terraform/application-plane/production/environments"
+TERRAFORM_CLUSTER_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/terraform/clusters/production"
+APPLICATION_PLANE_INFRA_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/terraform/application-plane/production/environments"
+IAM_USER_NAME="codecommit-user"
+ARGOWORKFLOWECR="argoworkflow-container"
+APPLICATIONHELMCHARTECR="gitops-saas/helm-tenant-chart"
+CONSUMERSERVICEECR="consumer-container"
+PRODUCERSERVICEECR="producer-container"
 
+#delete code-commit user ssh key
+user_info=$(aws iam list-ssh-public-keys --user-name "$IAM_USER_NAME" )
+key_ids=$(echo "$user_info" | jq -r '.SSHPublicKeys[]?.SSHPublicKeyId')
+for key_id in $key_ids; do
+     echo "Deleting SSH Key: $key_id"
+     aws iam delete-ssh-public-key --user-name "$IAM_USER_NAME" --ssh-public-key-id "$key_id" --profile "$AWS_PROFILE"
+done
+
+# remove ecr repos
+aws ecr delete-repository --repository-name "$ARGOWORKFLOWECR" --force --region "$AWS_REGION"
+aws ecr delete-repository --repository-name "$APPLICATIONHELMCHARTECR" --force --region "$AWS_REGION"
+aws ecr delete-repository --repository-name "$CONSUMERSERVICEECR" --force --region "$AWS_REGION"
+aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force --region "$AWS_REGION"
+
+#remove tenant application stack
 cd $APPLICATION_PLANE_INFRA_FOLDER || exit 
 terraform destroy --auto-approve
+
+#remove s3 state file
+aws s3 rm "s3://$TENANT_TERRAFORM_STATE_BUCKET_NAME" --recursive
 
 MAX_RETRIES=3
 COUNT=0
@@ -55,7 +52,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      done
 
      #run destroy again
-     timeout 1200 terraform destroy -var "aws_region=${AWS_REGION}" --auto-approve     
+     timeout 1800 terraform destroy -var "aws_region=${AWS_REGION}" --auto-approve     
 
      if [ $? -eq 0 ]; then
           echo "Terraform apply succeeded."    
@@ -67,15 +64,18 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      fi
 done
 
-#get cfn parameter from ssm
-CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
-
 STATUS="SUCCESS"
 REASON=""
 if [ "$SUCCESS" = false ]; then
      STATUS="FAILURE"
      REASON="Failed to delete resource managed by terraform. Go to Cloud9 to delete them manually"
 fi
+
+#get cfn parameter from ssm
+CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
+
+#remove ssm parameter
+#aws ssm delete-parameter --name "eks-saas-gitops-custom-resource-event"
 
 #set variables
 EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)

@@ -7,7 +7,7 @@ catch_error() {
      CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
      
      #set variables
-     STATUS="SUCCESS"
+     STATUS="FAILURE"
      EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)
      EVENT_REQUEST_ID=$(echo "$CFN_PARAMETER" | jq -r .RequestId)
      EVENT_LOGICAL_RESOURCE_ID=$(echo "$CFN_PARAMETER" | jq -r .LogicalResourceId)

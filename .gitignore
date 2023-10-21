@@ -40,4 +40,5 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+.kube/
 # End of https://www.toptal.com/developers/gitignore/api/terraform

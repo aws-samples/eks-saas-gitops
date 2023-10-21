@@ -8,20 +8,21 @@ ARGOWORKFLOWECR="argoworkflow-container"
 APPLICATIONHELMCHARTECR="gitops-saas/helm-tenant-chart"
 CONSUMERSERVICEECR="consumer-container"
 PRODUCERSERVICEECR="producer-container"
+VPC_NAME="eks-saas-gitops"
 
 #delete code-commit user ssh key
 user_info=$(aws iam list-ssh-public-keys --user-name "$IAM_USER_NAME" )
 key_ids=$(echo "$user_info" | jq -r '.SSHPublicKeys[]?.SSHPublicKeyId')
 for key_id in $key_ids; do
      echo "Deleting SSH Key: $key_id"
-     aws iam delete-ssh-public-key --user-name "$IAM_USER_NAME" --ssh-public-key-id "$key_id" --profile "$AWS_PROFILE"
+     aws iam delete-ssh-public-key --user-name "$IAM_USER_NAME" --ssh-public-key-id "$key_id"
 done
 
 # remove ecr repos
-aws ecr delete-repository --repository-name "$ARGOWORKFLOWECR" --force --region "$AWS_REGION"
-aws ecr delete-repository --repository-name "$APPLICATIONHELMCHARTECR" --force --region "$AWS_REGION"
-aws ecr delete-repository --repository-name "$CONSUMERSERVICEECR" --force --region "$AWS_REGION"
-aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force --region "$AWS_REGION"
+aws ecr delete-repository --repository-name "$ARGOWORKFLOWECR" --force 
+aws ecr delete-repository --repository-name "$APPLICATIONHELMCHARTECR" --force 
+aws ecr delete-repository --repository-name "$CONSUMERSERVICEECR" --force 
+aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force 
 
 # remove tenant application stack
 cd $APPLICATION_PLANE_INFRA_FOLDER || exit 
@@ -30,11 +31,19 @@ terraform destroy --auto-approve
 # remove s3 state file
 aws s3 rm "s3://$TENANT_TERRAFORM_STATE_BUCKET_NAME" --recursive
 
-# remove flux controlled components - to avoid orphan dependencies
+# remove flux controlled components - to avoid orphaned dependencies
 flux suspend hr argo-workflows
 helm uninstall argo-workflows -n argo-workflows
 flux suspend hr pool-1
 helm uninstall pool-1 -n pool-1
+
+#remove security groups created by the ALB ingress resources
+vpc_id=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$VPC_NAME" --query "Vpcs[0].VpcId" --output text)
+security_group_ids=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc_id" --query "SecurityGroups[].GroupId" --output text)
+for sg_id in $security_group_ids; do
+     echo "Deleting security group $sg_id"
+     aws ec2 delete-security-group --group-id "$sg_id"
+done
 
 MAX_RETRIES=3
 COUNT=0
@@ -73,15 +82,15 @@ done
 STATUS="SUCCESS"
 REASON=""
 if [ "$SUCCESS" = false ]; then
-     STATUS="FAILURE"
-     REASON="Failed to delete resource managed by terraform. Go to Cloud9 to delete them manually"
+     STATUS="FAILED"
+     REASON="Failed to delete resources managed by terraform. Go to Cloud9 to delete them manually"
 fi
 
 #get cfn parameter from ssm
 CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
 
 #remove ssm parameter
-#aws ssm delete-parameter --name "eks-saas-gitops-custom-resource-event"
+aws ssm delete-parameter --name "eks-saas-gitops-custom-resource-event"
 
 #set variables
 EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)

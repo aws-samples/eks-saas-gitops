@@ -178,7 +178,7 @@ Resources:
       LabIdeInstanceProfileArn:
         Fn::GetAtt:
         - C9InstanceProfile
-        - Arn
+        - Arn      
   C9BootstrapInstanceLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -193,6 +193,9 @@ Resources:
       Runtime: python3.9
       MemorySize: 256
       Timeout: 600
+      Environment:
+        Variables:
+          SSM_OUTPUT_BUCKET: !Ref C9OutputBucket
       Code:
         ZipFile: |
           from __future__ import print_function
@@ -207,6 +210,7 @@ Resources:
           logger = logging.getLogger()
           logger.setLevel(logging.INFO)
           aws_region = os.environ['AWS_REGION']
+          ssm_output_bucket = os.environ['SSM_OUTPUT_BUCKET']
 
           def get_instance(**kwargs):    
               ec2 = boto3.client('ec2')
@@ -217,7 +221,7 @@ Resources:
                           return instance
               raise Exception("no instance found") 
               
-          def run_ssm_command(target_user, c9_pid, ssm_command):
+          def run_ssm_command(target_user, c9_pid, ssm_command, s3_output_prefix):
               ssm = boto3.client('ssm', region_name=aws_region)  
 
               # Include the variable in the command as an environment variable
@@ -235,6 +239,8 @@ Resources:
                   Parameters=parameters,
                   TimeoutSeconds=3600,
                   Comment=ssm_command[:100]  # Truncate to 100 characters for comment
+                  OutputS3BucketName=ssm_output_bucket,
+                  OutputS3KeyPrefix=s3_output_prefix, 
               )
 
           def lambda_handler(event, context):
@@ -253,7 +259,7 @@ Resources:
                           Value=json.dumps(event),
                           Type='String'
                       )
-                      logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh')
+                      logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh', 'cleanupoutput')
                       
                       run_ssm_command('ec2-user', instance['InstanceId'], 'cd /home/ec2-user/environment/eks-saas-gitops-aws && chmod +x cleanup.sh && ./cleanup.sh')
 

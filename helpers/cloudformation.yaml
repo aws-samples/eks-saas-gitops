@@ -178,7 +178,7 @@ Resources:
       LabIdeInstanceProfileArn:
         Fn::GetAtt:
         - C9InstanceProfile
-        - Arn      
+        - Arn
   C9BootstrapInstanceLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -238,9 +238,9 @@ Resources:
                   DocumentName="AWS-RunShellScript",
                   Parameters=parameters,
                   TimeoutSeconds=3600,
-                  Comment=ssm_command[:100]  # Truncate to 100 characters for comment
+                  Comment=ssm_command[:100],  # Truncate to 100 characters for comment
                   OutputS3BucketName=ssm_output_bucket,
-                  OutputS3KeyPrefix=s3_output_prefix, 
+                  OutputS3KeyPrefix=s3_output_prefix
               )
 
           def lambda_handler(event, context):
@@ -259,9 +259,9 @@ Resources:
                           Value=json.dumps(event),
                           Type='String'
                       )
-                      logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh', 'cleanupoutput')
+                      logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh')
                       
-                      run_ssm_command('ec2-user', instance['InstanceId'], 'cd /home/ec2-user/environment/eks-saas-gitops-aws && chmod +x cleanup.sh && ./cleanup.sh')
+                      run_ssm_command('ec2-user', instance['InstanceId'], 'cd /home/ec2-user/environment/eks-saas-gitops-aws && chmod +x cleanup.sh && ./cleanup.sh', 'cleanupoutput')
 
                   if event['RequestType'] == 'Create':                                  
                       ec2 = boto3.client('ec2')

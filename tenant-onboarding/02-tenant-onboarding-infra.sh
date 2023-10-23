@@ -11,6 +11,7 @@ TENANT_TF_TEMPLATE_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/te
 
 TERRAFORM_SCRIPT_TEMPLATE_SILO="${TENANT_TF_TEMPLATE_PATH}/silo-template.tf.template"
 TERRAFORM_SCRIPT_TEMPLATE_HYBRID="${TENANT_TF_TEMPLATE_PATH}/hybrid-template.tf.template"
+TERRAFORM_SCRIPT_TEMPLATE_POOL="${TENANT_TF_TEMPLATE_PATH}/pool-template.tf.template"
 
 TERRAFORM_SCRIPT="${TENANT_TF_PATH}/${TENANT_ID}-${TENANT_MODEL}.tf"
 
@@ -19,7 +20,7 @@ if [ "$TENANT_MODEL" == "hybrid" ]; then
 elif [ "$TENANT_MODEL" == "silo" ]; then
     cp "$TERRAFORM_SCRIPT_TEMPLATE_SILO" "$TERRAFORM_SCRIPT"
 elif [ "$TENANT_MODEL" == "pool" ]; then
-    exit 0 # Exit with a success code, doesn't need to create infra
+    cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "$TERRAFORM_SCRIPT"
 fi
 
 echo "$TERRAFORM_SCRIPT"

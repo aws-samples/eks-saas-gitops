@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route("/consumer")
 def index():
     environment = os.environ.get("TENANT_ID")
-    microsservice_version = "1.0.0"
+    microsservice_version = "0.0.1"
     tenant_id = request.headers.get('tenantID')
 
     message = {"tenant_id": tenant_id, "environment": environment, "microsservice_version": microsservice_version, "microserice": "consumer"}

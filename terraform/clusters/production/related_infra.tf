@@ -291,3 +291,22 @@ resource "aws_iam_user_policy_attachment" "codecommit-user-attach" {
   user       = aws_iam_user.codecommit-user.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
 }
+
+################################################################################
+# CODE COMMIT for microsservices
+################################################################################
+module "codecommit-producer" {
+  source          = "lgallard/codecommit/aws"
+  version         = "0.2.1"
+  default_branch  = "main"
+  description     = "Producer microsservice repository"
+  repository_name = "producer"
+}
+
+module "codecommit-consumer" {
+  source          = "lgallard/codecommit/aws"
+  version         = "0.2.1"
+  default_branch  = "main"
+  description     = "Consumer microsservice repository"
+  repository_name = "consumer"
+}

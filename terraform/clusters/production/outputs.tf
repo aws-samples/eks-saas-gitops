@@ -105,3 +105,21 @@ output "aws_codecommit_clone_url_http" {
 output "aws_codecommit_clone_url_ssh" {
   value = module.codecommit-flux.clone_url_ssh
 }
+
+# Producer microsservice Clone URL
+output "aws_codecommit_producer_clone_url_http" {
+  value = module.codecommit-producer.clone_url_http
+}
+
+output "aws_codecommit_producer_clone_url_ssh" {
+  value = module.codecommit-producer.clone_url_ssh
+}
+
+# Consumer microsservice Clone URL
+output "aws_codecommit_consumer_clone_url_http" {
+  value = module.codecommit-consumer.clone_url_http
+}
+
+output "aws_codecommit_consumer_clone_url_ssh" {
+  value = module.codecommit-consumer.clone_url_ssh
+}

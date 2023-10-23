@@ -11,6 +11,7 @@ TENANT_TF_TEMPLATE_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/te
 
 TERRAFORM_SCRIPT_TEMPLATE_SILO="${TENANT_TF_TEMPLATE_PATH}/silo-template.tf.template"
 TERRAFORM_SCRIPT_TEMPLATE_HYBRID="${TENANT_TF_TEMPLATE_PATH}/hybrid-template.tf.template"
+TERRAFORM_SCRIPT_TEMPLATE_POOL="${TENANT_TF_TEMPLATE_PATH}/pool-template.tf.template"
 
 TERRAFORM_SCRIPT="${TENANT_TF_PATH}/${TENANT_ID}-${TENANT_MODEL}.tf"
 
@@ -19,26 +20,24 @@ if [ "$TENANT_MODEL" == "hybrid" ]; then
 elif [ "$TENANT_MODEL" == "silo" ]; then
     cp "$TERRAFORM_SCRIPT_TEMPLATE_SILO" "$TERRAFORM_SCRIPT"
 elif [ "$TENANT_MODEL" == "pool" ]; then
-    exit 0 # Exit with a success code, doesn't need to create infra
+    cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "$TERRAFORM_SCRIPT"
 fi
 
 echo "$TERRAFORM_SCRIPT"
 
+cat "$TERRAFORM_SCRIPT"
+
 # Perform sed replacements based on the platform
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i "" "s/__TENANT_ID__/$TENANT_ID/g" "$TERRAFORM_SCRIPT"
+    sed -i "" "s|__TENANT_ID__|$TENANT_ID|g" "$TERRAFORM_SCRIPT"
 else
-    sed -i "s/__TENANT_ID__/$TENANT_ID/g" "$TERRAFORM_SCRIPT"
+    sed -i "s|__TENANT_ID__|$TENANT_ID|g" "$TERRAFORM_SCRIPT"
 fi
 
 echo "Replacements completed successfully."
 echo "Running Terraform..."
 
 cd "$TENANT_TF_PATH"
-
-terraform init
-terraform plan
-terraform apply -auto-approve
 
 cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com
@@ -50,6 +49,10 @@ chmod 600 /root/.ssh/config
 
 git config --global user.email "${git_user_email}"
 git config --global user.name "${git_user_name}"
+
+terraform init
+terraform plan
+terraform apply -auto-approve
 
 git status
 git add .

@@ -2,6 +2,6 @@ locals {}
 
 # It will deploy the infraestructure for all the apps
 module "silo_tenant___TENANT_ID__" {
-  source = "../../../modules/tenant-apps"
+  source = "git::__MODULE_SOURCE__//terraform//modules//tenant-apps?ref=v0.0.1"
   bucket_name = "__TENANT_ID__"
 }

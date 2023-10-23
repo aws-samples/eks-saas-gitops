@@ -214,7 +214,10 @@ export APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER="/home/ec2-user/environment/eks-s
 sed -e "s|{AWS_REGION}|${AWS_REGION}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/providers.tf.template" > ${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf
 sed -i "s|{TERRAFORM_STATE_BUCKET}|${TENANT_TERRAFORM_STATE_BUCKET_NAME}|g" "${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf"
 
-cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_FOLDER}/pooled-1.tf"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/hybrid-template.tf.template"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/pool-template.tf.template"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/silo-template.tf.template"
 
 echo "Changing template files to terraform output values"
 
@@ -233,7 +236,7 @@ sed -i "s|{ARGO_WORKFLOW_BUCKET}|${ARGO_WORKFLOWS_BUCKET_NAME}|g" "${GITOPS_FOLD
 sed -e "s|{LB_CONTROLLER_IRSA}|${LB_CONTROLLER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
 sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
-sed -e "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
+sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
@@ -277,8 +280,16 @@ echo "First commit CodeCommit repository"
 
 git checkout -b main
 git add .
-git commit -m 'Initial Setup'
+git commit -m 'Initial Setup, v0.0.1'
 git push origin main
+
+# Creating TAG in CodeCommit repository
+LAST_COMMIT_ID=$(aws codecommit get-branch --repository-name eks-saas-gitops-aws --branch-name main | jq -r '.branch.commitId')
+git tag v0.0.1 $LAST_COMMIT_ID
+git push origin v0.0.1
+
+# Applying after push for being able to reference tenants terraform as a module
+cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
 
 echo "Configuring Flux and Argo to use SSH Key"
 cd /home/ec2-user/environment/

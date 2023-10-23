@@ -64,6 +64,8 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=aws_ecr_repository.consumer_container \
      -target=aws_ecr_repository.producer_container \
      -target=module.codecommit-flux \
+     -target=module.codecommit-producer \
+     -target=module.codecommit-consumer \
      -target=aws_iam_user.codecommit-user \
      -target=aws_iam_user_policy_attachment.codecommit-user-attach \
      -target=module.ebs_csi_irsa_role \
@@ -104,7 +106,11 @@ outputs=("argo_workflows_bucket_name"
           "karpenter_instance_profile" 
           "karpenter_irsa" 
           "lb_controller_irsa"
-          "tenant_terraform_state_bucket_name")
+          "tenant_terraform_state_bucket_name"
+          "aws_codecommit_producer_clone_url_http"
+          "aws_codecommit_producer_clone_url_ssh"
+          "aws_codecommit_consumer_clone_url_http"
+          "aws_codecommit_consumer_clone_url_ssh")
 
 for output in "${outputs[@]}"; do
      value=$(terraform output -raw $output)
@@ -123,6 +129,8 @@ aws iam upload-ssh-public-key --user-name codecommit-user --ssh-public-key-body 
 
 ssh_public_key_id=$(aws iam list-ssh-public-keys --user-name codecommit-user --query "SSHPublicKeys[0].SSHPublicKeyId" --output text)
 modified_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_CLONE_URL_SSH} | cut -d'/' -f3-)"
+producer_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_PRODUCER_CLONE_URL_SSH} | cut -d'/' -f3-)"
+consumer_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_CONSUMER_CLONE_URL_SSH} | cut -d'/' -f3-)"
 
 export CODECOMMIT_USER_ID=$(aws iam list-ssh-public-keys --user-name codecommit-user | jq -r '.SSHPublicKeys[0].SSHPublicKeyId')
 echo "export CODECOMMIT_USER_ID=${CODECOMMIT_USER_ID}" >> /home/ec2-user/.bashrc
@@ -131,6 +139,14 @@ echo "export CODECOMMIT_USER_ID=${CODECOMMIT_USER_ID}" >> /root/.bashrc
 export CLONE_URL_CODECOMMIT_USER=${modified_clone_url}
 echo "export CLONE_URL_CODECOMMIT_USER=${CLONE_URL_CODECOMMIT_USER}" >> /home/ec2-user/.bashrc
 echo "export CLONE_URL_CODECOMMIT_USER=${CLONE_URL_CODECOMMIT_USER}" >> /root/.bashrc
+
+export CLONE_URL_CODECOMMIT_USER_PRODUCER=${producer_clone_url}
+echo "export CLONE_URL_CODECOMMIT_USER_PRODUCER=${CLONE_URL_CODECOMMIT_USER_PRODUCER}" >> /home/ec2-user/.bashrc
+echo "export CLONE_URL_CODECOMMIT_USER_PRODUCER=${CLONE_URL_CODECOMMIT_USER_PRODUCER}" >> /root/.bashrc
+
+export CLONE_URL_CODECOMMIT_USER_CONSUMER=${consumer_clone_url}
+echo "export CLONE_URL_CODECOMMIT_USER_CONSUMER=${CLONE_URL_CODECOMMIT_USER_CONSUMER}" >> /home/ec2-user/.bashrc
+echo "export CLONE_URL_CODECOMMIT_USER_CONSUMER=${CLONE_URL_CODECOMMIT_USER_CONSUMER}" >> /root/.bashrc
 
 source /root/.bashrc
 
@@ -168,10 +184,26 @@ echo "Cloning CodeCommit repository and copying files"
 sleep 60
 
 git clone $CLONE_URL_CODECOMMIT_USER
+git clone $CLONE_URL_CODECOMMIT_USER_PRODUCER
+git clone $CLONE_URL_CODECOMMIT_USER_CONSUMER
 
+# Flux repository copy from public repo to CodeCommit
 cp -r /home/ec2-user/environment/eks-saas-gitops/* /home/ec2-user/environment/eks-saas-gitops-aws
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/eks-saas-gitops-aws/.gitignore
+
+# Producer microsservice copy repository
+cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/producer/* /home/ec2-user/environment/producer
+cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/producer/.gitignore
+cd /home/ec2-user/environment/producer/ && git checkout -b main && git add . && git commit -am "Added producer MS and configs" && git push origin main
+
+# Consumer microsservice copy repository
+cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/consumer/* /home/ec2-user/environment/consumer
+cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/consumer/.gitignore
+cd /home/ec2-user/environment/consumer/ && git checkout -b main && git add . && git commit -am "Added consumer MS and configs" && git push origin main
+
+# Removing GitHub repository
 rm -rf /home/ec2-user/environment/eks-saas-gitops
+cd /home/ec2-user/environment
 
 echo "Create pool-1 application infra"
 

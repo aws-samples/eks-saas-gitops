@@ -24,7 +24,7 @@ variable "repo_name" {
 }
 
 variable "branch_name" {
-  default = "master"
+  default = "main"
 }
 
 variable "codebuild_project" {

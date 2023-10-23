@@ -4,11 +4,6 @@ resource "aws_s3_bucket" "codeartifacts" {
   bucket = "codestack-artifacts-bucket-${random_uuid.uuid_2.result}"
 }
 
-resource "aws_s3_bucket_acl" "codeartifacts" {
-  bucket = aws_s3_bucket.codeartifacts.id
-  acl    = "private"
-}
-
 module "codebuild_producer_project" {
   source = "../../modules/codebuild"
   vpc_id = module.vpc.vpc_id

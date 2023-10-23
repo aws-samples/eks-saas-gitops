@@ -25,21 +25,19 @@ fi
 
 echo "$TERRAFORM_SCRIPT"
 
+cat "$TERRAFORM_SCRIPT"
+
 # Perform sed replacements based on the platform
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i "" "s/__TENANT_ID__/$TENANT_ID/g" "$TERRAFORM_SCRIPT"
+    sed -i "" "s|__TENANT_ID__|$TENANT_ID|g" "$TERRAFORM_SCRIPT"
 else
-    sed -i "s/__TENANT_ID__/$TENANT_ID/g" "$TERRAFORM_SCRIPT"
+    sed -i "s|__TENANT_ID__|$TENANT_ID|g" "$TERRAFORM_SCRIPT"
 fi
 
 echo "Replacements completed successfully."
 echo "Running Terraform..."
 
 cd "$TENANT_TF_PATH"
-
-terraform init
-terraform plan
-terraform apply -auto-approve
 
 cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com
@@ -51,6 +49,10 @@ chmod 600 /root/.ssh/config
 
 git config --global user.email "${git_user_email}"
 git config --global user.name "${git_user_name}"
+
+terraform init
+terraform plan
+terraform apply -auto-approve
 
 git status
 git add .

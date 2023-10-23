@@ -10,6 +10,7 @@ module "codebuild_producer_project" {
   codebuild_project_name = "producer-codebuild"
   private_subnet_list = module.vpc.private_subnets
   bucket_id = aws_s3_bucket.codeartifacts.id
+  repo_uri = aws_ecr_repository.producer_container.repository_url # Interpolated to buildspec.yml
 }
 
 module "codepipeline_producer" {

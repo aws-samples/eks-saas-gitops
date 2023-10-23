@@ -51,6 +51,11 @@ resource "aws_codebuild_project" "example" {
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
+
+    environment_variable {
+      name  = "REPOSITORY_URI"
+      value = var.repo_uri
+    }
   }
 
   logs_config {

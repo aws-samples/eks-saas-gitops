@@ -43,3 +43,5 @@ EOF
 }
 
 variable "bucket_id" {}
+
+variable "repo_uri" {}

@@ -7,7 +7,7 @@ catch_error() {
      CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
      
      #set variables
-     STATUS="SUCCESS"
+     STATUS="FAILED"
      EVENT_STACK_ID=$(echo "$CFN_PARAMETER" | jq -r .StackId)
      EVENT_REQUEST_ID=$(echo "$CFN_PARAMETER" | jq -r .RequestId)
      EVENT_LOGICAL_RESOURCE_ID=$(echo "$CFN_PARAMETER" | jq -r .LogicalResourceId)
@@ -306,6 +306,9 @@ flux reconcile helmrelease kubecost -nflux-system --kubeconfig /root/.kube/confi
 
 helm uninstall karpenter -nkarpenter --kubeconfig /root/.kube/config
 flux reconcile helmrelease karpenter -nflux-system --kubeconfig /root/.kube/config
+
+helm uninstall metrics-server -nkube-system --kubeconfig /root/.kube/config
+flux reconcile helmrelease metrics-server -nflux-system --kubeconfig /root/.kube/config
 
 echo "Changing permissions for ec2-user"
 chown -R ec2-user:ec2-user /home/ec2-user/environment/

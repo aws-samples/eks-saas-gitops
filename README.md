@@ -36,6 +36,7 @@ aws cloudformation create-stack \
 --parameters ParameterKey=C9EnvType,ParameterValue=self \
 --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
 ```
+
 - `YOUR_CHOICE_HERE`: Use either `self` or `event-engine` based on your specific installation requirement.
 
 ### Step 4: Verify Stack Creation
@@ -55,6 +56,14 @@ To access your newly created Cloud9 environment:
 1. Go to the [AWS Cloud9 Console](https://console.aws.amazon.com/cloud9/).
 2. Find your Cloud9 instance listed under "Your environments."
 3. Click "Open IDE" to start working in your Cloud9 environment.
+
+## Removing the stack
+
+To remove the resources that have been created for this workshop, execute the following AWS CLI command:
+
+```bash
+aws cloudformation delete-stack --stack-name "eks-saas-gitops"
+```
 
 ## Security
 

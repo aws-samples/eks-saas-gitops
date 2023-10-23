@@ -214,7 +214,10 @@ export APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER="/home/ec2-user/environment/eks-s
 sed -e "s|{AWS_REGION}|${AWS_REGION}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/providers.tf.template" > ${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf
 sed -i "s|{TERRAFORM_STATE_BUCKET}|${TENANT_TERRAFORM_STATE_BUCKET_NAME}|g" "${APPLICATION_PLANE_INFRA_FOLDER}/providers.tf"
 
-cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_FOLDER}/pooled-1.tf"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/hybrid-template.tf.template"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/pool-template.tf.template"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/silo-template.tf.template"
 
 echo "Changing template files to terraform output values"
 
@@ -277,8 +280,16 @@ echo "First commit CodeCommit repository"
 
 git checkout -b main
 git add .
-git commit -m 'Initial Setup'
+git commit -m 'Initial Setup, v0.0.1'
 git push origin main
+
+# Creating TAG in CodeCommit repository
+LAST_COMMIT_ID=$(aws codecommit get-branch --repository-name eks-saas-gitops-aws --branch-name main | jq -r '.branch.commitId')
+git tag v0.0.1 $LAST_COMMIT_ID
+git push origin v0.0.1
+
+# Applying after push for being able to reference tenants terraform as a module
+cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
 
 echo "Configuring Flux and Argo to use SSH Key"
 cd /home/ec2-user/environment/

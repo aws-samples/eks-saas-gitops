@@ -1,11 +1,22 @@
-variable "cluster_endpoint" {}
+variable "cluster_endpoint" {
+  description = "Amazon EKS Cluster endpoint URL"
+  type        = string
+}
 
-variable "ca" {}
+variable "ca" {
+  description = "Amazon EKS Certificate authority"
+  type        = string
+}
 
-variable "token" {}
+variable "token" {
+  description = "Amazon EKS Cluster token"
+  type        = string
+}
 
 variable "git_branch" {
-  default = "main"
+  description = "Git branch name to be used by Flux"
+  type        = string
+  default     = "main"
 }
 
 # variable "git_username" {
@@ -15,48 +26,71 @@ variable "git_branch" {
 # variable "git_password" {
 # }
 
-variable "git_url" {}
+variable "git_url" {
+  description = "Git URL to be used by Flux"
+  type        = string
+}
 
 variable "namespace" {
-  default = "flux-system"
+  description = "Flux default Kubernetes namespace"
+  type        = string
+  default     = "flux-system"
 }
 
 variable "activate_helm_controller" {
-  default = true
+  description = "Defines if Helm controller should be deployed"
+  type        = bool
+  default     = true
 }
 
 variable "activate_image_automation_controller" {
-  default = false
+  description = "Defines if image automation controller should be activated"
+  type        = bool
+  default     = false
 }
 
 variable "image_automation_controller_sa_annotations" {
-  default = ""
+  description = "Defines image automation controller SA annotations"
+  type        = string
+  default     = ""
 }
 
 variable "activate_image_reflection_controller" {
-  default = false
+  description = "Defines if image automation controller should be activated"
+  type        = bool
+  default     = false
 }
 
 variable "image_reflection_controller_sa_annotations" {
-  default = ""
+  description = "Defines image reflection controller SA annotations"
+  type        = string
+  default     = ""
 }
 
 variable "activate_kustomize_controller" {
-  default = true
+  description = "Defines if Kustomize controller should be activated"
+  type        = bool
+  default     = true
 }
 
 variable "activate_notification_controller" {
-  default = true
+  description = "Defines if notification controller should be activated"
+  type        = bool
+  default     = true
 }
 
 variable "activate_source_controller" {
-  default = true
+  description = "Defines if source controller should be activated"
+  type        = bool
+  default     = true
 }
 
 variable "kustomization_path" {
-  
+  default = "Path for Kustomization directory"
+  type    = string
 }
 
 variable "values_path" {
-  
+  description = "Path for Helm values"
+  type        = string
 }

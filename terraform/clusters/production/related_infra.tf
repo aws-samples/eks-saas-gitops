@@ -213,6 +213,7 @@ resource "aws_ecr_repository" "tenant_helm_chart" {
     scan_on_push = true
   }
 }
+
 resource "aws_ecr_repository" "argoworkflow_container" {
   name                 = var.argoworkflow_container_repo
   image_tag_mutability = "MUTABLE"
@@ -221,6 +222,7 @@ resource "aws_ecr_repository" "argoworkflow_container" {
     scan_on_push = true
   }
 }
+
 resource "aws_ecr_repository" "consumer_container" {
   name                 = var.consumer_container_repo
   image_tag_mutability = "MUTABLE"
@@ -229,6 +231,7 @@ resource "aws_ecr_repository" "consumer_container" {
     scan_on_push = true
   }
 }
+
 resource "aws_ecr_repository" "producer_container" {
   name                 = var.producer_container_repo
   image_tag_mutability = "MUTABLE"
@@ -237,8 +240,6 @@ resource "aws_ecr_repository" "producer_container" {
     scan_on_push = true
   }
 }
-
-
 
 ################################################################################
 # EBS CSI Driver IRSA
@@ -258,11 +259,9 @@ module "ebs_csi_irsa_role" {
   }
 }
 
-
 ################################################################################
 # TERRAFORM STATE TENANT S3_BUCKET
 ################################################################################
-
 # To store argo artifacts
 resource "aws_s3_bucket" "tenant-terraform-state-bucket" {
   bucket = "saasgitops-terraform-${random_uuid.uuid.result}"

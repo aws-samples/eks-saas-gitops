@@ -1,3 +1,6 @@
+################################################################################
+# IAM Roles
+################################################################################
 resource "aws_iam_role" "codebuild" {
   name = "codebuildrole-${var.codebuild_project_name}"
 
@@ -18,14 +21,17 @@ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  role = aws_iam_role.codebuild.name
+  role   = aws_iam_role.codebuild.name
   policy = var.iam_policy
 }
 
+################################################################################
+# Security Group
+################################################################################
 resource "aws_security_group" "code_build_default" {
   name        = "${var.codebuild_project_name}-sg"
   description = "Managed by Terraform"
-  vpc_id      = "${var.vpc_id}"
+  vpc_id      = var.vpc_id
 
   egress {
     from_port   = 0
@@ -35,6 +41,9 @@ resource "aws_security_group" "code_build_default" {
   }
 }
 
+################################################################################
+# AWS Codebuild
+################################################################################
 resource "aws_codebuild_project" "example" {
   name          = var.codebuild_project_name
   description   = var.codebuild_description

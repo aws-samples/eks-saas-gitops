@@ -1,19 +1,18 @@
 locals {
   name   = var.name
-  region = var.aws_region
+  region = coalesce(var.aws_region, data.aws_region.current.name)
 
   vpc_cidr = var.vpc_cidr
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
   tags = {
-    Blueprint  = var.name
+    Blueprint = var.name
   }
 }
 
 ################################################################################
 # Supporting Resources
 ################################################################################
-
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 4.0"
@@ -41,11 +40,9 @@ module "vpc" {
   tags = local.tags
 }
 
-
 ################################################################################
 # Cluster
 ################################################################################
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 19.12"
@@ -123,8 +120,3 @@ module "flux_v2" {
   kustomization_path = var.kustomization_path
   values_path        = var.values_path
 }
-
-
-
-
-

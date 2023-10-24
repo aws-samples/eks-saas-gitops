@@ -1,45 +1,71 @@
 variable "name" {
-  default = "eks-saas-gitops"
+  description = "Stack name"
+  type        = string
+  default     = "eks-saas-gitops"
 }
 
-variable "aws_region" {}
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = null
+}
 
 variable "vpc_cidr" {
-  default = "10.35.0.0/16"
+  description = "Amazon VPC CIDR Block"
+  type        = string
+  default     = "10.35.0.0/16"
 }
 
 variable "cluster_version" {
-  default = "1.27"
+  description = "Amazon EKS Cluster version"
+  type        = string
+  default     = "1.27"
 }
 
 variable "git_branch" {
-  default = "main"
+  description = "Branch of the Git repository"
+  type        = string
+  default     = "main"
 }
 
 variable "git_url" {
-  default = ""
+  description = "URL for the Git repository"
+  type        = string
+  default     = ""
 }
 
 variable "kustomization_path" {
-  default = "gitops/clusters/production"
+  description = "Path for Kustomization tool"
+  type        = string
+  default     = "gitops/clusters/production"
 }
 
 variable "values_path" {
-  default = "./values.yaml"
+  description = "Path for Helm chart values"
+  type        = string
+  default     = "./values.yaml"
 }
 
 variable "tenant_helm_chart_repo" {
-  default = "gitops-saas/helm-tenant-chart"
+  description = "Repository for Tenant Helm chart"
+  type        = string
+  default     = "gitops-saas/helm-tenant-chart"
 }
 
 variable "argoworkflow_container_repo" {
-  default = "argoworkflow-container"
+  description = "Repository for Argo Workflows container image"
+  type        = string
+  default     = "argoworkflow-container"
 }
 
 variable "producer_container_repo" {
-  default = "producer-container"
+  description = "Repository for Producer container image"
+  type        = string
+  default     = "producer-container"
 }
 
 variable "consumer_container_repo" {
-  default = "consumer-container"
+  description = "Repository for Consumer container image"
+  type        = string
+  default     = "consumer-container"
 }

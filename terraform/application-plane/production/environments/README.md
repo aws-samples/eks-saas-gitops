@@ -1,3 +1,5 @@
+# Application plane pattern
+
 ## Requirements
 
 No requirements.
@@ -10,7 +12,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_pooled_1"></a> [pooled\_1](#module\_pooled\_1) | ../../../modules/tenant-apps | n/a |
+| <a name="module_pooled_1"></a> [pooled\_1](#module\_pooled\_1) | git::__MODULE_SOURCE__//terraform//modules//tenant-apps | v0.0.1 |
 
 ## Resources
 

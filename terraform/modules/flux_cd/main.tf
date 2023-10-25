@@ -24,7 +24,7 @@ resource "helm_release" "flux2-sync" {
   repository = "https://fluxcd-community.github.io/helm-charts"
   chart      = "flux2-sync"
 
-  values = ["${file("${var.values_path}")}"]
+  values = [file(var.values_path)]
 
   set {
     name  = "secret.create"

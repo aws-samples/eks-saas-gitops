@@ -26,11 +26,11 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "security_group_ids_list" {
-  description = "List of Security Groups"
-  type        = list(string)
-  default     = []
-}
+# variable "security_group_ids_list" {
+#   description = "List of Security Groups"
+#   type        = list(string)
+#   default     = []
+# }
 
 variable "tags" {
   description = "Tags"
@@ -40,7 +40,7 @@ variable "tags" {
 
 variable "iam_policy" {
   description = "AWS Codebuild IAM Policy"
-  type = any
+  type        = any
   default     = <<EOF
 {
   "Version": "2012-10-17",

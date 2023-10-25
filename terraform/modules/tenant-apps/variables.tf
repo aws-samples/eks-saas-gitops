@@ -1,7 +1,6 @@
-variable "bucket_name" {
-  description = "Amazon S3 bucket name"
+variable "tenant_id" {
+  description = "Tentant identification"
   type        = string
-  default     = ""
 }
 
 variable "enable_producer" {

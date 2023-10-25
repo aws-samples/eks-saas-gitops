@@ -184,7 +184,7 @@ module "argo_events_eks_role" {
 ################################################################################
 # LB Controller IRSA
 ################################################################################
-module "lb-controller-irsa" {
+module "lb_controller_irsa" {
   source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   role_name = "lb-controller-irsa"
 
@@ -274,7 +274,7 @@ resource "aws_s3_bucket" "tenant-terraform-state-bucket" {
 ################################################################################
 # CODE COMMIT needs for flux
 ################################################################################
-module "codecommit-flux" {
+module "codecommit_flux" {
   source          = "lgallard/codecommit/aws"
   version         = "0.2.1"
   default_branch  = "main"
@@ -282,30 +282,11 @@ module "codecommit-flux" {
   repository_name = "eks-saas-gitops-aws"
 }
 
-resource "aws_iam_user" "codecommit-user" {
+resource "aws_iam_user" "codecommit_user" {
   name = "codecommit-user"
 }
 
-resource "aws_iam_user_policy_attachment" "codecommit-user-attach" {
-  user       = aws_iam_user.codecommit-user.name
+resource "aws_iam_user_policy_attachment" "codecommit_user_attach" {
+  user       = aws_iam_user.codecommit_user.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
-}
-
-################################################################################
-# CODE COMMIT for microsservices
-################################################################################
-module "codecommit-producer" {
-  source          = "lgallard/codecommit/aws"
-  version         = "0.2.1"
-  default_branch  = "main"
-  description     = "Producer microsservice repository"
-  repository_name = "producer"
-}
-
-module "codecommit-consumer" {
-  source          = "lgallard/codecommit/aws"
-  version         = "0.2.1"
-  default_branch  = "main"
-  description     = "Consumer microsservice repository"
-  repository_name = "consumer"
 }

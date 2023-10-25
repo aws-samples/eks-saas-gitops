@@ -7,10 +7,10 @@ resource "random_string" "random_suffix" {
 # PRODUCER INFRAESTRUCTURE
 resource "aws_s3_bucket" "producer_bucket" {
   count  = var.enable_producer == true ? 1 : 0
-  bucket = "producer-${var.bucket_name}-${random_string.random_suffix.result}"
+  bucket = "producer-${var.tenant_id}-${random_string.random_suffix.result}"
 
   tags = {
-    Name = var.bucket_name
+    Name = var.tenant_id
   }
 }
 
@@ -23,10 +23,10 @@ resource "aws_s3_bucket_acl" "producer" {
 # CONSUMER INFRAESTRUCTURE
 resource "aws_s3_bucket" "consumer_bucket" {
   count  = var.enable_consumer == true ? 1 : 0
-  bucket = "consumer-${var.bucket_name}-${random_string.random_suffix.result}"
+  bucket = "consumer-${var.tenant_id}-${random_string.random_suffix.result}"
 
   tags = {
-    Name = var.bucket_name
+    Name = var.tenant_id
   }
 }
 

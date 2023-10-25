@@ -72,7 +72,7 @@ output "argo_events_irsa" {
 ################
 output "lb_controller_irsa" {
   description = "IAM Role for Load Balancer Controller Service Account"
-  value       = module.lb-controller-irsa.iam_role_arn
+  value       = module.lb_controller_irsa.iam_role_arn
 }
 
 ##################
@@ -112,32 +112,32 @@ output "tenant_terraform_state_bucket_name" {
 #####################
 output "aws_codecommit_clone_url_http" {
   description = "AWS CodeCommit HTTP based clone URL"
-  value       = module.codecommit-flux.clone_url_http
+  value       = module.codecommit_flux.clone_url_http
 }
 
 output "aws_codecommit_clone_url_ssh" {
   description = "AWS CodeCommit SSH based clone URL"
-  value       = module.codecommit-flux.clone_url_ssh
+  value       = module.codecommit_flux.clone_url_ssh
 }
 
 # Producer microsservice Clone URL
 output "aws_codecommit_producer_clone_url_http" {
   description = "AWS CodeCommit Producer repo HTTP based clone URL"
-  value       = module.codecommit-producer.clone_url_http
+  value       = module.codecommit_producer.clone_url_http
 }
 
 output "aws_codecommit_producer_clone_url_ssh" {
   description = "AWS CodeCommit Producer repo SSH based clone URL"
-  value       = module.codecommit-producer.clone_url_ssh
+  value       = module.codecommit_producer.clone_url_ssh
 }
 
 # Consumer microsservice Clone URL
 output "aws_codecommit_consumer_clone_url_http" {
   description = "AWS CodeCommit Consumer repo HTTP based clone URL"
-  value       = module.codecommit-consumer.clone_url_http
+  value       = module.codecommit_consumer.clone_url_http
 }
 
 output "aws_codecommit_consumer_clone_url_ssh" {
   description = "AWS CodeCommit Consumer repo SSH based clone URL"
-  value       = module.codecommit-consumer.clone_url_ssh
+  value       = module.codecommit_consumer.clone_url_ssh
 }

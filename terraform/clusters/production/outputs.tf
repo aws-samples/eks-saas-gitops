@@ -141,3 +141,15 @@ output "aws_codecommit_consumer_clone_url_ssh" {
   description = "AWS CodeCommit Consumer repo SSH based clone URL"
   value       = module.codecommit_consumer.clone_url_ssh
 }
+
+# Payments microsservice Clone URL
+
+output "aws_codecommit_payments_clone_url_http" {
+  description = "AWS CodeCommit payments repo HTTP based clone URL"
+  value       = module.codecommit_payments.clone_url_http
+}
+
+output "aws_codecommit_payments_clone_url_ssh" {
+  description = "AWS CodeCommit payments repo SSH based clone URL"
+  value       = module.codecommit_payments.clone_url_ssh
+}

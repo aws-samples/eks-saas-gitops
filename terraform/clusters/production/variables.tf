@@ -69,3 +69,9 @@ variable "consumer_container_repo" {
   type        = string
   default     = "consumer-container"
 }
+
+variable "payments_container_repo" {
+  description = "Repository for Payments container image"
+  type        = string
+  default     = "payments-container"
+}

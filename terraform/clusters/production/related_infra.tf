@@ -74,7 +74,8 @@ resource "aws_iam_instance_profile" "karpenter_instance_profile" {
 # Karpenter IRSA
 ################################################################################
 module "karpenter_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
 
   role_name                          = "karpenter_controller"
   attach_karpenter_controller_policy = true
@@ -132,7 +133,9 @@ resource "aws_iam_policy_attachment" "karpenter_policy_attach" {
 # Argo Workflows needs
 ################################################################################
 module "argo_workflows_eks_role" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "argo-workflows-irsa"
 
   # TODO: Change to specific policy
@@ -165,7 +168,9 @@ resource "aws_sqs_queue" "argoworkflows_queue" {
 }
 
 module "argo_events_eks_role" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "argo-events-irsa"
 
   # TODO: Change to specific policy
@@ -185,7 +190,9 @@ module "argo_events_eks_role" {
 # LB Controller IRSA
 ################################################################################
 module "lb_controller_irsa" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "lb-controller-irsa"
 
   # TODO: Change to specific policy
@@ -245,7 +252,8 @@ resource "aws_ecr_repository" "producer_container" {
 # EBS CSI Driver IRSA
 ################################################################################
 module "ebs_csi_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
 
   role_name = "ebs-csi"
 

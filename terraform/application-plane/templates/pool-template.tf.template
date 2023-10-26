@@ -4,5 +4,5 @@ module "pool_tenant___TENANT_ID__" {
   tenant_id       = "__TENANT_ID__"
   enable_consumer = false
   enable_producer = false
-  enable_producer = false
+  enable_payments = false
 }

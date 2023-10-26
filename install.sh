@@ -66,6 +66,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=module.codecommit-flux \
      -target=module.codecommit-producer \
      -target=module.codecommit-consumer \
+     -target=module.codecommit-payments \
      -target=aws_iam_user.codecommit-user \
      -target=aws_iam_user_policy_attachment.codecommit-user-attach \
      -target=module.ebs_csi_irsa_role \
@@ -110,7 +111,9 @@ outputs=("argo_workflows_bucket_name"
           "aws_codecommit_producer_clone_url_http"
           "aws_codecommit_producer_clone_url_ssh"
           "aws_codecommit_consumer_clone_url_http"
-          "aws_codecommit_consumer_clone_url_ssh")
+          "aws_codecommit_consumer_clone_url_ssh"
+          "aws_codecommit_payments_clone_url_ssh"
+          "aws_codecommit_payments_clone_url_http")
 
 for output in "${outputs[@]}"; do
      value=$(terraform output -raw $output)
@@ -131,6 +134,7 @@ ssh_public_key_id=$(aws iam list-ssh-public-keys --user-name codecommit-user --q
 modified_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_CLONE_URL_SSH} | cut -d'/' -f3-)"
 producer_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_PRODUCER_CLONE_URL_SSH} | cut -d'/' -f3-)"
 consumer_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_CONSUMER_CLONE_URL_SSH} | cut -d'/' -f3-)"
+payments_clone_url="ssh://${ssh_public_key_id}@$(echo ${AWS_CODECOMMIT_PAYMENTS_CLONE_URL_SSH} | cut -d'/' -f3-)"
 
 export CODECOMMIT_USER_ID=$(aws iam list-ssh-public-keys --user-name codecommit-user | jq -r '.SSHPublicKeys[0].SSHPublicKeyId')
 echo "export CODECOMMIT_USER_ID=${CODECOMMIT_USER_ID}" >> /home/ec2-user/.bashrc
@@ -147,6 +151,10 @@ echo "export CLONE_URL_CODECOMMIT_USER_PRODUCER=${CLONE_URL_CODECOMMIT_USER_PROD
 export CLONE_URL_CODECOMMIT_USER_CONSUMER=${consumer_clone_url}
 echo "export CLONE_URL_CODECOMMIT_USER_CONSUMER=${CLONE_URL_CODECOMMIT_USER_CONSUMER}" >> /home/ec2-user/.bashrc
 echo "export CLONE_URL_CODECOMMIT_USER_CONSUMER=${CLONE_URL_CODECOMMIT_USER_CONSUMER}" >> /root/.bashrc
+
+export CLONE_URL_CODECOMMIT_USER_PAYMENTS=${payments_clone_url}
+echo "export CLONE_URL_CODECOMMIT_USER_PAYMENTS=${CLONE_URL_CODECOMMIT_USER_PAYMENTS}" >> /home/ec2-user/.bashrc
+echo "export CLONE_URL_CODECOMMIT_USER_PAYMENTS=${CLONE_URL_CODECOMMIT_USER_PAYMENTS}" >> /root/.bashrc
 
 source /root/.bashrc
 
@@ -186,6 +194,7 @@ sleep 60
 git clone $CLONE_URL_CODECOMMIT_USER
 git clone $CLONE_URL_CODECOMMIT_USER_PRODUCER
 git clone $CLONE_URL_CODECOMMIT_USER_CONSUMER
+git clone $CLONE_URL_CODECOMMIT_USER_PAYMENTS
 
 # Flux repository copy from public repo to CodeCommit
 cp -r /home/ec2-user/environment/eks-saas-gitops/* /home/ec2-user/environment/eks-saas-gitops-aws
@@ -200,6 +209,11 @@ cd /home/ec2-user/environment/producer/ && git checkout -b main && git add . && 
 cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/consumer/* /home/ec2-user/environment/consumer
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/consumer/.gitignore
 cd /home/ec2-user/environment/consumer/ && git checkout -b main && git add . && git commit -am "Added consumer MS and configs" && git push origin main
+
+# Payments microsservice copy repository
+cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/payments/* /home/ec2-user/environment/payments
+cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/payments/.gitignore
+cd /home/ec2-user/environment/payments/ && git checkout -b main && git add . && git commit -am "Added payments MS and configs" && git push origin main
 
 # Removing GitHub repository
 rm -rf /home/ec2-user/environment/eks-saas-gitops

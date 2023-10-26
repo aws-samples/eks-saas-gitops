@@ -18,7 +18,6 @@ resource "aws_s3_bucket_acl" "producer" {
   bucket = aws_s3_bucket.producer_bucket[0].id
 }
 
-# TBD: ADD IRSA
 
 # CONSUMER INFRAESTRUCTURE
 resource "aws_s3_bucket" "consumer_bucket" {
@@ -34,4 +33,17 @@ resource "aws_s3_bucket_acl" "consumer" {
   bucket = aws_s3_bucket.consumer_bucket[0].id
 }
 
-# TBD: ADD IRSA
+
+# PAYMENTS INFRAESTRUCTURE
+# resource "aws_s3_bucket" "payments_bucket" {
+#   count  = var.enable_payments == true ? 1 : 0
+#   bucket = "payments-${var.tenant_id}-${random_string.random_suffix.result}"
+
+#   tags = {
+#     Name = var.tenant_id
+#   }
+# }
+
+# resource "aws_s3_bucket_acl" "payments" {
+#   bucket = aws_s3_bucket.payments_bucket[0].id
+# }

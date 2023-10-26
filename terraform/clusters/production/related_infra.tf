@@ -248,6 +248,15 @@ resource "aws_ecr_repository" "producer_container" {
   }
 }
 
+resource "aws_ecr_repository" "payments_container" {
+  name                 = var.payments_container_repo
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
 ################################################################################
 # EBS CSI Driver IRSA
 ################################################################################

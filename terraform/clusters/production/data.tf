@@ -3,3 +3,5 @@ data "aws_eks_cluster_auth" "this" {
 }
 
 data "aws_availability_zones" "available" {}
+
+data "aws_region" "current" {}

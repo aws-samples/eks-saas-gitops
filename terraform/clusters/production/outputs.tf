@@ -22,104 +22,122 @@ output "cluster_name" {
 }
 
 output "cluster_endpoint" {
-  value = module.eks.cluster_endpoint
+  description = "Amazon EKS Cluster Endpoint address"
+  value       = module.eks.cluster_endpoint
 }
 
 output "cluster_primary_security_group_id" {
-  value = module.eks.cluster_primary_security_group_id
+  description = "Amazon EKS Cluster Security Group ID"
+  value       = module.eks.cluster_primary_security_group_id
 }
 
 ################################################################################
 # Karpenter
 ################################################################################
 output "karpenter_irsa" {
-  value = module.karpenter_irsa_role.iam_role_arn
+  description = "IAM Role for Karpenter Service Account"
+  value       = module.karpenter_irsa_role.iam_role_arn
 }
 
 output "karpenter_instance_profile" {
-  value = aws_iam_instance_profile.karpenter_instance_profile.name
+  description = "Instance profile that will be used on Karpenter provisioned instances"
+  value       = aws_iam_instance_profile.karpenter_instance_profile.name
 }
 
 ################################################################################
 # Argo Workflows
 ################################################################################
 output "argo_workflows_irsa" {
-  value = module.argo_workflows_eks_role.iam_role_arn
+  description = "IAM Role for Argo Workflows Service Account"
+  value       = module.argo_workflows_eks_role.iam_role_arn
 }
 
 output "argo_workflows_bucket_name" {
-  value = aws_s3_bucket.argo-artifacts.id
+  description = "Amazon S3 bucket that Argo Workflows will store its artifacts"
+  value       = aws_s3_bucket.argo-artifacts.id
 }
 
 output "argo_workflows_sqs_url" {
-  value = aws_sqs_queue.argoworkflows_queue.url
+  description = "Amazon SQS queue URL"
+  value       = aws_sqs_queue.argoworkflows_queue.url
 }
 
 output "argo_events_irsa" {
-  value = module.argo_events_eks_role.iam_role_arn
+  description = "IAM Role for Argo Events Service Account"
+  value       = module.argo_events_eks_role.iam_role_arn
 }
 
 ################
 # LB Controller
 ################
-
 output "lb_controller_irsa" {
-  value = module.lb-controller-irsa.iam_role_arn
+  description = "IAM Role for Load Balancer Controller Service Account"
+  value       = module.lb_controller_irsa.iam_role_arn
 }
 
 ##################
 # ECR Helm Chart
 ##################
-
 output "ecr_helm_chart_url" {
-  value = aws_ecr_repository.tenant_helm_chart.repository_url
+  description = "URL for Amazon ECR stored chart"
+  value       = aws_ecr_repository.tenant_helm_chart.repository_url
 }
 
 output "ecr_argoworkflow_container" {
-  value = aws_ecr_repository.argoworkflow_container.repository_url
+  description = "URL for Amazon ECR stored Argo Workflows container"
+  value       = aws_ecr_repository.argoworkflow_container.repository_url
 }
 
 output "ecr_consumer_container" {
-  value = aws_ecr_repository.consumer_container.repository_url
+  description = "URL for Amazon ECR stored Consumer container"
+  value       = aws_ecr_repository.consumer_container.repository_url
+
 }
 
 output "ecr_producer_container" {
-  value = aws_ecr_repository.producer_container.repository_url
+  description = "URL for Amazon ECR stored Producer container"
+  value       = aws_ecr_repository.producer_container.repository_url
 }
 
 #####################
 # S3 TENANT STATE TF
 #####################
 output "tenant_terraform_state_bucket_name" {
-  value = aws_s3_bucket.tenant-terraform-state-bucket.id
+  description = "Amazon S3 bucket name for Terraform state"
+  value       = aws_s3_bucket.tenant-terraform-state-bucket.id
 }
 
 #####################
 # Code Commit Outputs
 #####################
-
 output "aws_codecommit_clone_url_http" {
-  value = module.codecommit-flux.clone_url_http
+  description = "AWS CodeCommit HTTP based clone URL"
+  value       = module.codecommit_flux.clone_url_http
 }
 
 output "aws_codecommit_clone_url_ssh" {
-  value = module.codecommit-flux.clone_url_ssh
+  description = "AWS CodeCommit SSH based clone URL"
+  value       = module.codecommit_flux.clone_url_ssh
 }
 
 # Producer microsservice Clone URL
 output "aws_codecommit_producer_clone_url_http" {
-  value = module.codecommit-producer.clone_url_http
+  description = "AWS CodeCommit Producer repo HTTP based clone URL"
+  value       = module.codecommit_producer.clone_url_http
 }
 
 output "aws_codecommit_producer_clone_url_ssh" {
-  value = module.codecommit-producer.clone_url_ssh
+  description = "AWS CodeCommit Producer repo SSH based clone URL"
+  value       = module.codecommit_producer.clone_url_ssh
 }
 
 # Consumer microsservice Clone URL
 output "aws_codecommit_consumer_clone_url_http" {
-  value = module.codecommit-consumer.clone_url_http
+  description = "AWS CodeCommit Consumer repo HTTP based clone URL"
+  value       = module.codecommit_consumer.clone_url_http
 }
 
 output "aws_codecommit_consumer_clone_url_ssh" {
-  value = module.codecommit-consumer.clone_url_ssh
+  description = "AWS CodeCommit Consumer repo SSH based clone URL"
+  value       = module.codecommit_consumer.clone_url_ssh
 }

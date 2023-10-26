@@ -1,3 +1,6 @@
+################################################################################
+# IAM Roles
+################################################################################
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipelinerole-${var.pipeline_name}"
 
@@ -24,6 +27,9 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   policy = var.iam_policy
 }
 
+################################################################################
+# AWS Codepipeline
+################################################################################
 resource "aws_codepipeline" "pipeline" {
   name     = var.pipeline_name
   role_arn = aws_iam_role.codepipeline_role.arn
@@ -41,15 +47,15 @@ resource "aws_codepipeline" "pipeline" {
       category         = "Source"
       owner            = "AWS"
       provider         = "CodeCommit"
-      version         = "1"
+      version          = "1"
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
         RepositoryName = var.repo_name //MUST BE the name of the your codecommit repo
-        BranchName = var.branch_name
+        BranchName     = var.branch_name
       }
     }
-  }    
+  }
 
   stage {
     name = "Build"
@@ -69,4 +75,3 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 }
-

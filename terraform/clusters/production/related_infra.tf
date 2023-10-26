@@ -74,7 +74,8 @@ resource "aws_iam_instance_profile" "karpenter_instance_profile" {
 # Karpenter IRSA
 ################################################################################
 module "karpenter_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
 
   role_name                          = "karpenter_controller"
   attach_karpenter_controller_policy = true
@@ -132,7 +133,9 @@ resource "aws_iam_policy_attachment" "karpenter_policy_attach" {
 # Argo Workflows needs
 ################################################################################
 module "argo_workflows_eks_role" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "argo-workflows-irsa"
 
   # TODO: Change to specific policy
@@ -165,7 +168,9 @@ resource "aws_sqs_queue" "argoworkflows_queue" {
 }
 
 module "argo_events_eks_role" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "argo-events-irsa"
 
   # TODO: Change to specific policy
@@ -184,8 +189,10 @@ module "argo_events_eks_role" {
 ################################################################################
 # LB Controller IRSA
 ################################################################################
-module "lb-controller-irsa" {
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+module "lb_controller_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "lb-controller-irsa"
 
   # TODO: Change to specific policy
@@ -213,6 +220,7 @@ resource "aws_ecr_repository" "tenant_helm_chart" {
     scan_on_push = true
   }
 }
+
 resource "aws_ecr_repository" "argoworkflow_container" {
   name                 = var.argoworkflow_container_repo
   image_tag_mutability = "MUTABLE"
@@ -221,6 +229,7 @@ resource "aws_ecr_repository" "argoworkflow_container" {
     scan_on_push = true
   }
 }
+
 resource "aws_ecr_repository" "consumer_container" {
   name                 = var.consumer_container_repo
   image_tag_mutability = "MUTABLE"
@@ -229,6 +238,7 @@ resource "aws_ecr_repository" "consumer_container" {
     scan_on_push = true
   }
 }
+
 resource "aws_ecr_repository" "producer_container" {
   name                 = var.producer_container_repo
   image_tag_mutability = "MUTABLE"
@@ -238,13 +248,12 @@ resource "aws_ecr_repository" "producer_container" {
   }
 }
 
-
-
 ################################################################################
 # EBS CSI Driver IRSA
 ################################################################################
 module "ebs_csi_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
 
   role_name = "ebs-csi"
 
@@ -258,11 +267,9 @@ module "ebs_csi_irsa_role" {
   }
 }
 
-
 ################################################################################
 # TERRAFORM STATE TENANT S3_BUCKET
 ################################################################################
-
 # To store argo artifacts
 resource "aws_s3_bucket" "tenant-terraform-state-bucket" {
   bucket = "saasgitops-terraform-${random_uuid.uuid.result}"
@@ -275,7 +282,7 @@ resource "aws_s3_bucket" "tenant-terraform-state-bucket" {
 ################################################################################
 # CODE COMMIT needs for flux
 ################################################################################
-module "codecommit-flux" {
+module "codecommit_flux" {
   source          = "lgallard/codecommit/aws"
   version         = "0.2.1"
   default_branch  = "main"
@@ -283,30 +290,11 @@ module "codecommit-flux" {
   repository_name = "eks-saas-gitops-aws"
 }
 
-resource "aws_iam_user" "codecommit-user" {
+resource "aws_iam_user" "codecommit_user" {
   name = "codecommit-user"
 }
 
-resource "aws_iam_user_policy_attachment" "codecommit-user-attach" {
-  user       = aws_iam_user.codecommit-user.name
+resource "aws_iam_user_policy_attachment" "codecommit_user_attach" {
+  user       = aws_iam_user.codecommit_user.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
-}
-
-################################################################################
-# CODE COMMIT for microsservices
-################################################################################
-module "codecommit-producer" {
-  source          = "lgallard/codecommit/aws"
-  version         = "0.2.1"
-  default_branch  = "main"
-  description     = "Producer microsservice repository"
-  repository_name = "producer"
-}
-
-module "codecommit-consumer" {
-  source          = "lgallard/codecommit/aws"
-  version         = "0.2.1"
-  default_branch  = "main"
-  description     = "Consumer microsservice repository"
-  repository_name = "consumer"
 }

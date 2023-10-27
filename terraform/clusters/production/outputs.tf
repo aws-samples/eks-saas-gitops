@@ -54,7 +54,7 @@ output "argo_workflows_irsa" {
 
 output "argo_workflows_bucket_name" {
   description = "Amazon S3 bucket that Argo Workflows will store its artifacts"
-  value       = aws_s3_bucket.argo-artifacts.id
+  value       = aws_s3_bucket.argo_artifacts.id
 }
 
 output "argo_workflows_sqs_url" {
@@ -104,7 +104,7 @@ output "ecr_producer_container" {
 #####################
 output "tenant_terraform_state_bucket_name" {
   description = "Amazon S3 bucket name for Terraform state"
-  value       = aws_s3_bucket.tenant-terraform-state-bucket.id
+  value       = aws_s3_bucket.tenant_terraform_state_bucket.id
 }
 
 #####################

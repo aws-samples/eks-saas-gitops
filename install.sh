@@ -238,7 +238,7 @@ echo "Changing template files to terraform output values"
 
 # Changing template files to use the new values
 export GITOPS_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/gitops"
-export ONBOARDING_FOLER="/home/ec2-user/environment/eks-saas-gitops-aws/tenant-onboarding"
+export ONBOARDING_FOLER="/home/ec2-user/environment/eks-saas-gitops-aws/workflow-scripts"
 export TENANT_CHART_FOLER="/home/ec2-user/environment/eks-saas-gitops-aws/tenant-chart"
 
 sed -e "s|{TENANT_CHART_HELM_REPO}|$(echo ${ECR_HELM_CHART_URL} | sed 's|\(.*\)/.*|\1|')|g" "${GITOPS_FOLDER}/infrastructure/base/sources/tenant-chart-helm.yaml.template" > ${GITOPS_FOLDER}/infrastructure/base/sources/tenant-chart-helm.yaml
@@ -253,6 +253,10 @@ sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_F
 sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
+
+sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-template.yaml"
+sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment.yaml"
+sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment.yaml"
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
 sed -i "s|{PRODUCER_ECR}|${ECR_PRODUCER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml"
@@ -288,7 +292,7 @@ aws ecr get-login-password \
      --region $AWS_REGION | docker login \
      --username AWS \
      --password-stdin $ECR_ARGOWORKFLOW_CONTAINER
-docker build --build-arg aws_region=${AWS_REGION} -t $ECR_ARGOWORKFLOW_CONTAINER tenant-onboarding
+docker build --build-arg aws_region=${AWS_REGION} -t $ECR_ARGOWORKFLOW_CONTAINER workflow-scripts
 docker push $ECR_ARGOWORKFLOW_CONTAINER
 
 echo "First commit CodeCommit repository"
@@ -334,7 +338,7 @@ cat /home/ec2-user/environment/temp_known_hosts | sed 's/^/      /' >> ${TERRAFO
 
 cd $TERRAFORM_CLUSTER_FOLDER
 
-export TENANT_ONBOARDING_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/tenant-onboarding"
+#export TENANT_ONBOARDING_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/workflow-scripts/tenant-onboarding"
 
 echo "Applying Terraform to deploy flux"
 

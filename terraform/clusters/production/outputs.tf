@@ -99,6 +99,11 @@ output "ecr_producer_container" {
   value       = aws_ecr_repository.producer_container.repository_url
 }
 
+output "ecr_payments_container" {
+  description = "URL for Amazon ECR stored Payments container"
+  value       = aws_ecr_repository.payments_container.repository_url
+}
+
 #####################
 # S3 TENANT STATE TF
 #####################

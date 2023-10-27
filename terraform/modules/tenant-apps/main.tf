@@ -14,11 +14,6 @@ resource "aws_s3_bucket" "producer_bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "producer" {
-  bucket = aws_s3_bucket.producer_bucket[0].id
-}
-
-
 # CONSUMER INFRAESTRUCTURE
 resource "aws_s3_bucket" "consumer_bucket" {
   count  = var.enable_consumer == true ? 1 : 0
@@ -29,11 +24,6 @@ resource "aws_s3_bucket" "consumer_bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "consumer" {
-  bucket = aws_s3_bucket.consumer_bucket[0].id
-}
-
-
 # PAYMENTS INFRAESTRUCTURE
 # resource "aws_s3_bucket" "payments_bucket" {
 #   count  = var.enable_payments == true ? 1 : 0
@@ -42,8 +32,4 @@ resource "aws_s3_bucket_acl" "consumer" {
 #   tags = {
 #     Name = var.tenant_id
 #   }
-# }
-
-# resource "aws_s3_bucket_acl" "payments" {
-#   bucket = aws_s3_bucket.payments_bucket[0].id
 # }

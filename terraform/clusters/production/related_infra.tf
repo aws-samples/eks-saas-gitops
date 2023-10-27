@@ -154,7 +154,7 @@ module "argo_workflows_eks_role" {
 resource "random_uuid" "uuid" {}
 
 # To store argo artifacts
-resource "aws_s3_bucket" "argo-artifacts" {
+resource "aws_s3_bucket" "argo_artifacts" {
   bucket = "saasgitops-argo-${random_uuid.uuid.result}"
 
   tags = {

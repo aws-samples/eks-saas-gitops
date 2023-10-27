@@ -280,7 +280,7 @@ module "ebs_csi_irsa_role" {
 # TERRAFORM STATE TENANT S3_BUCKET
 ################################################################################
 # To store argo artifacts
-resource "aws_s3_bucket" "tenant-terraform-state-bucket" {
+resource "aws_s3_bucket" "tenant_terraform_state_bucket" {
   bucket = "saasgitops-terraform-${random_uuid.uuid.result}"
 
   tags = {

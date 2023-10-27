@@ -70,7 +70,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=aws_iam_user.codecommit_user \
      -target=aws_iam_user_policy_attachment.codecommit_user_attach \
      -target=module.ebs_csi_irsa_role \
-     -target=aws_s3_bucket.tenant-terraform-state-bucket --auto-approve
+     -target=aws_s3_bucket.tenant_terraform_state_bucket --auto-approve
 
      if [ $? -eq 0 ]; then
           echo "Terraform apply succeeded."

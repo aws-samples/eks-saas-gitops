@@ -56,21 +56,21 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=module.argo_workflows_eks_role \
      -target=module.argo_events_eks_role \
      -target=random_uuid.uuid \
-     -target=aws_s3_bucket.argo-artifacts \
+     -target=aws_s3_bucket.argo_artifacts \
      -target=aws_sqs_queue.argoworkflows_queue \
-     -target=module.lb-controller-irsa \
+     -target=module.lb_controller_irsa \
      -target=aws_ecr_repository.tenant_helm_chart \
      -target=aws_ecr_repository.argoworkflow_container \
      -target=aws_ecr_repository.consumer_container \
      -target=aws_ecr_repository.producer_container \
-     -target=module.codecommit-flux \
-     -target=module.codecommit-producer \
-     -target=module.codecommit-consumer \
-     -target=module.codecommit-payments \
-     -target=aws_iam_user.codecommit-user \
-     -target=aws_iam_user_policy_attachment.codecommit-user-attach \
+     -target=module.codecommit_flux \
+     -target=module.codecommit_producer \
+     -target=module.codecommit_consumer \
+     -target=module.codecommit_payments \
+     -target=aws_iam_user.codecommit_user \
+     -target=aws_iam_user_policy_attachment.codecommit_user_attach \
      -target=module.ebs_csi_irsa_role \
-     -target=aws_s3_bucket.tenant-terraform-state-bucket --auto-approve
+     -target=aws_s3_bucket.tenant_terraform_state_bucket --auto-approve
 
      if [ $? -eq 0 ]; then
           echo "Terraform apply succeeded."

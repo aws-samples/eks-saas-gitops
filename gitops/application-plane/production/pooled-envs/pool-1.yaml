@@ -16,7 +16,7 @@ spec:
   chart:
     spec:
       chart: helm-tenant-chart
-      version: 0.x.x
+      version: 0.0.x
       sourceRef:
         kind: HelmRepository
         name: helm-tenant-chart

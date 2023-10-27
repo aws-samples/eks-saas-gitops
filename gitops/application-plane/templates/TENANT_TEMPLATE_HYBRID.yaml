@@ -16,7 +16,7 @@ spec:
   chart:
     spec:
       chart: helm-tenant-chart
-      version: {MAJOR_VERSION}.x.x
+      version: {MAJOR_VERSION}.0.x
       sourceRef:
         kind: HelmRepository
         name: helm-tenant-chart
@@ -40,7 +40,7 @@ spec:
   chart:
     spec:
       chart: helm-tenant-chart
-      version: {MAJOR_VERSION}.x.x
+      version: {MAJOR_VERSION}.0.x
       sourceRef:
         kind: HelmRepository
         name: helm-tenant-chart

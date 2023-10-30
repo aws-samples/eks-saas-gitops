@@ -23,6 +23,13 @@ for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
     fi
 done
 
+for POOLED_ENVS in $(ls $TENANT_TF_PATH/pooled-*)
+  do 
+    if [[ "$POOLED_ENV" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
+      cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${POOLED_ENV}"
+    fi
+  done
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
     do

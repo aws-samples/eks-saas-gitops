@@ -2,6 +2,12 @@ resource "random_string" "random_suffix" {
   length  = 3
   special = false
   upper   = false
+
+  lifecycle {
+    ignore_changes = [
+      length,
+    ]
+  }
 }
 
 # PRODUCER INFRAESTRUCTURE

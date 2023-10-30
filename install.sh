@@ -339,8 +339,6 @@ cat /home/ec2-user/environment/temp_known_hosts | sed 's/^/      /' >> ${TERRAFO
 
 cd $TERRAFORM_CLUSTER_FOLDER
 
-#export TENANT_ONBOARDING_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/workflow-scripts/tenant-onboarding"
-
 echo "Applying Terraform to deploy flux"
 
 terraform init && terraform apply -var "git_url=${CLONE_URL_CODECOMMIT_USER}" -var "aws_region=${AWS_REGION}" -auto-approve

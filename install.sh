@@ -249,6 +249,7 @@ sed -e "s|{ARGO_WORKFLOW_IRSA}|${ARGO_WORKFLOWS_IRSA}|g" "${GITOPS_FOLDER}/infra
 sed -e "s|{ARGO_EVENTS_IRSA}|${ARGO_EVENTS_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/06-argo-events.yaml.template" > "${GITOPS_FOLDER}/infrastructure/production/06-argo-events.yaml"
 sed -i "s|{ARGO_WORKFLOW_BUCKET}|${ARGO_WORKFLOWS_BUCKET_NAME}|g" "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml"
 sed -e "s|{LB_CONTROLLER_IRSA}|${LB_CONTROLLER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml
+
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
 sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
@@ -337,8 +338,6 @@ echo "    known_hosts: |" >> ${TERRAFORM_CLUSTER_FOLDER}/values.yaml
 cat /home/ec2-user/environment/temp_known_hosts | sed 's/^/      /' >> ${TERRAFORM_CLUSTER_FOLDER}/values.yaml
 
 cd $TERRAFORM_CLUSTER_FOLDER
-
-#export TENANT_ONBOARDING_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/workflow-scripts/tenant-onboarding"
 
 echo "Applying Terraform to deploy flux"
 

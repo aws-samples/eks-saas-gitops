@@ -7,20 +7,20 @@ REPOSITORY_BRANCH="$5"
 MANIFESTS_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/"
 POOLED_ENVS="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/pooled-envs/"
 
-for TENANT_FILE in $(ls $TENANT_MANIFEST_FILE/tenant*)
+for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
   do
     if [[ "$TENANT_FILE" == *"hybrid"* && "$tenant_model" == "hybrid" ]]; then
-      sed -i "s|version:.*|version: ${release_version}.x|g" "${MANIFESTS_PATH}${TENANT_FILE}"
+      sed -i "s|version:.*|version: ${release_version}.x|g" "${TENANT_FILE}"
     elif [[ "$TENANT_FILE" == *"silo"* && "$tenant_model" == "silo" ]]; then
-      sed -i "s|version:.*|version: ${release_version}.x|g" "${MANIFESTS_PATH}${TENANT_FILE}"
+      sed -i "s|version:.*|version: ${release_version}.x|g" "${TENANT_FILE}"
     elif [[ "$TENANT_FILE" == *"pool"* && "$tenant_model" == "pool" ]]; then
-      sed -i "s|version:.*|version: ${release_version}.x|g" "${MANIFESTS_PATH}${TENANT_FILE}"
+      sed -i "s|version:.*|version: ${release_version}.x|g" "${TENANT_FILE}"
     fi
 done
 
 if [[ $tenant_model == "pool" ]]; then
   for POOLED_ENV in $(ls $POOLED_ENVS/pool-*)
-    do sed -i "s|version:.*|version: ${release_version}.x|g" "${POOLED_ENVS}${POOLED_ENV}"
+    do sed -i "s|version:.*|version: ${release_version}.x|g" "${POOLED_ENV}"
   done
 fi
 

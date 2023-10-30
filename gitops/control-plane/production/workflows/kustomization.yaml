@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - tenant-onboarding-workflow-template.yaml
   - tenant-onboarding-sensor.yaml
+  - tenant-deployment-workflow-template.yaml

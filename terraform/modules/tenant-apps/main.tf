@@ -5,7 +5,7 @@ resource "random_string" "random_suffix" {
 
   lifecycle {
     ignore_changes = [
-      length,
+      length
     ]
   }
 }

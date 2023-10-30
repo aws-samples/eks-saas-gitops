@@ -5,7 +5,7 @@ metadata:
   namespace: argo-workflows
 spec:
   serviceAccountName: argoworkflows-sa
-  entrypoint: tenant-provisioning
+  entrypoint: tenant-deployment
   arguments:
     parameters:
       - name: TENANT_MODEL

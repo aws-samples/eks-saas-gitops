@@ -35,6 +35,7 @@ chmod 600 /root/.ssh/config
 git config --global user.email "${git_user_email}"
 git config --global user.name "${git_user_name}"
 
+cd /mnt/vol/eks-saas-gitops/
 git status
 git add .
 git commit -am "Deploying to tenant of $tenant_model in version $release_version"

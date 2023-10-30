@@ -14,16 +14,15 @@ TERRAFORM_SCRIPT_TEMPLATE_POOL="${TENANT_TF_TEMPLATE_PATH}/pool-template.tf.temp
 
 for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
   do
-    if [[ "$TENANT_FILE" == *"hybrid"* ]]; then
+    if [[ "$TENANT_FILE" == *"hybrid"* && "$TENANT_MODEL" == "hybrid" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_HYBRID" "${TENANT_FILE}"
-    elif [[ "$TENANT_FILE" == *"silo"* ]]; then
+    elif [[ "$TENANT_FILE" == *"silo"* && "$TENANT_MODEL" == "silo" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_SILO" "${TENANT_FILE}"
-    elif [[ "$TENANT_FILE" == *"pool"* ]]; then
+    elif [[ "$TENANT_FILE" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${TENANT_FILE}"
     fi
 done
 
-# Perform sed replacements based on the platform
 if [[ "$OSTYPE" == "darwin"* ]]; then
   for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
     do
@@ -58,5 +57,5 @@ terraform apply -auto-approve
 
 git status
 git add .
-git commit -m "Adding new infra for tenant $TENANT_ID in model $TENANT_MODEL"
+git commit -m "Deploying new infra for model $TENANT_MODEL."
 git push origin $REPOSITORY_BRANCH

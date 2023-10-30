@@ -63,6 +63,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=aws_ecr_repository.argoworkflow_container \
      -target=aws_ecr_repository.consumer_container \
      -target=aws_ecr_repository.producer_container \
+     -target=aws_ecr_repository.payments_container \
      -target=module.codecommit_flux \
      -target=module.codecommit_producer \
      -target=module.codecommit_consumer \

@@ -3,8 +3,6 @@
 # Declare variables to be passed into your templates.
 
 tenantId:
-sqs_queue_arn:
-ddb_table_arn:
 nodeSelector:
   node-type: applications
 tolerations:

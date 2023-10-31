@@ -50,3 +50,4 @@ spec:
       - name: producer
     deployApps: true
     deployIngress: true
+    sqs_queue_arn: {SQS_QUEUE_ARN}

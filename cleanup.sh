@@ -10,6 +10,15 @@ CONSUMERSERVICEECR="consumer-container"
 PRODUCERSERVICEECR="producer-container"
 VPC_NAME="eks-saas-gitops"
 
+#set terraform folders (weather they have been copied to code-commit folder or not)
+if [ ! -d "$APPLICATION_PLANE_INFRA_FOLDER" ]; then
+     APPLICATION_PLANE_INFRA_FOLDER="/home/ec2-user/environment/eks-saas-gitops/terraform/application-plane/production/environments"
+fi
+
+if [ ! -d "$TERRAFORM_CLUSTER_FOLDER" ]; then
+     TERRAFORM_CLUSTER_FOLDER="/home/ec2-user/environment/eks-saas-gitops/terraform/clusters/production"
+fi
+
 #delete code-commit user ssh key
 user_info=$(aws iam list-ssh-public-keys --user-name "$IAM_USER_NAME" )
 key_ids=$(echo "$user_info" | jq -r '.SSHPublicKeys[]?.SSHPublicKeyId')

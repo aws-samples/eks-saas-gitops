@@ -14,6 +14,7 @@ TERRAFORM_SCRIPT_TEMPLATE_POOL="${TENANT_TF_TEMPLATE_PATH}/pool-template.tf.temp
 
 for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
   do
+    TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
     if [[ "$TENANT_FILE" == *"hybrid"* && "$TENANT_MODEL" == "hybrid" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_HYBRID" "${TENANT_FILE}"
     elif [[ "$TENANT_FILE" == *"silo"* && "$TENANT_MODEL" == "silo" ]]; then
@@ -21,6 +22,7 @@ for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
     elif [[ "$TENANT_FILE" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${TENANT_FILE}"
     fi
+    sed -i "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_FILE
 done
 
 for POOLED_ENV in $(ls $TENANT_TF_PATH/pooled-*)
@@ -35,18 +37,6 @@ for POOLED_ENV in $(ls $TENANT_TF_PATH/pooled-*)
       sed -i "s?ref=$current_version?ref=$new_version?g" $POOLED_ENV
     fi
   done
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
-    do
-      sed -i "" "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_TF_PATH/*.tf
-    done
-else
-  for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
-    do
-      sed -i "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_TF_PATH/*.tf
-    done
-fi
 
 echo "Replacements completed successfully."
 echo "Running Terraform..."

@@ -14,6 +14,7 @@ TERRAFORM_SCRIPT_TEMPLATE_POOL="${TENANT_TF_TEMPLATE_PATH}/pool-template.tf.temp
 
 for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
   do
+    TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
     if [[ "$TENANT_FILE" == *"hybrid"* && "$TENANT_MODEL" == "hybrid" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_HYBRID" "${TENANT_FILE}"
     elif [[ "$TENANT_FILE" == *"silo"* && "$TENANT_MODEL" == "silo" ]]; then
@@ -21,26 +22,21 @@ for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
     elif [[ "$TENANT_FILE" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
       cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${TENANT_FILE}"
     fi
+    sed -i "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_FILE
 done
 
-for POOLED_ENVS in $(ls $TENANT_TF_PATH/pooled-*)
+for POOLED_ENV in $(ls $TENANT_TF_PATH/pooled-*)
   do 
     if [[ "$POOLED_ENV" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
-      cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${POOLED_ENV}"
+      # This is needed for changed pooled environments
+      filename=$TERRAFORM_SCRIPT_TEMPLATE_POOL
+      new_version=$(grep -o 'ref=v[0-9]\+\.[0-9]\+\.[0-9]\+' $filename | awk -F= '{print $2}')
+      current_version=$(grep -o 'ref=v[0-9]\+\.[0-9]\+\.[0-9]\+' $POOLED_ENV | awk -F= '{print $2}')
+      
+      echo "Change ${POOLED_ENV} from ${current_version} to new version ${new_version}"
+      sed -i "s?ref=$current_version?ref=$new_version?g" $POOLED_ENV
     fi
   done
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
-    do
-      sed -i "" "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_TF_PATH/*.tf
-    done
-else
-  for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
-    do
-      sed -i "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_TF_PATH/*.tf
-    done
-fi
 
 echo "Replacements completed successfully."
 echo "Running Terraform..."

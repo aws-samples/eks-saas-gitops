@@ -9,9 +9,9 @@ spec:
   arguments:
     parameters:
       - name: TENANT_MODEL
-        value: "hybrid" # Valid values are: silo, pool, hybrid
+        value: "" # Valid values are: silo, pool, hybrid
       - name: RELEASE_VERSION
-        value: "1" # Valid values are: silo, pool, hybrid
+        value: "1.0" # Valid values are: silo, pool, hybrid
       - name: REPO_URL
         value: "{REPO_URL}"
       - name: GIT_USER_EMAIL

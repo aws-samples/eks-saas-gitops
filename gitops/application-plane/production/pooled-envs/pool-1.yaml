@@ -24,5 +24,3 @@ spec:
     tenantId: pool-1
     deployApps: true
     deployIngress: true # to simplify cleaning the stack
-    SQS_QUEUE_ARN: { SQS_QUEUE_ARN }
-    DDB_TABLE_ARN: { DDB_TABLE_ARN }

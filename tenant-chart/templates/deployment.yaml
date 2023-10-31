@@ -47,10 +47,6 @@ spec:
           env:
             - name: TENANT_ID
               value: "{{ $.Values.tenantId }}"
-            - name: SQS_QUEUE_ARN
-              value: "{{ $.Values.sqs_queue_arn }}"
-            - name: DDB_TABLE_ARN
-              value: "{{ $.Values.ddb_table_arn }}"
           ports:
             - name: http
               containerPort: {{ (index $.Values .name).service.port }}

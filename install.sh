@@ -310,10 +310,6 @@ git push origin v0.0.1
 
 # Applying after push for being able to reference tenants terraform as a module
 cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
-export SQS_QUEUE_ARN=$(terraform output -json | jq -r ".\"pooled-1_producer_sqs_arn\".\"value\"")
-export DDB_TABLE_ARN=$(terraform output -json | jq -r ".\"pooled-1_consumer_ddb_arn\".\"value\"")
-sed -i "s|{SQS_QUEUE_ARN}|${SQS_QUEUE_ARN}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
-sed -i "s|{DDB_TABLE_ARN}|${DDB_TABLE_ARN}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
 
 echo "Configuring Flux and Argo to use SSH Key"
 cd /home/ec2-user/environment/

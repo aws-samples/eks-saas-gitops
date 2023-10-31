@@ -3,3 +3,11 @@ module "silo_tenant___TENANT_ID__" {
   source    = "git::__MODULE_SOURCE__//terraform//modules//tenant-apps?ref=v0.0.1"
   tenant_id = "__TENANT_ID__"
 }
+
+output "__TENANT_ID___producer_sqs_arn" {
+  value = "${module.silo_tenant___TENANT_ID__.producer_sqs_arn}"
+}
+
+output "__TENANT_ID___consumer_ddb_arn" {
+  value = "${module.silo_tenant___TENANT_ID__.consumer_ddb_arn}"
+}

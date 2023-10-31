@@ -8,6 +8,7 @@ REPOSITORY_BRANCH="$6"
 
 TEMPLATE_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/templates"
 MANIFESTS_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/"
+TENANT_TF_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/production/environments"
 
 TENANT_HYBRID_TEMPLATE_FILE="TENANT_TEMPLATE_HYBRID.yaml"
 TENANT_POOL_TEMPLATE_FILE="TENANT_TEMPLATE_POOL.yaml"
@@ -26,16 +27,24 @@ if [ "$tenant_model" == "pool" ]; then
     cd ../../../
 
 elif [ "$tenant_model" == "silo" ]; then
+    cd $TENANT_TF_PATH || exit 1
+    export SQS_QUEUE_ARN=$(terraform output -json | jq -r ".\"${TENANT_ID}_producer_sqs_arn\".\"value\"")
+    export DDB_TABLE_ARN=$(terraform output -json | jq -r ".\"${TENANT_ID}_consumer_ddb_arn\".\"value\"")
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_SILO_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
     sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+    sed -i "s|{SQS_QUEUE_ARN}|${SQS_QUEUE_ARN}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+    sed -i "s|{DDB_TABLE_ARN}|${DDB_TABLE_ARN}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
     printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 
 elif [ "$tenant_model" == "hybrid" ]; then
+    cd $TENANT_TF_PATH || exit 1
+    export SQS_QUEUE_ARN=$(terraform output -json | jq -r ".\"${TENANT_ID}_producer_sqs_arn\".\"value\"")
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_HYBRID_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
     sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+    sed -i "s|{SQS_QUEUE_ARN}|${SQS_QUEUE_ARN}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
     printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 fi

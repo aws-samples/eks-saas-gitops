@@ -4,7 +4,3 @@ module "hybrid_tenant___TENANT_ID__" {
   tenant_id       = "__TENANT_ID__"
   enable_consumer = false
 }
-
-output "___TENANT_ID___producer_sqs_arn" {
-  value = "${module.hybrid_tenant___TENANT_ID__.producer_sqs_arn}"
-}

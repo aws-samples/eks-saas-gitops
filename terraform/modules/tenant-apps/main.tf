@@ -38,7 +38,7 @@ resource "aws_sqs_queue" "consumer_sqs" {
 }
 resource "aws_ssm_parameter" "consumer_sqs" {
   count  = var.enable_consumer == true ? 1 : 0
-  name  = "${var.tenant_id}/consumer_sqs"
+  name  = "/${var.tenant_id}/consumer_sqs"
   type  = "String"
   value = aws_sqs_queue.consumer_sqs[0].arn
 }
@@ -60,7 +60,7 @@ resource "aws_dynamodb_table" "consumer_ddb" {
 }
 resource "aws_ssm_parameter" "consumer_ddb" {
   count  = var.enable_consumer == true ? 1 : 0
-  name  = "${var.tenant_id}/consumer_ddb"
+  name  = "/${var.tenant_id}/consumer_ddb"
   type  = "String"
   value = aws_dynamodb_table.consumer_ddb[0].arn
 }
@@ -78,7 +78,7 @@ resource "aws_ssm_parameter" "consumer_ddb" {
 
 # resource "aws_ssm_parameter" "payments_bucket" {
 #   count  = var.enable_consumer == true ? 1 : 0
-#   name  = "${var.tenant_id}/payments_bucket"
+#   name  = "/${var.tenant_id}/payments_bucket"
 #   type  = "String"
 #   value = aws_s3_bucket.payments_bucket[0].arn
 # }

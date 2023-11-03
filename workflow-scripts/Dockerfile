@@ -12,7 +12,8 @@ RUN apk update && \
         openssh \
         openssl \
         wget \
-        unzip
+        unzip \
+        jq
 
 # Install Terraform
 ENV TERRAFORM_VERSION=1.5.1

@@ -1,7 +1,7 @@
-output "consumer_sqs_arn" {
-  value = try(aws_sqs_queue.consumer_sqs[0].arn, null)
+output "producer_irsa_role" {
+  value = try(module.producer_irsa_role[0].iam_role_arn, null)
 }
 
-output "consumer_ddb_arn" {
-  value = try(aws_dynamodb_table.consumer_ddb[0].arn, null)
+output "consumer_irsa_role" {
+  value = try(module.consumer_irsa_role[0].iam_role_arn, null)
 }

@@ -50,3 +50,4 @@ spec:
       - name: consumer
     deployApps: true
     deployIngress: true
+    consumer.serviceAccount.annotations: "eks.amazonaws.com/role-arn: {{TENANT_ID}_consumer_irsa_role}"

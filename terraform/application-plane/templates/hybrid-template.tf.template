@@ -4,3 +4,11 @@ module "hybrid_tenant___TENANT_ID__" {
   tenant_id       = "__TENANT_ID__"
   enable_producer = false
 }
+
+output "__TENANT_ID___producer_irsa_role" {
+  value = try(module.hybrid_tenant___TENANT_ID__.producer_irsa_role, null)
+}
+
+output "__TENANT_ID___consumer_irsa_role" {
+  value = try(module.hybrid_tenant___TENANT_ID__.consumer_irsa_role, null)
+}

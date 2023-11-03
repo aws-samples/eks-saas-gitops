@@ -6,3 +6,11 @@ module "pool_tenant___TENANT_ID__" {
   enable_producer = false
   enable_payments = false
 }
+
+output "__TENANT_ID___producer_irsa_role" {
+  value = try(module.pool_tenant___TENANT_ID__.producer_irsa_role, null)
+}
+
+output "__TENANT_ID___consumer_irsa_role" {
+  value = try(module.pool_tenant___TENANT_ID__.consumer_irsa_role, null)
+}

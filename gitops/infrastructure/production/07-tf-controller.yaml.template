@@ -43,6 +43,9 @@ spec:
     image:
       tag: v0.16.0-rc.3
     runner:
+      serviceAccount:
+        annotations:
+          eks.amazonaws.com/role-arn: {TF_CONTROLLER_IRSA}
       image:
         tag: v0.16.0-rc.3
       grpc:

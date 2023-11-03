@@ -1,0 +1,24 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: tenant-10
+  namespace: flux-system
+spec:
+  path: ./terraform/modules/tenant-apps
+  interval: 1m
+  approvePlan: auto
+  sourceRef:
+    kind: GitRepository
+    name: terraform
+  vars:
+    - name: tenant_id
+      value: tenant-10
+    - name: enable_producer
+      value: true
+    - name: enable_consumer
+      value: true
+    - name: enable_payments
+      value: true
+  # varsFrom: # Could create a dynamic ConfigMap and map.
+  #   - kind: ConfigMap
+  #     name: cluster-config

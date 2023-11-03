@@ -202,7 +202,7 @@ module "tf_controller_eks_role" {
   oidc_providers = {
     one = {
       provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["flux-system:tf-controller"]
+      namespace_service_accounts = ["flux-system:tf-controller", "flux-system:tf-runner"]
     }
   }
 }

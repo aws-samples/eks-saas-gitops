@@ -57,6 +57,32 @@ resource "helm_release" "flux2-sync" {
   depends_on = [helm_release.flux2, kubernetes_namespace.flux_system]
 }
 
+resource "helm_release" "flux2-sync-terraform" {
+  name       = "terraform"
+  namespace  = var.namespace
+  repository = "https://fluxcd-community.github.io/helm-charts"
+  chart      = "flux2-sync"
+
+  values = [file(var.values_path)]
+
+  set {
+    name  = "secret.create"
+    value = true
+  }
+
+  set {
+    name  = "gitRepository.spec.ref.tag"
+    value = var.tf_tag
+  }
+
+  set {
+    name  = "gitRepository.spec.url"
+    value = var.git_url # The repository URL, can be an HTTP/S or SSH address.
+  }
+
+  depends_on = [helm_release.flux2, kubernetes_namespace.flux_system]
+}
+
 # TODO: Implement IRSA and change the Service Account name, for Image Controller
 resource "helm_release" "flux2" {
   name       = "flux2"

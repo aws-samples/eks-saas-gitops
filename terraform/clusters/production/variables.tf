@@ -34,6 +34,10 @@ variable "git_url" {
   default     = ""
 }
 
+variable "tf_tag" {
+  default = "v0.0.1"
+}
+
 variable "kustomization_path" {
   description = "Path for Kustomization tool"
   type        = string

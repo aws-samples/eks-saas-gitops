@@ -19,6 +19,10 @@ variable "git_branch" {
   default     = "main"
 }
 
+variable "tf_tag" {
+  default = "v0.0.1"
+}
+
 # variable "git_username" {
 # }
 

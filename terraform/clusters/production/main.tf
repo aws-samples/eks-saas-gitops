@@ -119,4 +119,5 @@ module "flux_v2" {
   git_url            = var.git_url
   kustomization_path = var.kustomization_path
   values_path        = var.values_path
+  tf_tag             = var.tf_tag
 }

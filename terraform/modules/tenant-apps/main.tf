@@ -138,14 +138,14 @@ resource "aws_ssm_parameter" "shared_consumer_ddb" {
 # }
 
 # resource "aws_ssm_parameter" "dedicated_payments_bucket" {
-#   count  = var.enable_consumer == true ? 1 : 0
+#   count  = var.enable_payments == true ? 1 : 0
 #   name  = "/${var.tenant_id}/payments_bucket"
 #   type  = "String"
 #   value = aws_s3_bucket.payments_bucket[0].arn
 # }
 
 # resource "aws_ssm_parameter" "shared_payments_bucket" {
-#   count  = var.enable_consumer == false ? 1 : 0
+#   count  = var.enable_payments == false ? 1 : 0
 #   name  = "/${var.tenant_id}/payments_bucket"
 #   type  = "String"
 #   value = data.aws_ssm_parameter.pool_1_payments_bucket[0].value

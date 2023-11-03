@@ -7,3 +7,4 @@ resources:
   - tenant-chart-helm.yaml
   - eks-charts-helm.yaml
   - kubecost-helm.yaml
+  - tf-controller-helm.yaml

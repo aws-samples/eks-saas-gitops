@@ -23,7 +23,7 @@ spec:
   values:
     tenantId: {TENANT_ID}
     apps:
-      - name: consumer
+      - name: producer
     deployApps: false
     deployIngress: true
 ---
@@ -47,6 +47,6 @@ spec:
   values:
     tenantId: {TENANT_ID}
     apps:
-      - name: producer
+      - name: consumer
     deployApps: true
     deployIngress: true

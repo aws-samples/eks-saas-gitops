@@ -11,7 +11,7 @@ MANIFESTS_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/ten
 TENANT_HYBRID_TEMPLATE_FILE="TENANT_TEMPLATE_HYBRID.yaml"
 TENANT_POOL_TEMPLATE_FILE="TENANT_TEMPLATE_POOL.yaml"
 TENANT_SILO_TEMPLATE_FILE="TENANT_TEMPLATE_SILO.yaml"
-
+TENANT_TF_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/production/environments"
 
 TENANT_MANIFEST_FILE="${tenant_id}-${tenant_model}.yaml"
 
@@ -41,6 +41,15 @@ elif [ "$tenant_model" == "hybrid" ]; then
     printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 fi
+
+# Add IRSA to SA Annotation
+cd $TENANT_TF_PATH || exit 1
+for item in $(terraform output -json | jq -r 'keys[]')
+do
+  irsa_role=$(terraform output -json | jq -r ".\"$item\".value")
+  sed -i "s|{$item}|${irsa_role}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+done
+cd ../../../../
 
 cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com

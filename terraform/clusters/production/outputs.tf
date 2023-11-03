@@ -66,6 +66,13 @@ output "argo_events_irsa" {
   description = "IAM Role for Argo Events Service Account"
   value       = module.argo_events_eks_role.iam_role_arn
 }
+################################################################################
+# TF Cotroller IRSA
+################################################################################
+output "tf_controller_irsa" {
+  description = "IAM Role for TF Controller Service Account"
+  value       = module.tf_controller_eks_role.iam_role_arn
+}
 
 ################
 # LB Controller

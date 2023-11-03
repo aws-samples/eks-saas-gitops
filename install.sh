@@ -58,6 +58,7 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=random_uuid.uuid \
      -target=aws_s3_bucket.argo_artifacts \
      -target=aws_sqs_queue.argoworkflows_queue \
+     -target=module.tf_controller_eks_role \
      -target=module.lb_controller_irsa \
      -target=aws_ecr_repository.tenant_helm_chart \
      -target=aws_ecr_repository.argoworkflow_container \
@@ -107,7 +108,8 @@ outputs=("argo_workflows_bucket_name"
           "ecr_producer_container"
           "ecr_payments_container" 
           "karpenter_instance_profile" 
-          "karpenter_irsa" 
+          "karpenter_irsa"
+          "tf_controller_irsa" 
           "lb_controller_irsa"
           "tenant_terraform_state_bucket_name"
           "aws_codecommit_producer_clone_url_http"
@@ -250,6 +252,7 @@ sed -e "s|{ARGO_WORKFLOW_IRSA}|${ARGO_WORKFLOWS_IRSA}|g" "${GITOPS_FOLDER}/infra
 sed -e "s|{ARGO_EVENTS_IRSA}|${ARGO_EVENTS_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/06-argo-events.yaml.template" > "${GITOPS_FOLDER}/infrastructure/production/06-argo-events.yaml"
 sed -i "s|{ARGO_WORKFLOW_BUCKET}|${ARGO_WORKFLOWS_BUCKET_NAME}|g" "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml"
 sed -e "s|{LB_CONTROLLER_IRSA}|${LB_CONTROLLER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/04-lb-controller.yaml
+sed -e "s|{TF_CONTROLLER_IRSA}|${TF_CONTROLLER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/07-tf-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/07-tf-controller.yaml
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-workflow-template.yaml"
 sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"

@@ -1,0 +1,10 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: tf-controller
+  namespace: flux-system
+spec:
+  interval: 1h0s
+  type: oci
+  url: oci://ghcr.io/weaveworks/charts

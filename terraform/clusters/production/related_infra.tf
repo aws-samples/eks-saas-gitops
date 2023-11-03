@@ -185,6 +185,27 @@ module "argo_events_eks_role" {
     }
   }
 }
+################################################################################
+# TF CONTROLLER NEEDS
+################################################################################
+module "tf_controller_eks_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
+  role_name = "tf-controller-irsa"
+
+  # TODO: Change to specific policy
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+
+  oidc_providers = {
+    one = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["flux-system:tf-controller"]
+    }
+  }
+}
 
 ################################################################################
 # LB Controller IRSA

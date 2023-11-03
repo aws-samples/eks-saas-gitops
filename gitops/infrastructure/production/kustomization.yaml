@@ -7,3 +7,4 @@ resources:
   - 04-lb-controller.yaml
   - 05-kubecost.yaml
   - 06-argo-events.yaml
+  - 07-tf-controller.yaml

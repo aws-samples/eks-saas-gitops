@@ -261,7 +261,7 @@ Resources:
                       )
                       logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh')
                       
-                      run_ssm_command('root', instance['InstanceId'], 'cd /home/ec2-user/environment && ./cleanup.sh', 'cleanupoutput')
+                      run_ssm_command('ec2-user', instance['InstanceId'], 'cd /home/ec2-user/environment && ./cleanup.sh', 'cleanupoutput')
 
                   if event['RequestType'] == 'Create':                                  
                       ec2 = boto3.client('ec2')

@@ -43,7 +43,7 @@ def get_ddb_table_name(environment):
     return table_name
 
 
-@app.route("/consumer/version")
+@app.route("/consumer", methods = ['GET'])
 def index():    
     tenant_id = request.headers.get("tenantID")
     return {

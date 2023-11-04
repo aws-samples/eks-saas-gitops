@@ -19,7 +19,7 @@ ms_version = "0.0.1"
 
 def get_queue_url(tenant_id):
     response = ssm_client.get_parameter(Name=f"/{tenant_id}/{sms_queue_param_name_suffix}")
-    parts = response["Parameter"]["Value"].split(":")    
+    parts = response["Parameter"]["Value"].split(":")
     aws_region = parts[3]
     aws_account_id = parts[4]
     queue_name = parts[5].split("/")[-1]
@@ -27,7 +27,7 @@ def get_queue_url(tenant_id):
     return queue_url
 
 
-@app.route("/producer/version")
+@app.route("/producer", methods = ['GET'])
 def version():
     tenant_id = request.headers.get("tenantID")
     message = { 
@@ -39,7 +39,7 @@ def version():
     return jsonify(message)
 
 
-@app.route("/producer")
+@app.route("/producer", methods = ['POST'])
 def index():
     try:
         tenant_id = request.headers.get("tenantID")

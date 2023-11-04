@@ -70,11 +70,17 @@ resource "aws_ssm_parameter" "shared_consumer_sqs" {
 resource "aws_dynamodb_table" "consumer_ddb" {
   count  = var.enable_consumer == true ? 1 : 0
   name = "consumer-${var.tenant_id}-${random_string.random_suffix.result}"
-  hash_key = "primary_key"
+  hash_key = "tenant_id"
+  range_key = "message_id"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
-    name = "primary_key"
+    name = "tenant_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "message_id"
     type = "S"
   }
 

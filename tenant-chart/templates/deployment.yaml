@@ -44,8 +44,8 @@ spec:
             {{- toYaml (index $.Values .name).securityContext | nindent 12 }}
           image: "{{ (index $.Values .name).image.repository }}:{{ (index $.Values .name).image.tag | default $.Chart.AppVersion }}"
           imagePullPolicy: {{ (index $.Values .name).image.pullPolicy }}
-          env:
-            - name: TENANT_ID
+          env:            
+            - name: ENVIRONMENT
               value: "{{ $.Values.tenantId }}"
           ports:
             - name: http

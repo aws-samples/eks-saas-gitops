@@ -11,8 +11,9 @@ resource "random_string" "random_suffix" {
 }
 
 # ---------------------[ PRODUCER INFRASTRUCTURE ]--------------------
+# IAM POLICY FOR PRODUCER TO ACCESS CONSUMER SQS QUEUE
 resource "aws_iam_policy" "producer-iampolicy" {
-  count  = var.enable_producer == true ? 1 : 0
+  count  = var.enable_consumer == true ? 1 : 0
   name        = "producer-policy-${var.tenant_id}"
   policy = jsonencode({
     Version = "2012-10-17"
@@ -20,15 +21,21 @@ resource "aws_iam_policy" "producer-iampolicy" {
       {
         Action = [
           "sqs:SendMessage",
+          "ssm:GetParameter",
         ]
         Effect   = "Allow"
-        Resource = ["*"]
+        Resource = [
+          aws_sqs_queue.consumer_sqs[0].arn,
+          aws_ssm_parameter.dedicated_consumer_sqs[0].arn
+        ]
       },
     ]
   })
 }
+
+# IF DEDICATED PRODUCER AND CONSUMER:
 module "producer_irsa_role" {
-  count  = var.enable_producer == true ? 1 : 0
+  count  = var.enable_producer == true && var.enable_consumer == true ? 1 : 0
   source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   role_name = "producer-role-${var.tenant_id}"
 
@@ -44,6 +51,13 @@ module "producer_irsa_role" {
   }
 }
 
+# IF SHARED PRODUCER AND DEDICATED CONSUMER (HYBRID):
+resource "aws_iam_role_policy_attachment" "sto-readonly-role-policy-attach" {
+  count  = var.enable_producer == false && var.enable_consumer == true ? 1 : 0
+  role       = "producer-role-pooled-1"
+  policy_arn = aws_iam_policy.producer-iampolicy[0].arn
+}
+
 # ---------------------[ CONSUMER INFRASTRUCTURE ]--------------------
 resource "aws_iam_policy" "consumer-iampolicy" {
   count  = var.enable_consumer == true ? 1 : 0
@@ -53,10 +67,24 @@ resource "aws_iam_policy" "consumer-iampolicy" {
     Statement = [
       {
         Action = [
-          "sqs:SendMessage",
+          "sqs:ListQueues",
+          "sqs:GetQueueUrl",
+          "sqs:ListDeadLetterSourceQueues",
+          "sqs:ListMessageMoveTasks",
+          "sqs:ReceiveMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ListQueueTags",
+          "sqs:DeleteMessage",
+          "dynamodb:PutItem",
+          "ssm:GetParameter"
         ]
         Effect   = "Allow"
-        Resource = ["*"]
+        Resource = [
+          aws_dynamodb_table.consumer_ddb[0].arn,
+          aws_sqs_queue.consumer_sqs[0].arn,
+          aws_ssm_parameter.dedicated_consumer_sqs[0].arn,
+          aws_ssm_parameter.dedicated_consumer_ddb[0].arn
+        ]
       },
     ]
   })

@@ -21,9 +21,13 @@ resource "aws_iam_policy" "producer-iampolicy" {
       {
         Action = [
           "sqs:SendMessage",
+          "ssm:GetParameter",
         ]
         Effect   = "Allow"
-        Resource = [aws_sqs_queue.consumer_sqs[0].arn]
+        Resource = [
+          aws_sqs_queue.consumer_sqs[0].arn,
+          aws_ssm_parameter.dedicated_consumer_sqs[0].arn
+        ]
       },
     ]
   })
@@ -71,12 +75,15 @@ resource "aws_iam_policy" "consumer-iampolicy" {
           "sqs:GetQueueAttributes",
           "sqs:ListQueueTags",
           "sqs:DeleteMessage",
-          "dynamodb:PutItem"
+          "dynamodb:PutItem",
+          "ssm:GetParameter"
         ]
         Effect   = "Allow"
         Resource = [
           aws_dynamodb_table.consumer_ddb[0].arn,
-          aws_sqs_queue.consumer_sqs[0].arn
+          aws_sqs_queue.consumer_sqs[0].arn,
+          aws_ssm_parameter.dedicated_consumer_sqs[0].arn,
+          aws_ssm_parameter.dedicated_consumer_ddb[0].arn
         ]
       },
     ]

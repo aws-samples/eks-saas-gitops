@@ -52,4 +52,4 @@ spec:
     deployIngress: true
     consumer:
       serviceAccount:
-        annotations: { eks.amazonaws.com/role-arn: {{TENANT_ID}_consumer_irsa_role } }
+        annotations: { eks.amazonaws.com/role-arn: {{TENANT_ID}_consumer_irsa_role} }

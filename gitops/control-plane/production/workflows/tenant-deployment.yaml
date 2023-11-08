@@ -6,6 +6,9 @@ metadata:
 spec:
   serviceAccountName: argoworkflows-sa
   entrypoint: tenant-deployment
+  synchronization:
+    mutex:
+      name: workflow
   arguments:
     parameters:
       - name: TENANT_MODEL

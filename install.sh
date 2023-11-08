@@ -15,7 +15,7 @@ catch_error() {
 
      JSON_DATA='{
           "Status": "'"$STATUS"'",
-          "Reason": "Error "'"$1"'" occurred on "'"$2"'",
+          "Reason": "Error '"$1"' occurred on '"$2"'",
           "StackId": "'"$EVENT_STACK_ID"'",
           "PhysicalResourceId": "Terraform",
           "RequestId": "'"$EVENT_REQUEST_ID"'",

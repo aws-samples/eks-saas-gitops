@@ -201,6 +201,9 @@ git clone $CLONE_URL_CODECOMMIT_USER_PAYMENTS
 # Flux repository copy from public repo to CodeCommit
 cp -r /home/ec2-user/environment/eks-saas-gitops/* /home/ec2-user/environment/eks-saas-gitops-aws
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/eks-saas-gitops-aws/.gitignore
+# remove folders that are not needed on the GitOps repo
+rm -rf /home/ec2-user/environment/eks-saas-gitops-aws/helpers
+rm -rf /home/ec2-user/environment/eks-saas-gitops-aws/tenant-microservices
 
 # Producer microsservice copy repository
 cp -r /home/ec2-user/environment/eks-saas-gitops/tenant-microservices/producer/* /home/ec2-user/environment/producer
@@ -312,8 +315,8 @@ git push origin v0.0.1
 cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
 for item in $(terraform output -json | jq -r 'keys[]')
 do
-  irsa_role=$(terraform output -json | jq -r ".\"$item\".value")
-  sed -i "s|{$item}|${irsa_role}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
+     irsa_role=$(terraform output -json | jq -r ".\"$item\".value")
+     sed -i "s|{$item}|${irsa_role}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
 done
 
 

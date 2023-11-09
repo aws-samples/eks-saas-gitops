@@ -203,17 +203,17 @@ cp -r /home/ec2-user/environment/eks-saas-gitops/* /home/ec2-user/environment/ek
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/eks-saas-gitops-aws/.gitignore
 
 # Producer microsservice copy repository
-cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/producer/* /home/ec2-user/environment/producer
+cp -r /home/ec2-user/environment/eks-saas-gitops/tenant-microservices/producer/* /home/ec2-user/environment/producer
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/producer/.gitignore
 cd /home/ec2-user/environment/producer/ && git checkout -b main && git add . && git commit -am "Added producer MS and configs" && git push origin main
 
 # Consumer microsservice copy repository
-cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/consumer/* /home/ec2-user/environment/consumer
+cp -r /home/ec2-user/environment/eks-saas-gitops/tenant-microservices/consumer/* /home/ec2-user/environment/consumer
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/consumer/.gitignore
 cd /home/ec2-user/environment/consumer/ && git checkout -b main && git add . && git commit -am "Added consumer MS and configs" && git push origin main
 
 # Payments microsservice copy repository
-cp -r /home/ec2-user/environment/eks-saas-gitops/tenants-microsservices/payments/* /home/ec2-user/environment/payments
+cp -r /home/ec2-user/environment/eks-saas-gitops/tenant-microservices/payments/* /home/ec2-user/environment/payments
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/payments/.gitignore
 cd /home/ec2-user/environment/payments/ && git checkout -b main && git add . && git commit -am "Added payments MS and configs" && git push origin main
 
@@ -279,14 +279,14 @@ aws ecr get-login-password \
      --region $AWS_REGION | docker login \
      --username AWS \
      --password-stdin $ECR_PRODUCER_CONTAINER
-docker build -t $ECR_PRODUCER_CONTAINER:0.1 tenants-microsservices/producer
+docker build -t $ECR_PRODUCER_CONTAINER:0.1 tenant-microservices/producer
 docker push $ECR_PRODUCER_CONTAINER:0.1
 
 aws ecr get-login-password \
      --region $AWS_REGION | docker login \
      --username AWS \
      --password-stdin $ECR_CONSUMER_CONTAINER
-docker build -t $ECR_CONSUMER_CONTAINER:0.1 tenants-microsservices/consumer
+docker build -t $ECR_CONSUMER_CONTAINER:0.1 tenant-microservices/consumer
 docker push $ECR_CONSUMER_CONTAINER:0.1
 
 aws ecr get-login-password \

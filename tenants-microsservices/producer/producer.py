@@ -10,7 +10,7 @@ app.logger.setLevel(logging.DEBUG)
 
 ssm_client = boto3.client("ssm")
 sqs_client = boto3.client("sqs")
-sms_queue_param_name_suffix = "producer_sqs"
+sms_queue_param_name_suffix = "consumer_sqs"
 
 environment = os.environ.get("ENVIRONMENT")
 service_name = "producer"

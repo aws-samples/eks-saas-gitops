@@ -1,3 +1,7 @@
+locals {
+  irsa_principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(data.aws_eks_cluster.eks-saas-gitops.identity[0].oidc[0].issuer, "https://", "")}"
+}
+
 resource "random_string" "random_suffix" {
   length  = 3
   special = false
@@ -45,7 +49,7 @@ module "producer_irsa_role" {
 
   oidc_providers = {
     main = {
-      provider_arn               = replace(data.aws_eks_cluster.eks-saas-gitops.identity[0].oidc[0].issuer, "https://", "")
+      provider_arn               = local.irsa_principal_arn
       namespace_service_accounts = ["${var.tenant_id}:producer"]
     }
   }
@@ -100,7 +104,7 @@ module "consumer_irsa_role" {
 
   oidc_providers = {
     main = {
-      provider_arn               = replace(data.aws_eks_cluster.eks-saas-gitops.identity[0].oidc[0].issuer, "https://", "")
+      provider_arn               = local.irsa_principal_arn
       namespace_service_accounts = ["${var.tenant_id}:consumer"]
     }
   }

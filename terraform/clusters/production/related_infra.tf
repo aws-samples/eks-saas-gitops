@@ -143,7 +143,7 @@ resource "aws_iam_policy" "karpenter-policy" {
   })
 }
 resource "aws_iam_policy_attachment" "karpenter_policy_attach" {
-  name       = "karpenter-poicy-attach"
+  name       = "karpenter-policy-attach"
   roles      = [module.karpenter_irsa_role.iam_role_name]
   policy_arn = aws_iam_policy.karpenter-policy.arn
   users      = []

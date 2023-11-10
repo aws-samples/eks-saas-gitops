@@ -112,8 +112,7 @@ def process_messages():
             logger.error("Exception raised! " + str(e))        
 
 
-if __name__ == "__main__":
-    ## TODO: Uncomment below once IRSA is set with correct policies
-    # Thread(target = process_messages).start() 
+if __name__ == "__main__":    
+    Thread(target = process_messages).start() 
     # run in 0.0.0.0 so that it can be accessed from outside the container
     app.run(host="0.0.0.0", port=80)

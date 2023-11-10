@@ -201,9 +201,6 @@ git clone $CLONE_URL_CODECOMMIT_USER_PAYMENTS
 # Flux repository copy from public repo to CodeCommit
 cp -r /home/ec2-user/environment/eks-saas-gitops/* /home/ec2-user/environment/eks-saas-gitops-aws
 cp /home/ec2-user/environment/eks-saas-gitops/.gitignore /home/ec2-user/environment/eks-saas-gitops-aws/.gitignore
-# remove folders that are not needed on the GitOps repo
-rm -rf /home/ec2-user/environment/eks-saas-gitops-aws/helpers
-rm -rf /home/ec2-user/environment/eks-saas-gitops-aws/tenant-microservices
 
 # Producer microsservice copy repository
 cp -r /home/ec2-user/environment/eks-saas-gitops/tenant-microservices/producer/* /home/ec2-user/environment/producer
@@ -298,6 +295,10 @@ aws ecr get-login-password \
      --password-stdin $ECR_ARGOWORKFLOW_CONTAINER
 docker build --build-arg aws_region=${AWS_REGION} -t $ECR_ARGOWORKFLOW_CONTAINER workflow-scripts
 docker push $ECR_ARGOWORKFLOW_CONTAINER
+
+# remove folders that are not needed on the GitOps repo
+rm -rf /home/ec2-user/environment/eks-saas-gitops-aws/helpers
+rm -rf /home/ec2-user/environment/eks-saas-gitops-aws/tenant-microservices
 
 echo "First commit CodeCommit repository"
 

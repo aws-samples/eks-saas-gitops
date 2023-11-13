@@ -14,7 +14,9 @@ resource "random_string" "random_suffix" {
   }
 }
 
-# ---------------------[ PRODUCER INFRASTRUCTURE ]--------------------
+################################################################################
+# PRODUCER Infrastructure
+################################################################################
 # IAM POLICY FOR PRODUCER TO ACCESS CONSUMER SQS QUEUE
 resource "aws_iam_policy" "producer-iampolicy" {
   count = var.enable_consumer == true ? 1 : 0
@@ -39,8 +41,10 @@ resource "aws_iam_policy" "producer-iampolicy" {
 
 # IF DEDICATED PRODUCER AND CONSUMER:
 module "producer_irsa_role" {
-  count     = var.enable_producer == true && var.enable_consumer == true ? 1 : 0
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  count   = var.enable_producer == true && var.enable_consumer == true ? 1 : 0
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "producer-role-${var.tenant_id}"
 
   role_policy_arns = {
@@ -62,7 +66,9 @@ resource "aws_iam_role_policy_attachment" "sto-readonly-role-policy-attach" {
   policy_arn = aws_iam_policy.producer-iampolicy[0].arn
 }
 
-# ---------------------[ CONSUMER INFRASTRUCTURE ]--------------------
+################################################################################
+# CONSUMER Infrastructure
+################################################################################
 resource "aws_iam_policy" "consumer-iampolicy" {
   count = var.enable_consumer == true ? 1 : 0
   name  = "consumer-policy-${var.tenant_id}"
@@ -93,9 +99,12 @@ resource "aws_iam_policy" "consumer-iampolicy" {
     ]
   })
 }
+
 module "consumer_irsa_role" {
-  count     = var.enable_consumer == true ? 1 : 0
-  source    = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  count   = var.enable_consumer == true ? 1 : 0
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
   role_name = "consumer-role-${var.tenant_id}"
 
   role_policy_arns = {
@@ -109,6 +118,7 @@ module "consumer_irsa_role" {
     }
   }
 }
+
 resource "aws_sqs_queue" "consumer_sqs" {
   count = var.enable_consumer == true ? 1 : 0
   name  = "consumer-${var.tenant_id}-${random_string.random_suffix.result}"
@@ -117,12 +127,14 @@ resource "aws_sqs_queue" "consumer_sqs" {
     Name = var.tenant_id
   }
 }
+
 resource "aws_ssm_parameter" "dedicated_consumer_sqs" {
   count = var.enable_consumer == true ? 1 : 0
   name  = "/${var.tenant_id}/consumer_sqs"
   type  = "String"
   value = aws_sqs_queue.consumer_sqs[0].arn
 }
+
 resource "aws_ssm_parameter" "shared_consumer_sqs" {
   count = var.enable_consumer == false ? 1 : 0
   name  = "/${var.tenant_id}/consumer_sqs"
@@ -151,12 +163,14 @@ resource "aws_dynamodb_table" "consumer_ddb" {
     Name = var.tenant_id
   }
 }
+
 resource "aws_ssm_parameter" "dedicated_consumer_ddb" {
   count = var.enable_consumer == true ? 1 : 0
   name  = "/${var.tenant_id}/consumer_ddb"
   type  = "String"
   value = aws_dynamodb_table.consumer_ddb[0].arn
 }
+
 resource "aws_ssm_parameter" "shared_consumer_ddb" {
   count = var.enable_consumer == false ? 1 : 0
   name  = "/${var.tenant_id}/consumer_ddb"
@@ -164,7 +178,10 @@ resource "aws_ssm_parameter" "shared_consumer_ddb" {
   value = data.aws_ssm_parameter.pool_1_consumer_ddb[0].value
 }
 
-# ---------------------[ PAYMENTS INFRASTRUCTURE ]--------------------
+################################################################################
+# PAYMENTS Infrastructure
+################################################################################
+# Uncomment all lines below this one 
 
 # resource "aws_s3_bucket" "payments_bucket" {
 #   count  = var.enable_payments == true ? 1 : 0

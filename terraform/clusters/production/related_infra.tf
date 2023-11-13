@@ -214,7 +214,9 @@ resource "aws_iam_policy" "argosensor-policy" {
           "sqs:ListMessageMoveTasks",
           "sqs:ReceiveMessage",
           "sqs:GetQueueAttributes",
-          "sqs:ListQueueTags"
+          "sqs:ListQueueTags",
+          "sqs:PurgeQueue",
+          "sqs:DeleteMessage"
         ],
         "Effect" : "Allow",
         "Resource" : aws_sqs_queue.argoworkflows_queue.arn,

@@ -159,7 +159,7 @@ resource "aws_iam_policy_attachment" "karpenter_policy_attach" {
       roles, users
     ]
   }
-  depends_on = [module.module.karpenter_irsa_role, aws_iam_policy.karpenter-policy]
+  depends_on = [module.karpenter_irsa_role, aws_iam_policy.karpenter-policy]
 }
 
 ################################################################################
@@ -239,7 +239,7 @@ module "argo_events_eks_role" {
     }
   }
 
-  depends_on = [aws_iam_policy.argosensor-policy.arn]
+  depends_on = [aws_iam_policy.argosensor-policy]
 }
 
 ################################################################################

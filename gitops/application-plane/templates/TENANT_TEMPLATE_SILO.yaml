@@ -26,4 +26,4 @@ spec:
       node-type: applications
     deployApps: true
     deployIngress: true
-    infraValues: {{TENANT_ID}_OUTPUTS}
+    infraValues:

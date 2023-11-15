@@ -50,4 +50,4 @@ spec:
       - name: consumer
     deployApps: true
     deployIngress: true
-    infraValues: {{TENANT_ID}_OUTPUTS}
+    infraValues:

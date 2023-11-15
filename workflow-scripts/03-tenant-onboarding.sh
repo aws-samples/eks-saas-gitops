@@ -46,8 +46,8 @@ fi
 cd $TENANT_TF_PATH || exit 1
 for tenant in $(terraform output -json | jq -r 'keys[]')
 do
-  infra_outputs=$(terraform output -json | jq -r ".\"$tenant\".value" | tr -d '\n')
-  sed -i "s|{{$tenant}_OUTPUTS}|${infra_outputs}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+  infra_outputs=$(terraform output -json | jq -r ".\"$tenant\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
+  sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
 done
 cd ../../../../
 

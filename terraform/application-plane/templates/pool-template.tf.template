@@ -1,16 +1,12 @@
-# It will deploy only the infraestructure of the siloed services
+# It will deploy only the infrastructure of the pool services
 module "pool_tenant___TENANT_ID__" {
   source          = "git::__MODULE_SOURCE__//terraform//modules//tenant-apps?ref=v0.0.1"
   tenant_id       = "__TENANT_ID__"
   enable_consumer = false
   enable_producer = false
-  enable_payments = false
+# enable_payments = false
 }
 
-output "__TENANT_ID___producer_irsa_role" {
-  value = try(module.pool_tenant___TENANT_ID__.producer_irsa_role, null)
-}
-
-output "__TENANT_ID___consumer_irsa_role" {
-  value = try(module.pool_tenant___TENANT_ID__.consumer_irsa_role, null)
+output "__TENANT_ID__" {
+  value = module.pool_tenant___TENANT_ID__
 }

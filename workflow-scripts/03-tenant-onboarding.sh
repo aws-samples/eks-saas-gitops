@@ -44,10 +44,10 @@ fi
 
 # Add IRSA to SA Annotation
 cd $TENANT_TF_PATH || exit 1
-for item in $(terraform output -json | jq -r 'keys[]')
+for tenant in $(terraform output -json | jq -r 'keys[]')
 do
-  irsa_role=$(terraform output -json | jq -r ".\"$item\".value")
-  sed -i "s|{$item}|${irsa_role}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+  infra_outputs=$(terraform output -json | jq -r ".\"$tenant\".value" | tr -d '\n')
+  sed -i "s|{{$tenant}_OUTPUTS}|${infra_outputs}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
 done
 cd ../../../../
 

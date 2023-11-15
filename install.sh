@@ -313,13 +313,13 @@ git tag v0.0.1 $LAST_COMMIT_ID
 git push origin v0.0.1
 
 # Applying after push for being able to reference tenants terraform as a module
-cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
-for item in $(terraform output -json | jq -r 'keys[]')
-do
-     irsa_role=$(terraform output -json | jq -r ".\"$item\".value")
-     sed -i "s|{$item}|${irsa_role}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
-done
 
+cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
+for tenant in $(terraform output -json | jq -r 'keys[]')
+do
+  infra_outputs=$(terraform output -json | jq -r ".\"$tenant\".value" | tr -d '\n')
+  sed -i "s|{{$tenant}_OUTPUTS}|${infra_outputs}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
+done
 
 echo "Configuring Flux and Argo to use SSH Key"
 cd /home/ec2-user/environment/

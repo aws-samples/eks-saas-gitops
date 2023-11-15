@@ -11,35 +11,28 @@ TENANT_TF_TEMPLATE_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/te
 TERRAFORM_SCRIPT_TEMPLATE_SILO="${TENANT_TF_TEMPLATE_PATH}/silo-template.tf.template"
 TERRAFORM_SCRIPT_TEMPLATE_HYBRID="${TENANT_TF_TEMPLATE_PATH}/hybrid-template.tf.template"
 TERRAFORM_SCRIPT_TEMPLATE_POOL="${TENANT_TF_TEMPLATE_PATH}/pool-template.tf.template"
+TERRAFORM_SCRIPT_TEMPLATE_POOL_ENV="${TENANT_TF_TEMPLATE_PATH}/pool-env-template.tf.template"
 
 for TENANT_FILE in $(ls $TENANT_TF_PATH/tenant*)
-  do
-    if [[ "$TENANT_FILE" == *"hybrid"* && "$TENANT_MODEL" == "hybrid" ]]; then
-      cp "$TERRAFORM_SCRIPT_TEMPLATE_HYBRID" "${TENANT_FILE}"
-    elif [[ "$TENANT_FILE" == *"silo"* && "$TENANT_MODEL" == "silo" ]]; then
-      cp "$TERRAFORM_SCRIPT_TEMPLATE_SILO" "${TENANT_FILE}"
-    elif [[ "$TENANT_FILE" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
-      cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${TENANT_FILE}"
-    fi
+do
+  TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
+  if [[ "$TENANT_FILE" == *"hybrid"* && "$TENANT_MODEL" == "hybrid" ]]; then
+    cp "$TERRAFORM_SCRIPT_TEMPLATE_HYBRID" "${TENANT_FILE}"
+  elif [[ "$TENANT_FILE" == *"silo"* && "$TENANT_MODEL" == "silo" ]]; then
+    cp "$TERRAFORM_SCRIPT_TEMPLATE_SILO" "${TENANT_FILE}"
+  elif [[ "$TENANT_FILE" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
+    cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${TENANT_FILE}"
+  fi
+  sed -i "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_FILE
 done
 
-for POOLED_ENVS in $(ls $TENANT_TF_PATH/pooled-*)
-  do 
-    if [[ "$POOLED_ENV" == *"pool"* && "$TENANT_MODEL" == "pool" ]]; then
-      cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL" "${POOLED_ENV}"
-    fi
+if [[ "$TENANT_MODEL" == "pool" ]]; then
+  for POOLED_ENV in $(ls $TENANT_TF_PATH/pooled-*)
+  do
+    ENVIRONMENT_ID=$(echo $POOLED_ENV | tr '/' '\n' | tail -n1 | cut -d '.' -f1)
+    cp "$TERRAFORM_SCRIPT_TEMPLATE_POOL_ENV" "${POOLED_ENV}"
+    sed -i "s|__ENVIRONMENT_ID__|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
   done
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
-    do
-      sed -i "" "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_TF_PATH/*.tf
-    done
-else
-  for TENANT_ID in $(cd $TENANT_TF_PATH; ls tenant* | cut -d- -f1,2)
-    do
-      sed -i "s|__TENANT_ID__|$TENANT_ID|g" $TENANT_TF_PATH/*.tf
-    done
 fi
 
 echo "Replacements completed successfully."

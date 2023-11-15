@@ -24,9 +24,4 @@ spec:
     tenantId: pool-1
     deployApps: true
     deployIngress: true # to simplify cleaning the stack
-    producer:
-      serviceAccount:
-        annotations: "eks.amazonaws.com/role-arn: {pooled-1_producer_irsa_role}"
-    consumer:
-      serviceAccount:
-        annotations: "eks.amazonaws.com/role-arn: {pooled-1_consumer_irsa_role}"
+    infraValues: {pooled-1_OUTPUTS}

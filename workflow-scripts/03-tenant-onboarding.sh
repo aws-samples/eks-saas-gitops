@@ -1,5 +1,5 @@
 tenant_id="$1"
-major_version="$2"
+release_version="$2"
 tenant_model="$3"
 git_user_email="$4"
 git_user_name="$5"
@@ -19,7 +19,7 @@ TENANT_MANIFEST_FILE="${tenant_id}-${tenant_model}.yaml"
 if [ "$tenant_model" == "pool" ]; then
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_POOL_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
-    sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
     # append a new line in kustomization.yaml file using $TENANT_MANIFEST_FILE
     printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
@@ -27,28 +27,22 @@ if [ "$tenant_model" == "pool" ]; then
 elif [ "$tenant_model" == "silo" ]; then
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_SILO_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
-    sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-    sed -i "s|{SQS_QUEUE_ARN}|${SQS_QUEUE_ARN}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-    sed -i "s|{DDB_TABLE_ARN}|${DDB_TABLE_ARN}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
     printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 
 elif [ "$tenant_model" == "hybrid" ]; then
     cd  $TEMPLATE_PATH || exit 1
     sed -e "s|{TENANT_ID}|${tenant_id}|g" "${TENANT_HYBRID_TEMPLATE_FILE}" > ${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}
-    sed -i "s|{MAJOR_VERSION}|${major_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-    sed -i "s|{SQS_QUEUE_ARN}|${SQS_QUEUE_ARN}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
     printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> ${MANIFESTS_PATH}kustomization.yaml
     cd ../../../
 fi
 
-# Add IRSA to SA Annotation
+# Terraform Outputs to Helm Release
 cd $TENANT_TF_PATH || exit 1
-for tenant in $(terraform output -json | jq -r 'keys[]')
-do
-  infra_outputs=$(terraform output -json | jq -r ".\"$tenant\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
-  sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-done
+infra_outputs=$(terraform output -json | jq -r ".\"$tenant_id\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
+sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
 cd ../../../../
 
 cat <<EOF > /root/.ssh/config

@@ -60,8 +60,8 @@ spec:
                       value: "" # ID of your tenant, use this patter eg. tenant-xx (tenant-10, tenant-11)
                     - name: TENANT_MODEL
                       value: "" # Valid values are: silo, pool, hybrid
-                    - name: MAJOR_VERSION
-                      value: "" # I.E. 0 or 1
+                    - name: RELEASE_VERSION
+                      value: "" # I.E. 0.0 or 1.0
                     - name: REPO_URL
                       value: "{REPO_URL}"
                     - name: GIT_USER_EMAIL
@@ -111,5 +111,5 @@ spec:
               dest: spec.arguments.parameters.1.value
             - src:
                 dependencyName: tenant-provisioning-dep
-                dataKey: body.major_version
+                dataKey: body.release_version
               dest: spec.arguments.parameters.2.value

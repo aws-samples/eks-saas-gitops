@@ -6,21 +6,41 @@ REPOSITORY_BRANCH="$5"
 
 MANIFESTS_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/"
 POOLED_ENVS="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/pooled-envs/"
+TENANT_TF_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/production/environments"
+
+TEMPLATE_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/templates/"
+TENANT_HYBRID_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_HYBRID.yaml"
+TENANT_POOL_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_POOL.yaml"
+TENANT_POOL_ENV_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_POOL_ENV.yaml"
+TENANT_SILO_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_SILO.yaml"
 
 for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
   do
+    TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
     if [[ "$TENANT_FILE" == *"hybrid"* && "$tenant_model" == "hybrid" ]]; then
-      sed -i "s|version:.*|version: ${release_version}.x|g" "${TENANT_FILE}"
+      cp "$TENANT_HYBRID_TEMPLATE_FILE" "${TENANT_FILE}"
     elif [[ "$TENANT_FILE" == *"silo"* && "$tenant_model" == "silo" ]]; then
-      sed -i "s|version:.*|version: ${release_version}.x|g" "${TENANT_FILE}"
+      cp "$TENANT_SILO_TEMPLATE_FILE" "${TENANT_FILE}"
     elif [[ "$TENANT_FILE" == *"pool"* && "$tenant_model" == "pool" ]]; then
-      sed -i "s|version:.*|version: ${release_version}.x|g" "${TENANT_FILE}"
+      cp "$TENANT_POOL_TEMPLATE_FILE" "${TENANT_FILE}"
     fi
+    cd $TENANT_TF_PATH || exit 1
+    infra_outputs=$(terraform output -json | jq -r ".\"$TENANT_ID\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
+    sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "$TENANT_FILE"
+    sed -i "s|{TENANT_ID}|$TENANT_ID|g" "$TENANT_FILE"
+    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${TENANT_FILE}"
 done
 
 if [[ $tenant_model == "pool" ]]; then
   for POOLED_ENV in $(ls $POOLED_ENVS/pool-*)
-    do sed -i "s|version:.*|version: ${release_version}.x|g" "${POOLED_ENV}"
+    do
+      ENVIRONMENT_ID=$(echo $POOLED_ENV | tr '/' '\n' | tail -n1 | cut -d '.' -f1)
+      cp "$TENANT_POOL_ENV_TEMPLATE_FILE" "${POOLED_ENV}"
+      sed -i "s|{ENVIRONMENT_ID}|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
+      sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${POOLED_ENV}"
+      cd $TENANT_TF_PATH || exit 1
+      infra_outputs=$(terraform output -json | jq -r ".\"$ENVIRONMENT_ID\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
+      sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "${POOLED_ENV}"
   done
 fi
 

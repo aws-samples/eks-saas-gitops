@@ -24,4 +24,4 @@ spec:
     tenantId: pool-1
     deployApps: true
     deployIngress: true # to simplify cleaning the stack
-    infraValues: {pooled-1_OUTPUTS}
+    infraValues:

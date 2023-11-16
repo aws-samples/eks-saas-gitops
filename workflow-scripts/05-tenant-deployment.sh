@@ -23,7 +23,8 @@ if [[ $tenant_model == "pool" ]]; then
       sed -i "s|{ENVIRONMENT_ID}|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
       sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${POOLED_ENV}"
       cd $TENANT_TF_PATH || exit 1
-      terraform output -json | jq ".\"$ENVIRONMENT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
+      POOLED_TF=$(ls pooled-* | cut -d. -f1)
+      terraform output -json | jq ".\"$POOLED_TF\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
       sed -i '/infraValues:/r ./infra_outputs.yaml' "${POOLED_ENV}"
       rm -rf ./infra_outputs.yaml
   done

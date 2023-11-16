@@ -15,6 +15,20 @@ TENANT_POOL_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_POOL.yaml"
 TENANT_POOL_ENV_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_POOL_ENV.yaml"
 TENANT_SILO_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_SILO.yaml"
 
+if [[ $tenant_model == "pool" ]]; then
+  for POOLED_ENV in $(ls $POOLED_ENVS/pool-*)
+    do
+      ENVIRONMENT_ID=$(echo $POOLED_ENV | tr '/' '\n' | tail -n1 | cut -d '.' -f1)
+      cp "$TENANT_POOL_ENV_TEMPLATE_FILE" "${POOLED_ENV}"
+      sed -i "s|{ENVIRONMENT_ID}|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
+      sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${POOLED_ENV}"
+      cd $TENANT_TF_PATH || exit 1
+      terraform output -json | jq ".\"$ENVIRONMENT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
+      sed -i '/infraValues:/r ./infra_outputs.yaml' "${POOLED_ENV}"
+      rm -rf ./infra_outputs.yaml
+  done
+fi
+
 for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
   do
     TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
@@ -40,20 +54,6 @@ for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
     sed -i "s|{TENANT_ID}|$TENANT_ID|g" "$TENANT_FILE"
     sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${TENANT_FILE}"
 done
-
-if [[ $tenant_model == "pool" ]]; then
-  for POOLED_ENV in $(ls $POOLED_ENVS/pool-*)
-    do
-      ENVIRONMENT_ID=$(echo $POOLED_ENV | tr '/' '\n' | tail -n1 | cut -d '.' -f1)
-      cp "$TENANT_POOL_ENV_TEMPLATE_FILE" "${POOLED_ENV}"
-      sed -i "s|{ENVIRONMENT_ID}|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
-      sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${POOLED_ENV}"
-      cd $TENANT_TF_PATH || exit 1
-      terraform output -json | jq ".\"$ENVIRONMENT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
-      sed -i '/infraValues:/r ./infra_outputs.yaml' "${POOLED_ENV}"
-      rm -rf ./infra_outputs.yaml
-  done
-fi
 
 cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com

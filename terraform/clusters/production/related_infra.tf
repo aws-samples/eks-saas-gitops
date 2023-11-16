@@ -195,8 +195,11 @@ resource "aws_s3_bucket" "argo_artifacts" {
 }
 
 # SQS Queue to Trigger ArgoWorkflows
-resource "aws_sqs_queue" "argoworkflows_queue" {
-  name = "argoworkflows-queue"
+resource "aws_sqs_queue" "argoworkflows_onboarding_queue" {
+  name = "argoworkflows-onboarding-queue"
+}
+resource "aws_sqs_queue" "argoworkflows_deployment_queue" {
+  name = "argoworkflows-deployment-queue"
 }
 
 resource "aws_iam_policy" "argosensor-policy" {
@@ -219,11 +222,15 @@ resource "aws_iam_policy" "argosensor-policy" {
           "sqs:DeleteMessage"
         ],
         "Effect" : "Allow",
-        "Resource" : aws_sqs_queue.argoworkflows_queue.arn,
+        "Resource" : [
+          aws_sqs_queue.argoworkflows_onboarding_queue.arn,
+          aws_sqs_queue.argoworkflows_deployment_queue.arn
+        ]
       }
     ]
   })
 }
+
 module "argo_events_eks_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "5.30.0"

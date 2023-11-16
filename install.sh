@@ -94,7 +94,8 @@ echo "Exporting terraform output to environment variables"
 outputs=("argo_workflows_bucket_name" 
           "argo_workflows_irsa"
           "argo_events_irsa"
-          "argo_workflows_sqs_url"
+          "argo_workflows_onboarding_sqs_url"
+          "argo_workflows_deployment_sqs_url"
           "aws_codecommit_clone_url_http" 
           "aws_codecommit_clone_url_ssh" 
           "aws_vpc_id" 
@@ -257,8 +258,8 @@ sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/producti
 sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-workflow-template.yaml"
-sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment.yaml"
-sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment.yaml"
+sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
+sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
 sed -i "s|{PRODUCER_ECR}|${ECR_PRODUCER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml"

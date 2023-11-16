@@ -67,6 +67,10 @@ spec:
                           templateRef:
                             name: tenant-onboarding-template
                             template: clone-repository
+                      - - name: validate-if-tenant-exists # TODO: Create a validation/ folder to have validation templates
+                          templateRef:
+                            name: tenant-onboarding-template # All sensors could reference the same template
+                            template: validate-if-tenant-exists
                       - - name: create-tenant-infrastructure
                           templateRef:
                             name: tenant-onboarding-template

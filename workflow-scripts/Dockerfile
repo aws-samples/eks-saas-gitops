@@ -14,7 +14,8 @@ RUN apk update && \
         wget \
         unzip \
         jq \
-        yq
+        yq \
+        bash
 
 # Install Terraform
 ENV TERRAFORM_VERSION=1.5.1

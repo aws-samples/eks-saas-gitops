@@ -13,7 +13,8 @@ RUN apk update && \
         openssl \
         wget \
         unzip \
-        jq
+        jq \
+        yq
 
 # Install Terraform
 ENV TERRAFORM_VERSION=1.5.1
@@ -24,4 +25,3 @@ RUN wget --quiet https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/t
 COPY . /
 # Display installed versions
 RUN terraform version && git version && mkdir -p /root/.ssh/ && ssh-keyscan "git-codecommit.${AWS_REGION}.amazonaws.com" >> /root/.ssh/known_hosts
-

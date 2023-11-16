@@ -42,3 +42,8 @@ terraform.rc
 
 .kube/
 # End of https://www.toptal.com/developers/gitignore/api/terraform
+
+.DS_Store
+.idea
+.build
+*.vscode

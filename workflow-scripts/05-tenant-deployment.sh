@@ -1,5 +1,4 @@
 #!/bin/bash
-
 release_version="$1"
 tenant_model="$2"
 git_user_email="$3"

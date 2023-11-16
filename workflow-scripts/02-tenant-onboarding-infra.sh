@@ -1,3 +1,4 @@
+#!/bin/bash
 # Set the desired values for AWS_REGION, TENANT_ID, TENANT_MODEL
 TENANT_ID="$1"
 TENANT_MODEL="$2"

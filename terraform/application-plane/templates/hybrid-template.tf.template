@@ -1,14 +1,12 @@
-# It will deploy only the infraestructure of the siloed services
+# It will deploy only the infrastructure of the hybrid services
 module "hybrid_tenant___TENANT_ID__" {
   source          = "git::__MODULE_SOURCE__//terraform//modules//tenant-apps?ref=v0.0.1"
   tenant_id       = "__TENANT_ID__"
   enable_producer = false
+  enable_consumer = true
+# enable_payments = true
 }
 
-output "__TENANT_ID___producer_irsa_role" {
-  value = try(module.hybrid_tenant___TENANT_ID__.producer_irsa_role, null)
-}
-
-output "__TENANT_ID___consumer_irsa_role" {
-  value = try(module.hybrid_tenant___TENANT_ID__.consumer_irsa_role, null)
+output "__TENANT_ID__" {
+  value = module.hybrid_tenant___TENANT_ID__
 }

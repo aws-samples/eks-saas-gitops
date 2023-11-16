@@ -94,7 +94,8 @@ echo "Exporting terraform output to environment variables"
 outputs=("argo_workflows_bucket_name" 
           "argo_workflows_irsa"
           "argo_events_irsa"
-          "argo_workflows_sqs_url"
+          "argo_workflows_onboarding_sqs_url"
+          "argo_workflows_deployment_sqs_url"
           "aws_codecommit_clone_url_http" 
           "aws_codecommit_clone_url_ssh" 
           "aws_vpc_id" 
@@ -234,6 +235,7 @@ sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PL
 sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/hybrid-template.tf.template"
 sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/pool-template.tf.template"
 sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/silo-template.tf.template"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/pool-env-template.tf.template"
 
 echo "Changing template files to terraform output values"
 
@@ -256,8 +258,9 @@ sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/producti
 sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-workflow-template.yaml"
-sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment.yaml"
-sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment.yaml"
+sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
+sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
+sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
 sed -i "s|{PRODUCER_ECR}|${ECR_PRODUCER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml"
@@ -314,12 +317,8 @@ git push origin v0.0.1
 
 # Applying after push for being able to reference tenants terraform as a module
 cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
-for item in $(terraform output -json | jq -r 'keys[]')
-do
-     irsa_role=$(terraform output -json | jq -r ".\"$item\".value")
-     sed -i "s|{$item}|${irsa_role}|g" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
-done
-
+terraform output -json | jq ".\"pooled-1\".\"value\"" | yq e -P - | sed 's/^/      /' > /tmp/infra_outputs.yaml
+sed -i '/infraValues:/r /tmp/infra_outputs.yaml' /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
 
 echo "Configuring Flux and Argo to use SSH Key"
 cd /home/ec2-user/environment/

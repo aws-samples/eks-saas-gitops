@@ -57,9 +57,14 @@ output "argo_workflows_bucket_name" {
   value       = aws_s3_bucket.argo_artifacts.id
 }
 
-output "argo_workflows_sqs_url" {
-  description = "Amazon SQS queue URL"
-  value       = aws_sqs_queue.argoworkflows_queue.url
+output "argo_workflows_onboarding_sqs_url" {
+  description = "Amazon SQS queue URL for Onboarding"
+  value       = aws_sqs_queue.argoworkflows_onboarding_queue.url
+}
+
+output "argo_workflows_deployment_sqs_url" {
+  description = "Amazon SQS queue URL for Deployment"
+  value       = aws_sqs_queue.argoworkflows_deployment_queue.url
 }
 
 output "argo_events_irsa" {

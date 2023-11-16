@@ -16,7 +16,7 @@ spec:
   chart:
     spec:
       chart: helm-tenant-chart
-      version: {MAJOR_VERSION}.0.x
+      version: {RELEASE_VERSION}.x
       sourceRef:
         kind: HelmRepository
         name: helm-tenant-chart
@@ -26,9 +26,4 @@ spec:
       node-type: applications
     deployApps: true
     deployIngress: true
-    producer:
-      serviceAccount:
-        annotations: { eks.amazonaws.com/role-arn: {{TENANT_ID}_producer_irsa_role} }
-    consumer:
-      serviceAccount:
-        annotations: { eks.amazonaws.com/role-arn: {{TENANT_ID}_consumer_irsa_role} }
+    infraValues:

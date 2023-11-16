@@ -4,10 +4,6 @@ module "pooled-1" {
   tenant_id = "pooled-1"
 }
 
-output "pooled-1_producer_irsa_role" {
-  value = try(module.pooled-1.producer_irsa_role, null)
-}
-
-output "pooled-1_consumer_irsa_role" {
-  value = try(module.pooled-1.consumer_irsa_role, null)
+output "pooled-1" {
+  value = module.pooled-1
 }

@@ -2,33 +2,33 @@
 apiVersion: argoproj.io/v1alpha1
 kind: EventSource
 metadata:
-  name: aws-sqs-onboarding
+  name: aws-sqs-deployment
   namespace: argo-events
 spec:
   template:
     serviceAccountName: argo-events-sa
   sqs:
-    tenant-provisioning:
+    tenant-deployment:
       jsonBody: true
       region: "{AWS_REGION}"
-      queue: "argoworkflows-onboarding-queue"
+      queue: "argoworkflows-deployment-queue"
       waitTimeSeconds: 20
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: aws-sqs-onboarding
+  name: aws-sqs-deployment
   namespace: argo-events
 spec:
   template:
     serviceAccountName: argo-events-sa
   dependencies:
-    - name: tenant-provisioning-dep
-      eventSourceName: aws-sqs-onboarding
-      eventName: tenant-provisioning
+    - name: tenant-deployment-dep
+      eventSourceName: aws-sqs-deployment
+      eventName: tenant-deployment
   triggers:
     - template:
-        name: tenant-onboarding-template
+        name: tenant-deployment-template
         k8s:
           operation: create
           source:
@@ -36,22 +36,20 @@ spec:
               apiVersion: argoproj.io/v1alpha1
               kind: Workflow
               metadata:
-                generateName: tenant-onboarding-
+                generateName: tenant-deployment-
                 namespace: argo-workflows
               spec:
                 serviceAccountName: argoworkflows-sa
-                entrypoint: tenant-provisioning
+                entrypoint: tenant-deployment
                 synchronization:
                   mutex:
                     name: workflow
                 arguments:
                   parameters:
-                    - name: TENANT_ID
-                      value: "" # ID of your tenant, use this patter eg. tenant-xx (tenant-10, tenant-11)
                     - name: TENANT_MODEL
                       value: "" # Valid values are: silo, pool, hybrid
                     - name: RELEASE_VERSION
-                      value: "" # I.E. 0.0 or 1.0
+                      value: "" # Valid values are: silo, pool, hybrid
                     - name: REPO_URL
                       value: "{REPO_URL}"
                     - name: GIT_USER_EMAIL
@@ -61,20 +59,20 @@ spec:
                     - name: GIT_BRANCH
                       value: "main" # Can change based on your configs
                 templates:
-                  - name: tenant-provisioning
+                  - name: tenant-deployment
                     steps:
                       - - name: clone-repository
                           templateRef:
-                            name: tenant-onboarding-template
+                            name: tenant-deployment-template
                             template: clone-repository
-                      - - name: create-tenant-infrastructure
+                      - - name: update-tenant-infrastructure
                           templateRef:
-                            name: tenant-onboarding-template
-                            template: create-tenant-infrastructure
-                      - - name: create-tenant-helm-release
+                            name: tenant-deployment-template
+                            template: update-tenant-infrastructure
+                      - - name: update-tenant-helm-release
                           templateRef:
-                            name: tenant-onboarding-template
-                            template: create-tenant-helm-release
+                            name: tenant-deployment-template
+                            template: update-tenant-helm-release
                 volumeClaimTemplates:
                   - metadata:
                       name: workdir
@@ -92,14 +90,10 @@ spec:
                           path: id_rsa
           parameters:
             - src:
-                dependencyName: tenant-provisioning-dep
-                dataKey: body.tenant_id
+                dependencyName: tenant-deployment-dep
+                dataKey: body.tenant_model
               dest: spec.arguments.parameters.0.value
             - src:
-                dependencyName: tenant-provisioning-dep
-                dataKey: body.tenant_model
-              dest: spec.arguments.parameters.1.value
-            - src:
-                dependencyName: tenant-provisioning-dep
+                dependencyName: tenant-deployment-dep
                 dataKey: body.release_version
-              dest: spec.arguments.parameters.2.value
+              dest: spec.arguments.parameters.1.value

@@ -1,0 +1,12 @@
+# It will deploy only the infrastructure of the pool env
+module "__ENVIRONMENT_ID__" {
+  source          = "git::__MODULE_SOURCE__//terraform//modules//tenant-apps?ref=v0.0.1"
+  tenant_id       = "__ENVIRONMENT_ID__"
+  enable_consumer = true
+  enable_producer = true
+# enable_payments = true
+}
+
+output "__ENVIRONMENT_ID__" {
+  value = module.__ENVIRONMENT_ID__
+}

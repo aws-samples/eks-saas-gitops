@@ -205,3 +205,37 @@ resource "aws_ssm_parameter" "shared_consumer_ddb" {
 #   type  = "String"
 #   value = data.aws_ssm_parameter.pool_1_payments_bucket[0].value
 # }
+
+# resource "aws_iam_policy" "payments-iampolicy" {
+#   count = var.enable_payments == true ? 1 : 0
+#   name  = "payments-policy-${var.tenant_id}"
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = ["s3:ListBucket"]
+#         Effect = "Allow"
+#         Resource = ["*"]
+#       },
+#     ]
+#   })
+# }
+
+# module "payments_irsa_role" {
+#   count   = var.enable_payments == true ? 1 : 0
+#   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+#   version = "5.30.0"
+
+#   role_name = "payments-role-${var.tenant_id}"
+
+#   role_policy_arns = {
+#     policy = aws_iam_policy.payments-iampolicy[0].arn
+#   }
+
+#   oidc_providers = {
+#     main = {
+#       provider_arn               = local.irsa_principal_arn
+#       namespace_service_accounts = ["${var.tenant_id}:payments"]
+#     }
+#   }
+# }

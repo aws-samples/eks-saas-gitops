@@ -399,6 +399,8 @@ Resources:
             - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v0.41.2/flux_0.41.2_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
             - mv /tmp/flux /usr/local/bin
             - /usr/local/bin/flux completion bash > /etc/bash_completion.d/flux
+            - echo '=== INSTALL YQ ==='
+            - wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
             - echo '=== INSTALL PLUTO ==='
             - curl --silent --location "https://github.com/FairwindsOps/pluto/releases/download/v5.16.1/pluto_5.16.1_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
             - mv /tmp/pluto /usr/local/bin

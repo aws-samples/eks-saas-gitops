@@ -16,9 +16,7 @@ TENANT_SILO_TEMPLATE_FILE="${TEMPLATE_PATH}/TENANT_TEMPLATE_SILO.yaml"
 
 for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
   do
-    echo $TENANT_FILE
     TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
-    echo $TENANT_ID
     if [[ "$TENANT_FILE" == *"hybrid"* && "$tenant_model" == "hybrid" ]]; then
       cp "$TENANT_HYBRID_TEMPLATE_FILE" "${TENANT_FILE}"
       cd $TENANT_TF_PATH || exit 1

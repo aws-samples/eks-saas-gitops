@@ -258,6 +258,7 @@ sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/producti
 sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-onboarding-sensor.yaml"
 
 sed -i "s|{ARGO_WORKFLOW_CONTAINER}|${ECR_ARGOWORKFLOW_CONTAINER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-workflow-template.yaml"
+sed -i "s|{AWS_REGION}|${AWS_REGION}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
 sed -i "s|{REPO_URL}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
 sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/control-plane/production/workflows/tenant-deployment-sensor.yaml"
 

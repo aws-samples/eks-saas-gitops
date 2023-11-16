@@ -25,8 +25,8 @@ for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
       cp "$TENANT_POOL_TEMPLATE_FILE" "${TENANT_FILE}"
     fi
     cd $TENANT_TF_PATH || exit 1
-    infra_outputs=$(terraform output -json | jq -r ".\"$TENANT_ID\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
-    sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "$TENANT_FILE"
+    terraform output -json | jq ".\"$TENANT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > /tmp/infra_outputs.yaml
+    sed -i '/infraValues:/r /tmp/infra_outputs.yaml' "$TENANT_FILE"
     sed -i "s|{TENANT_ID}|$TENANT_ID|g" "$TENANT_FILE"
     sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${TENANT_FILE}"
 done
@@ -39,8 +39,8 @@ if [[ $tenant_model == "pool" ]]; then
       sed -i "s|{ENVIRONMENT_ID}|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
       sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${POOLED_ENV}"
       cd $TENANT_TF_PATH || exit 1
-      infra_outputs=$(terraform output -json | jq -r ".\"$ENVIRONMENT_ID\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
-      sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "${POOLED_ENV}"
+      terraform output -json | jq ".\"$ENVIRONMENT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > /tmp/infra_outputs.yaml
+      sed -i '/infraValues:/r /tmp/infra_outputs.yaml' "${POOLED_ENV}"
   done
 fi
 

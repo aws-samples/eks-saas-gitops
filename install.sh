@@ -314,8 +314,8 @@ git push origin v0.0.1
 
 # Applying after push for being able to reference tenants terraform as a module
 cd $APPLICATION_PLANE_INFRA_FOLDER && terraform init && terraform apply -auto-approve
-infra_outputs=$(terraform output -json | jq -r ".\"pooled-1\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
-sed -i "/infraValues/a \\\t\t\t${infra_outputs}" /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
+terraform output -json | jq ".\"pooled-1\".\"value\"" | yq e -P - | sed 's/^/      /' > /tmp/infra_outputs.yaml
+sed -i '/infraValues:/r /tmp/infra_outputs.yaml' /home/ec2-user/environment/eks-saas-gitops-aws/gitops/application-plane/production/pooled-envs/pool-1.yaml
 
 echo "Configuring Flux and Argo to use SSH Key"
 cd /home/ec2-user/environment/

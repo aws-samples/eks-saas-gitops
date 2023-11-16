@@ -41,8 +41,8 @@ fi
 
 # Terraform Outputs to Helm Release
 cd $TENANT_TF_PATH || exit 1
-infra_outputs=$(terraform output -json | jq -r ".\"$tenant_id\".value" | tr '\n' '\r' | sed -e 's|\r|\r\t\t\t|g')
-sed -i "/infraValues/a \\\t\t\t${infra_outputs}" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+terraform output -json | jq ".\"$tenant_id\".\"value\"" | yq e -P - | sed 's/^/      /' > /tmp/infra_outputs.yaml
+sed -i '/infraValues:/r /tmp/infra_outputs.yaml' "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
 cd ../../../../
 
 cat <<EOF > /root/.ssh/config

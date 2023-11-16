@@ -234,6 +234,7 @@ sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PL
 sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/hybrid-template.tf.template"
 sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/pool-template.tf.template"
 sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/silo-template.tf.template"
+sed -i "s|__MODULE_SOURCE__|${AWS_CODECOMMIT_CLONE_URL_SSH}|g" "${APPLICATION_PLANE_INFRA_TEMPLATE_FOLDER}/pool-env-template.tf.template"
 
 echo "Changing template files to terraform output values"
 

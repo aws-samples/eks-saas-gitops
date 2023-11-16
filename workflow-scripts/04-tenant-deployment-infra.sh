@@ -1,3 +1,4 @@
+#!/bin/bash
 # Set the desired values for AWS_REGION, TENANT_ID, TENANT_MODEL
 TENANT_MODEL="$1"
 git_user_email="$2"

@@ -1,3 +1,4 @@
+#!/bin/bash
 tenant_id="$1"
 release_version="$2"
 tenant_model="$3"

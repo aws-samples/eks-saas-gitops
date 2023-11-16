@@ -1,4 +1,4 @@
-
+#!/bin/bash
 
 if [ -z "$1" ]; then
   echo "Please provide the repo_url as the first argument."

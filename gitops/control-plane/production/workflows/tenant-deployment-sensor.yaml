@@ -8,7 +8,7 @@ spec:
   template:
     serviceAccountName: argo-events-sa
   sqs:
-    tenant-provisioning:
+    tenant-deployment:
       jsonBody: true
       region: "{AWS_REGION}"
       queue: "argoworkflows-deployment-queue"

@@ -28,25 +28,25 @@ fi
 # Creates new deployment file
 sed -i "s|__TENANT_ID__|$TENANT_ID|g" "$TERRAFORM_SCRIPT"
 
-# Apply terraform
-echo "Applying Terraform..."
-cd "$TENANT_TF_PATH"
-terraform init
-terraform plan
-terraform apply -auto-approve
-
-# Configure code-commit locally
+# Configure code-commit locally - terraform needs to pull ref version
 cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com
-  User ${GIT_USER_NAME}
-  IdentityFile /root/.ssh/id_rsa
+    User ${GIT_USER_NAME}
+    IdentityFile /root/.ssh/id_rsa
 EOF
 chmod 600 /root/.ssh/config
 git config --global user.email "${GIT_USER_EMAIL}"
 git config --global user.name "${GIT_USER_NAME}"
 
+# Apply terraform
+echo "Applying Terraform..."
+cd "$TENANT_TF_PATH" || exit
+terraform init
+terraform plan
+terraform apply -auto-approve
+
 # Commit files to gitops git repo
 git status
 git add .
 git commit -m "Adding new infra for tenant $TENANT_ID in model $TENANT_MODEL"
-git push origin $REPOSITORY_BRANCH
+git push origin "$REPOSITORY_BRANCH"

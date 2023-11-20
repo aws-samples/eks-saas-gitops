@@ -36,7 +36,7 @@ spec:
   releaseName: {TENANT_ID}-silo
   targetNamespace: {TENANT_ID}
   storageNamespace: {TENANT_ID}
-  interval: 10m0s
+  interval: 1m0s
   chart:
     spec:
       chart: helm-tenant-chart

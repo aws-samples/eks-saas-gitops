@@ -39,10 +39,8 @@ printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> "${MANIFESTS_PATH}kustomization.yaml
 cd ../../../ || exit 1
 
 # Link Terraform output to environment variables
-cd "$TENANT_TF_PATH" || exit 1
-TERRAFORM_OUTPUT=$(terraform output -json | jq ".\"$TENANT_ID\".\"value\"" | yq e -P -)
-echo "infraValues:" > ./infra_outputs.yaml
-echo "$TERRAFORM_OUTPUT" | sed 's/^/  /' >> ./infra_outputs.yaml
+cd $TENANT_TF_PATH || exit 1
+terraform output -json | jq ".\"$TENANT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
 sed -i '/infraValues:/r ./infra_outputs.yaml' "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
 rm -rf ./infra_outputs.yaml
 cd ../../../../

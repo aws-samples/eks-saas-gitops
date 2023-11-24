@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 
 environment = os.environ.get("ENVIRONMENT")
-service_name = "producer"
+service_name = "payments"
 ms_version = "1.0.0"
 
 @app.route("/payments")

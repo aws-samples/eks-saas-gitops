@@ -31,7 +31,8 @@ done
 aws ecr delete-repository --repository-name "$ARGOWORKFLOWECR" --force 
 aws ecr delete-repository --repository-name "$APPLICATIONHELMCHARTECR" --force 
 aws ecr delete-repository --repository-name "$CONSUMERSERVICEECR" --force 
-aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force 
+aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force
+aws ecr delete-repository --repository-name "$PAYMENTSSERVICEECR" --force 
 
 # remove tenant application stack
 cd $APPLICATION_PLANE_INFRA_FOLDER || exit 

@@ -8,6 +8,7 @@ ARGOWORKFLOWECR="argoworkflow-container"
 APPLICATIONHELMCHARTECR="gitops-saas/helm-tenant-chart"
 CONSUMERSERVICEECR="consumer-container"
 PRODUCERSERVICEECR="producer-container"
+PAYMENTSSERVICEECR="payments-container"
 VPC_NAME="eks-saas-gitops"
 
 #set terraform folders (weather they have been copied to code-commit folder or not)

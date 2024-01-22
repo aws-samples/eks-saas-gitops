@@ -94,3 +94,15 @@ variable "values_path" {
   description = "Path for Helm values"
   type        = string
 }
+
+variable "flux2_sync_version" {
+  description = "Flux2 sync helm chart version"
+  type        = string
+  default     = "1.7.3"
+}
+
+variable "flux2_version" {
+  description = "Flux2 helm chart version"
+  type        = string
+  default     = "2.11.1"
+}

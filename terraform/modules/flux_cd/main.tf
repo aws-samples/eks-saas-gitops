@@ -23,6 +23,7 @@ resource "helm_release" "flux2-sync" {
   namespace  = var.namespace
   repository = "https://fluxcd-community.github.io/helm-charts"
   chart      = "flux2-sync"
+  version    = var.flux2_sync_version
 
   values = [file(var.values_path)]
 
@@ -63,7 +64,8 @@ resource "helm_release" "flux2" {
   namespace  = var.namespace
   repository = "https://fluxcd-community.github.io/helm-charts"
   chart      = "flux2"
-
+  version    = var.flux2_version
+  
   set {
     name  = "helmController.create"
     value = var.activate_helm_controller

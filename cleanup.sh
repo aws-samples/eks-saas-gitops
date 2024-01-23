@@ -48,6 +48,9 @@ helm uninstall argo-workflows -n argo-workflows
 flux suspend hr pool-1
 helm uninstall pool-1 -n pool-1
 
+# remove flux
+flux uninstall
+
 #remove security groups created by the ALB ingress resources
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$VPC_NAME" --query "Vpcs[0].VpcId" --output text)
 security_group_ids=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc_id" --query "SecurityGroups[].GroupId" --output text)

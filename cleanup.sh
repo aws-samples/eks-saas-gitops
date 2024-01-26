@@ -8,6 +8,7 @@ ARGOWORKFLOWECR="argoworkflow-container"
 APPLICATIONHELMCHARTECR="gitops-saas/helm-tenant-chart"
 CONSUMERSERVICEECR="consumer-container"
 PRODUCERSERVICEECR="producer-container"
+PAYMENTSSERVICEECR="payments-container"
 VPC_NAME="eks-saas-gitops"
 
 #set terraform folders (weather they have been copied to code-commit folder or not)
@@ -31,7 +32,8 @@ done
 aws ecr delete-repository --repository-name "$ARGOWORKFLOWECR" --force 
 aws ecr delete-repository --repository-name "$APPLICATIONHELMCHARTECR" --force 
 aws ecr delete-repository --repository-name "$CONSUMERSERVICEECR" --force 
-aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force 
+aws ecr delete-repository --repository-name "$PRODUCERSERVICEECR" --force
+aws ecr delete-repository --repository-name "$PAYMENTSSERVICEECR" --force 
 
 # remove tenant application stack
 cd $APPLICATION_PLANE_INFRA_FOLDER || exit 
@@ -46,11 +48,23 @@ helm uninstall argo-workflows -n argo-workflows
 flux suspend hr pool-1
 helm uninstall pool-1 -n pool-1
 
+# remove flux
+flux uninstall -s
+
 #remove security groups created by the ALB ingress resources
 vpc_id=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$VPC_NAME" --query "Vpcs[0].VpcId" --output text)
 security_group_ids=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc_id" --query "SecurityGroups[].GroupId" --output text)
 for sg_id in $security_group_ids; do
-     echo "Deleting security group $sg_id"
+     echo "Revoking rules for security group $sg_id"
+     ingress_permissions=$(aws ec2 describe-security-group-rules --filters Name=group-id,Values="$sg_id" --query 'SecurityGroupRules[?!IsEgress].SecurityGroupRuleId' --output text)                           
+     for rule_id in $ingress_permissions; do
+          echo "Revoking rule: $rule_id for security group $sg_id"
+          aws ec2 revoke-security-group-ingress --group-id "$sg_id" --security-group-rule-ids "$rule_id"
+     done     
+done
+
+for sg_id in $security_group_ids; do
+     echo "Deleting security group $sg_id"     
      aws ec2 delete-security-group --group-id "$sg_id"
 done
 

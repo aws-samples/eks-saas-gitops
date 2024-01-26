@@ -370,15 +370,15 @@ sleep 120
 
 aws eks --region $AWS_REGION update-kubeconfig --name eks-saas-gitops
 
-echo "Verifying if any installation needs to be reconciled"
-helm uninstall kubecost -nkubecost --kubeconfig /root/.kube/config
-flux reconcile helmrelease kubecost -nflux-system --kubeconfig /root/.kube/config
+# echo "Verifying if any installation needs to be reconciled"
+# helm uninstall kubecost -nkubecost --kubeconfig /root/.kube/config
+# flux reconcile helmrelease kubecost -nflux-system --kubeconfig /root/.kube/config
 
-helm uninstall karpenter -nkarpenter --kubeconfig /root/.kube/config
-flux reconcile helmrelease karpenter -nflux-system --kubeconfig /root/.kube/config
+# helm uninstall karpenter -nkarpenter --kubeconfig /root/.kube/config
+# flux reconcile helmrelease karpenter -nflux-system --kubeconfig /root/.kube/config
 
-helm uninstall metrics-server -nkube-system --kubeconfig /root/.kube/config
-flux reconcile helmrelease metrics-server -nflux-system --kubeconfig /root/.kube/config
+# helm uninstall metrics-server -nkube-system --kubeconfig /root/.kube/config
+# flux reconcile helmrelease metrics-server -nflux-system --kubeconfig /root/.kube/config
 
 echo "Changing permissions for ec2-user"
 chown -R ec2-user:ec2-user /home/ec2-user/environment/

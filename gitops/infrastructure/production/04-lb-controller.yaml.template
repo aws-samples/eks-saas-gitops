@@ -16,7 +16,7 @@ spec:
   chart:
     spec:
       chart: aws-load-balancer-controller
-      version: 1.5.3
+      version: 1.6.2
       sourceRef:
         kind: HelmRepository
         name: eks-charts

@@ -3,8 +3,7 @@ kind: Kustomization
 metadata:
   name: dataplane-tenants
   namespace: flux-system
-spec:
-  timeout: 1m0s
+spec:  
   interval: 1m0s
   sourceRef:
     kind: GitRepository

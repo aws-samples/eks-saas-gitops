@@ -2,6 +2,7 @@ resource "random_uuid" "this" {}
 
 resource "aws_s3_bucket" "codeartifacts" {
   bucket = "codestack-artifacts-bucket-${random_uuid.this.result}"
+  force_destroy = true
 }
 
 ################################################################################

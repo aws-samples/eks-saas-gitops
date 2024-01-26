@@ -73,6 +73,39 @@ resource "aws_iam_instance_profile" "karpenter_instance_profile" {
 ################################################################################
 # Karpenter IRSA
 ################################################################################
+# SQS Queue to Trigger ArgoWorkflows
+resource "aws_sqs_queue" "karpenter_interruption_queue" {
+  name = local.name
+}
+
+resource "aws_iam_policy" "karpenter_sqs_policy" {
+  name        = "karpenter-sqs-interruption-policy"
+  path        = "/"
+  description = "karpenter-sqs-interruption-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        "Action" : [
+          "sqs:GetQueueUrl",
+          "sqs:ListDeadLetterSourceQueues",
+          "sqs:ListMessageMoveTasks",
+          "sqs:ReceiveMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ListQueueTags",
+          "sqs:PurgeQueue",
+          "sqs:DeleteMessage"
+        ],
+        "Effect" : "Allow",
+        "Resource" : [
+          aws_sqs_queue.karpenter_interruption_queue.arn
+        ]
+      }
+    ]
+  })
+}
+
 module "karpenter_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "5.33.1"
@@ -94,6 +127,22 @@ module "karpenter_irsa_role" {
   }
 }
 
+resource "aws_iam_policy_attachment" "karpenter_policy_attach_sqs" {
+  name       = "karpenter-policy-attach-sqs"
+  roles      = [module.karpenter_irsa_role.iam_role_name]
+  policy_arn = aws_iam_policy.karpenter_sqs_policy.arn
+  users      = []
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to tags, e.g. because a management agent
+      # updates these based on some ruleset managed elsewhere.
+      roles, users
+    ]
+  }
+  depends_on = [module.karpenter_irsa_role, aws_iam_policy.karpenter_sqs_policy]
+}
+
 resource "aws_iam_policy" "karpenter-policy" {
   name        = "karpenter-policy"
   path        = "/"
@@ -106,6 +155,7 @@ resource "aws_iam_policy" "karpenter-policy" {
     Statement = [
       {
         "Action" : [
+          "iam:*",
           "ssm:GetParameter",
           "iam:PassRole",
           "ec2:DescribeImages",

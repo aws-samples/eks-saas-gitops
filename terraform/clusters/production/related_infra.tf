@@ -75,7 +75,7 @@ resource "aws_iam_instance_profile" "karpenter_instance_profile" {
 ################################################################################
 module "karpenter_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "5.30.0"
+  version = "5.33.1"
 
   role_name                          = "karpenter_controller"
   attach_karpenter_controller_policy = true

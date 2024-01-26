@@ -5,3 +5,5 @@ resources:
   - argo-workflows-helm.yaml
   - tenant-chart-helm.yaml
   - eks-charts-helm.yaml
+  - kubecost-helm.yaml
+  - karpenter-helm.yaml

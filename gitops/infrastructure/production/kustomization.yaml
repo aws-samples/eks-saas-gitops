@@ -5,3 +5,4 @@ resources:
   - 03-argo-workflows.yaml
   - 04-lb-controller.yaml  
   - 06-argo-events.yaml
+  - 05-kubecost.yaml

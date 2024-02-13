@@ -10,7 +10,7 @@ REPOSITORY_BRANCH="$6"
 # Set directory paths
 TEMPLATE_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/templates"
 MANIFESTS_PATH="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/"
-TENANT_TF_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/production/environments"
+# TENANT_TF_PATH="/mnt/vol/eks-saas-gitops/terraform/application-plane/production/environments"
 
 # Set template files
 TENANT_HYBRID_TEMPLATE_FILE="TENANT_TEMPLATE_HYBRID.yaml"
@@ -36,14 +36,39 @@ sed -e "s|{TENANT_ID}|${TENANT_ID}|g" -e "s|{RELEASE_VERSION}|${RELEASE_VERSION}
 printf "\n  - ${TENANT_MANIFEST_FILE}\n" >> "${MANIFESTS_PATH}kustomization.yaml"
 
 # Move back to the parent directory
-cd ../../../ || exit 1
+cd /mnt/vol/eks-saas-gitops/ || exit 1
 
 # Link Terraform output to environment variables
-cd $TENANT_TF_PATH || exit 1
-terraform output -json | jq ".\"$TENANT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
-sed -i '/infraValues:/r ./infra_outputs.yaml' "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
-rm -rf ./infra_outputs.yaml
-cd ../../../../
+TENANT_ID="tenant-10"                  
+SECRET_NAME="${TENANT_ID}-infra-output"                  
+NAMESPACE="flux-system"                                            
+OUTPUT_FILE="./infra_outputs.yaml"                                 
+                                                                   
+# Fetch the secret, decode it, and convert to YAML format          
+kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" -o json | jq -r '
+  .data |                                                
+  to_entries |                                           
+  map({                                                  
+    key: (.key | rtrimstr("__type") | gsub("-"; "_")),   
+    value: (.value | @base64d | fromjson | to_entries[0])
+  }) |                                  
+  group_by(.key) |                      
+  map({                                 
+    (.[0].key): {                       
+      (.[0].value.key): .[0].value.value             
+    }                                                
+  }) | add' | yq e -P - > temp.yaml                  
+                                                     
+# Prepare the output file and add correct indentation   
+sed 's/^/      /' temp.yaml >> $OUTPUT_FILE
+
+# Cleanup
+rm temp.json
+
+# cd $TENANT_TF_PATH || exit 1
+# terraform output -json | jq ".\"$TENANT_ID\".\"value\"" | yq e -P - | sed 's/^/      /' > ./infra_outputs.yaml
+sed -i "/infraValues:/r ${OUTPUT_FILE}" "${MANIFESTS_PATH}${TENANT_MANIFEST_FILE}"
+rm -rf ${OUTPUT_FILE}
 
 # Configure SSH for Git
 cat <<EOF > /root/.ssh/config

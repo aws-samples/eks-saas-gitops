@@ -163,3 +163,8 @@ output "aws_codecommit_payments_clone_url_ssh" {
   description = "AWS CodeCommit payments repo SSH based clone URL"
   value       = module.codecommit_payments.clone_url_ssh
 }
+
+output "tf_controller_irsa_role_arn" {
+  description = "AWS CodeCommit payments repo SSH based clone URL"
+  value       = module.tf_controller_irsa_role.iam_role_arn
+}

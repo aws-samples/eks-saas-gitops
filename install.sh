@@ -71,7 +71,8 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
      -target=aws_iam_user.codecommit_user \
      -target=aws_iam_user_policy_attachment.codecommit_user_attach \
      -target=module.ebs_csi_irsa_role \
-     -target=aws_s3_bucket.tenant_terraform_state_bucket --auto-approve
+     -target=aws_s3_bucket.tenant_terraform_state_bucket \
+     -target=module.tf_controller_irsa_role --auto-approve
 
      if [ $? -eq 0 ]; then
           echo "Terraform apply succeeded."
@@ -116,10 +117,11 @@ outputs=("argo_workflows_bucket_name"
           "aws_codecommit_consumer_clone_url_http"
           "aws_codecommit_consumer_clone_url_ssh"
           "aws_codecommit_payments_clone_url_ssh"
-          "aws_codecommit_payments_clone_url_http")
+          "aws_codecommit_payments_clone_url_http"
+          "tf_controller_irsa_role_arn")
 
 for output in "${outputs[@]}"; do
-     value=$(terraform output -raw $output)
+     value=$(terraform output -raw "$output")
      echo "export ${output^^}=$value" >> /home/ec2-user/.bashrc
      echo "export ${output^^}=$value" >> /root/.bashrc
 done
@@ -244,7 +246,7 @@ export GITOPS_FOLDER="/home/ec2-user/environment/eks-saas-gitops-aws/gitops"
 export ONBOARDING_FOLER="/home/ec2-user/environment/eks-saas-gitops-aws/workflow-scripts"
 export TENANT_CHART_FOLER="/home/ec2-user/environment/eks-saas-gitops-aws/tenant-chart"
 
-sed -e "s|{TENANT_CHART_HELM_REPO}|$(echo ${ECR_HELM_CHART_URL} | sed 's|\(.*\)/.*|\1|')|g" "${GITOPS_FOLDER}/infrastructure/base/sources/tenant-chart-helm.yaml.template" > ${GITOPS_FOLDER}/infrastructure/base/sources/tenant-chart-helm.yaml
+sed -e "s|{TENANT_CHART_HELM_REPO}|$(echo "${ECR_HELM_CHART_URL}" | sed 's|\(.*\)/.*|\1|')|g" "${GITOPS_FOLDER}/infrastructure/base/sources/tenant-chart-helm.yaml.template" > ${GITOPS_FOLDER}/infrastructure/base/sources/tenant-chart-helm.yaml
 sed -e "s|{KARPENTER_CONTROLLER_IRSA}|${KARPENTER_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/02-karpenter.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/02-karpenter.yaml
 sed -i "s|{EKS_CLUSTER_ENDPOINT}|${CLUSTER_ENDPOINT}|g" "${GITOPS_FOLDER}/infrastructure/production/02-karpenter.yaml"
 sed -e "s|{ARGO_WORKFLOW_IRSA}|${ARGO_WORKFLOWS_IRSA}|g" "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml.template" > "${GITOPS_FOLDER}/infrastructure/production/03-argo-workflows.yaml"
@@ -263,6 +265,10 @@ sed -i "s|{CODECOMMIT_USER_ID}|${CODECOMMIT_USER_ID}|g" "${GITOPS_FOLDER}/contro
 
 sed -e "s|{CONSUMER_ECR}|${ECR_CONSUMER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml.template" > ${TENANT_CHART_FOLER}/values.yaml
 sed -i "s|{PRODUCER_ECR}|${ECR_PRODUCER_CONTAINER}|g" "${TENANT_CHART_FOLER}/values.yaml"
+
+#TF Controller
+sed -e "s|{TF_CONTROLLER_IRSA_ROLE_ARN}|${TF_CONTROLLER_IRSA_ROLE_ARN}|g" "${GITOPS_FOLDER}/infrastructure/production/07-tf-controller.yaml.template" > ${GITOPS_FOLDER}/infrastructure/production/07-tf-controller.yaml
+sed -e "s|{CLONE_URL_CODECOMMIT_USER}|${CLONE_URL_CODECOMMIT_USER}|g" "${GITOPS_FOLDER}/infrastructure/base/sources/git-terraform.yaml.template" > ${GITOPS_FOLDER}/infrastructure/base/sources/git-terraform.yaml
 
 # Building containers and push to ECR
 cd /home/ec2-user/environment/eks-saas-gitops-aws

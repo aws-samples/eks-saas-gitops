@@ -664,3 +664,24 @@ resource "aws_iam_user_policy_attachment" "codecommit_user_attach" {
   user       = aws_iam_user.codecommit_user.name
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
 }
+################################################################################
+# TF Controller Service Account
+################################################################################
+module "tf_controller_irsa_role" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "5.30.0"
+
+  role_name = "tf-controller"
+  
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+  
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["flux-system:tf-runner", "flux-system:tf-controller"]
+    }
+  }
+}

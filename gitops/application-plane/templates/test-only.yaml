@@ -1,0 +1,36 @@
+tenantId: tenant-4
+awsAccountId: "127913424329"
+
+global:
+  nodeSelector:
+    node-type: applications
+  tolerations:
+  - key: "applications"
+    operator: "Exists"
+    effect: "NoSchedule"
+git:
+  url: "ssh://APKAR3SB36XEXEYSKFPV@git-codecommit.us-west-2.amazonaws.com/v1/repos/eks-saas-gitops-aws"
+  tag: "v0.0.1"
+infra:
+  vars:
+    enable_producer: false  # Reflecting Terraform logic
+    enable_consumer: false
+apps:
+  producer:
+    enabled: false  # Reflecting pool deployment logic, not deploying the app
+    image:
+        repository: "producer_ecr_repository"
+        tag: "0.1"
+    ingress:
+        enabled: true
+        className: "alb"
+        pathType: "Prefix"
+  consumer:
+    enabled: false  # Direct deployment into the tenant-specific namespace
+    image:
+        repository: "consumer_ecr_repository"
+        tag: "0.1"
+    ingress:
+        enabled: true
+        className: "alb"
+        pathType: "Prefix"

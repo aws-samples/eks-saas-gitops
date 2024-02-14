@@ -1,33 +1,38 @@
-{{- if .Values.deployApps -}}
-{{ range .Values.apps }}
-  {{- if (index $.Values .name).autoscaling.enabled }}
+{{- range $appName, $appConfig := .Values.apps }}
+{{- if and $appConfig.enabled $appConfig.autoscaling.enabled }}
 ---
-apiVersion: autoscaling/v2beta1
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "tenant-chart.fullname" . }}
+  name: {{ $.Values.tenantId }}-{{ $appName }}-hpa
   labels:
-    {{- include "tenant-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ $.Chart.Name }}-{{ $appName }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .name }}
-  minReplicas: {{ (index $.Values .name).autoscaling.minReplicas }}
-  maxReplicas: {{ (index $.Values .name).autoscaling.maxReplicas }}
+    name: {{ $.Values.tenantId }}-{{ $appName }}
+  minReplicas: {{ $appConfig.autoscaling.minReplicas }}
+  maxReplicas: {{ $appConfig.autoscaling.maxReplicas }}
   metrics:
-    {{- if (index $.Values .name).autoscaling.targetCPUUtilizationPercentage }}
+    {{- with $appConfig.autoscaling.targetCPUUtilizationPercentage }}
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: {{ (index $.Values .name).autoscaling.targetCPUUtilizationPercentage }}
+        target:
+          type: Utilization
+          averageUtilization: {{ . }}
     {{- end }}
-    {{- if (index $.Values .name).autoscaling.targetMemoryUtilizationPercentage }}
+    {{- with $appConfig.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
-        targetAverageUtilization: {{ (index $.Values .name).autoscaling.targetMemoryUtilizationPercentage }}
-      {{- end }}
-  {{- end }}
-{{ end }}
-{{ end }}
+        target:
+          type: Utilization
+          averageUtilization: {{ . }}
+    {{- end }}
+{{- end }}
+{{- end }}

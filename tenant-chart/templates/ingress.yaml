@@ -1,59 +1,34 @@
-{{- if .Values.deployIngress -}}
-{{ range .Values.apps }}
-{{ if (index $.Values .name).ingress.enabled }}
+{{- range $appName, $appConfig := .Values.apps }}
+{{- if $appConfig.ingress.enabled }}
 ---
-{{- if and (index $.Values .name).ingress.className (not (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion)) }}
-  {{- if not (hasKey (index $.Values .name).ingress.annotations "kubernetes.io/ingress.class") }}
-  {{- $_ := set (index $.Values .name).ingress.annotations "kubernetes.io/ingress.class" (index $.Values .name).ingress.className}}
-  {{- end }}
-{{- end }}
-{{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
-{{- else if semverCompare ">=1.14-0" $.Capabilities.KubeVersion.GitVersion -}}
-apiVersion: networking.k8s.io/v1beta1
-{{- else -}}
-apiVersion: extensions/v1beta1
-{{- end }}
 kind: Ingress
 metadata:
-  name: "{{$.Values.tenantId}}-ingress-{{ .name }}"
+  name: "{{ $.Values.tenantId }}-ingress-{{ $appName }}"
   labels:
-    app.kubernetes.io/name: "{{$.Chart.Name}}-{{$.Chart.Version }}"
+    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
     app.kubernetes.io/instance: "{{ $.Release.Name }}"
-    app.kubernetes.io/version: "{{ $.Chart.AppVersion  }}"
-    app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "Helm"
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/healthcheck-path: /{{ .name }} # This will chande depending on the microsservice
-    alb.ingress.kubernetes.io/group.name: tenants-lb
-    alb.ingress.kubernetes.io/actions.{{ .name }}: >
-      {"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"200","messageBody":"HTTP header TenantID need to be set"}}
-    alb.ingress.kubernetes.io/conditions.{{ .name }}: >
-      [{"field":"http-header","httpHeaderConfig":{"httpHeaderName": "TenantID", "values":["{{ $.Values.tenantId }}"]}}]
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/healthcheck-path: "/{{ $appName }}"
+    alb.ingress.kubernetes.io/group.name: "tenants-lb"
+    {{- with $appConfig.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
-  {{- if and (index $.Values .name).ingress.className (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-  ingressClassName: {{ (index $.Values .name).ingress.className }}
-  {{- end }}
+  ingressClassName: {{ $appConfig.ingress.className | quote }}
   rules:
-    - http:
-        paths:
-          - path: /{{ .name }}
-            {{- if and (index $.Values .name).ingress.pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-            pathType: {{(index $.Values .name).ingress.pathType}}
-            {{- end }}
-            backend:
-              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
-              service:
-                name: {{ .name }}
-                port:
-                  number: {{ (index $.Values .name).service.port }}
-              {{- else }}
-              serviceName: {{ .name }}
-              servicePort: {{ (index $.Values .name).service.port }}
-              {{- end }}
-          {{- end }}
-    {{- end }}
-    {{- end }}
-
-
+  - http:
+      paths:
+      - path: /{{ $appName }}
+        pathType: {{ $appConfig.ingress.pathType | default "ImplementationSpecific" }}
+        backend:
+          service:
+            name: "{{ if $appConfig.enabled }}{{ $.Values.tenantId }}-{{ $appName }}{{ else }}{{ $appName }}{{ end }}"
+            port:
+              number: {{ $appConfig.service.port }}
+{{- end }}
+{{- end }}

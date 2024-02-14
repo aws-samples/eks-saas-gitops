@@ -1,80 +1,53 @@
 # Default values for tenant-chart.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+awsAccountId: "127913424329"
+tenantId: "example-tenant"
 
-tenantId:
-nodeSelector:
-  node-type: applications
-tolerations:
-  - key: "applications"
-    operator: "Exists"
-    effect: "NoSchedule"
+# Global settings for node selection and tolerations
+global:
+  nodeSelector:
+    node-type: applications
+  tolerations:
+    - key: "applications"
+      operator: "Exists"
+      effect: "NoSchedule"
 
+# Git configuration
+git:
+  url: "{CLONE_URL_CODECOMMIT_USER}"
+  tag: "v0.0.1"
+
+# Infrastructure variables (controlled by templates)
+infra:
+  vars:
+    enable_producer: true
+    enable_consumer: true
+    # enable_payments: true
+
+# Application configurations
 apps:
-  - name: producer
-  - name: consumer
-
-deployApps: true
-deployIngress: true
-
-producer:
-  imagePullSecrets: []
-  replicaCount: 3
-  image:
-    repository: {PRODUCER_ECR}
-    pullPolicy: Always
-    tag: 0.1
-  serviceAccount:
-    create: true
-    annotations: {}
-  podAnnotations: {}
-  podSecurityContext: {}
-  securityContext: {}
-  service:
-    type: ClusterIP
-    port: 80
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 100
-    targetCPUUtilizationPercentage: 80
-  affinity: {}
-  ingress:
+  producer:
     enabled: true
-    className: "alb"
-    pathType: Prefix
-    tls: []
-
-consumer:
     imagePullSecrets: []
     replicaCount: 3
     image:
-      repository: {CONSUMER_ECR}
-      pullPolicy: Always
-      tag: 0.1
+      repository: "{PRODUCER_ECR}"
+      pullPolicy: "Always"
+      tag: "0.1"
     serviceAccount:
       create: true
-      annotations: {}
     podAnnotations: {}
     podSecurityContext: {}
     securityContext: {}
     service:
-      type: ClusterIP
+      type: "ClusterIP"
       port: 80
     resources:
       limits:
-        cpu: 100m
-        memory: 128Mi
+        cpu: "100m"
+        memory: "128Mi"
       requests:
-        cpu: 100m
-        memory: 128Mi
+        cpu: "100m"
+        memory: "128Mi"
     autoscaling:
       enabled: false
       minReplicas: 1
@@ -84,5 +57,40 @@ consumer:
     ingress:
       enabled: true
       className: "alb"
-      pathType: Prefix
-      tls: [ ]
+      pathType: "Prefix"
+      tls: []
+
+  consumer:
+    enabled: true
+    imagePullSecrets: []
+    replicaCount: 3
+    image:
+      repository: "{CONSUMER_ECR}"
+      pullPolicy: "Always"
+      tag: "0.1"
+    serviceAccount:
+      create: true
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    service:
+      type: "ClusterIP"
+      port: 80
+    resources:
+      limits:
+        cpu: "100m"
+        memory: "128Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+    affinity: {}
+    ingress:
+      enabled: true
+      className: "alb"
+      pathType: "Prefix"
+      tls: []

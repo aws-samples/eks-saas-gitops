@@ -1,77 +1,65 @@
-{{- if .Values.deployApps -}}
-{{ range .Values.apps }}
+{{- range $appName, $appConfig := .Values.apps }}
+{{- if $appConfig.enabled }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}
+  name: {{ $.Values.tenantId }}-{{ $appName }}
   labels:
-    app.kubernetes.io/name: "{{$.Chart.Name}}"
+    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
     app.kubernetes.io/instance: "{{ $.Release.Name }}"
-    app.kubernetes.io/version: "{{ $.Chart.AppVersion  }}"
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
     app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
-    app: {{ .name }}
+    app: {{ $.Values.tenantId }}-{{ $appName }}
 spec:
-  {{- if not (index $.Values .name).autoscaling.enabled }}
-  replicas: {{ (index $.Values .name).replicaCount }}
-  {{- end }}
+  replicas: {{ $appConfig.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: "{{$.Chart.Name}}"
+      app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
       app.kubernetes.io/instance: "{{ $.Release.Name }}"
-      app: {{ .name }}
+      app: {{ $.Values.tenantId }}-{{ $appName }}
   template:
     metadata:
-      {{- with (index $.Values .name).podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- toYaml $appConfig.podAnnotations | nindent 8 }}
       labels:
-        app.kubernetes.io/name: "{{$.Chart.Name}}"
+        app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
         app.kubernetes.io/instance: "{{ $.Release.Name }}"
-        app: {{ .name }}
+        app: {{ $.Values.tenantId }}-{{ $appName }}
     spec:
-      {{- with (index $.Values .name).imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ .name }}
+        {{- toYaml $appConfig.imagePullSecrets | nindent 8 }}
+      serviceAccountName: {{ if $appConfig.serviceAccount.create }}{{ $.Values.tenantId }}-{{ $appName }}{{- else }}default{{- end }}
       securityContext:
-        {{- toYaml (index $.Values .name).podSecurityContext | nindent 8 }}
+        {{- toYaml $appConfig.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ $.Chart.Name }}
+        - name: {{ $appName }}
           securityContext:
-            {{- toYaml (index $.Values .name).securityContext | nindent 12 }}
-          image: "{{ (index $.Values .name).image.repository }}:{{ (index $.Values .name).image.tag | default $.Chart.AppVersion }}"
-          imagePullPolicy: {{ (index $.Values .name).image.pullPolicy }}
-          env:            
+            {{- toYaml $appConfig.securityContext | nindent 12 }}
+          image: "{{ $appConfig.image.repository }}:{{ $appConfig.image.tag }}"
+          imagePullPolicy: {{ $appConfig.image.pullPolicy }}
+          env:
             - name: ENVIRONMENT
               value: "{{ $.Values.tenantId }}"
           ports:
             - name: http
-              containerPort: {{ (index $.Values .name).service.port }}
+              containerPort: {{ $appConfig.service.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /{{ .name }}
+              path: /health
               port: http
           readinessProbe:
             httpGet:
-              path: /{{ .name }}
+              path: /ready
               port: http
           resources:
-            {{- toYaml .resources | nindent 12 }}
-      {{- with $.Values.nodeSelector }}
+            {{- toYaml $appConfig.resources | nindent 12 }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with (index $.Values .name).affinity }}
+        {{- toYaml $.Values.global.nodeSelector | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $.Values.tolerations }}
+        {{- toYaml $appConfig.affinity | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-{{ end }}
-{{ end }}
+        {{- toYaml $.Values.global.tolerations | nindent 8 }}
+{{- end }}
+{{- end }}

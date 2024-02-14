@@ -16,12 +16,29 @@ spec:
   chart:
     spec:
       chart: helm-tenant-chart
-      version: {RELEASE_VERSION}.x
+      version: "{RELEASE_VERSION}.x"
       sourceRef:
         kind: HelmRepository
         name: helm-tenant-chart
   values:
     tenantId: {ENVIRONMENT_ID}
-    deployApps: true
-    deployIngress: true
-    infraValues:
+    awsAccountId: "127913424329"
+    global:
+      nodeSelector:
+        node-type: applications
+      tolerations:
+        - key: "applications"
+          operator: "Exists"
+          effect: "NoSchedule"
+    git:
+      url: "{CLONE_URL_CODECOMMIT_USER}"
+      tag: "v0.0.1"
+    infra:
+      vars:
+        enable_producer: true
+        enable_consumer: true
+    apps:
+      producer:
+        enabled: true
+      consumer:
+        enabled: true

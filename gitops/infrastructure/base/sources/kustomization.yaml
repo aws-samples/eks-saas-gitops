@@ -7,5 +7,4 @@ resources:
   - eks-charts-helm.yaml
   - kubecost-helm.yaml
   - karpenter-helm.yaml
-  - git-terraform.yaml
   - tf-controller-helm.yaml

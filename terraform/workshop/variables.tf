@@ -23,5 +23,7 @@ variable "cluster_version" {
 }
 
 variable "public_key_file_path" {
-  default = "~/.ssh/id_rsa_git.pub"
+  description = "Public key file path, used for clone CodeCommit repo, you should have private key locally"
+  type        = string
+  default     = "~/.ssh/id_rsa_git.pub"
 }

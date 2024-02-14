@@ -14,23 +14,13 @@ git:
 infra:
   vars:
     enable_producer: false  # Reflecting Terraform logic
-    enable_consumer: false
+    enable_consumer: true
 apps:
   producer:
     enabled: false  # Reflecting pool deployment logic, not deploying the app
-    image:
-        repository: "producer_ecr_repository"
-        tag: "0.1"
     ingress:
         enabled: true
         className: "alb"
         pathType: "Prefix"
   consumer:
-    enabled: false  # Direct deployment into the tenant-specific namespace
-    image:
-        repository: "consumer_ecr_repository"
-        tag: "0.1"
-    ingress:
-        enabled: true
-        className: "alb"
-        pathType: "Prefix"
+    enabled: true  # Direct deployment into the tenant-specific namespac

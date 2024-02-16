@@ -23,16 +23,6 @@ spec:
   values:
     tenantId: {ENVIRONMENT_ID}
     awsAccountId: "127913424329"
-    global:
-      nodeSelector:
-        node-type: applications
-      tolerations:
-        - key: "applications"
-          operator: "Exists"
-          effect: "NoSchedule"
-    git:
-      url: "{CLONE_URL_CODECOMMIT_USER}"
-      tag: "v0.0.1"
     infra:
       vars:
         enable_producer: true

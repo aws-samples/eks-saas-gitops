@@ -1,16 +1,4 @@
 {{- if .Values.infra -}}
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: GitRepository
-metadata:
-  name: terraform-repo-{{ .Values.tenantId }}
-  namespace: flux-system
-spec:
-  interval: 300s
-  url: {{ .Values.git.url }} # Same repository for gitops components, could be sliptted
-  secretRef:
-    name: flux-system
-  ref:
-    tag: {{ .Values.git.tag }} # Needs to be updated accordngly to new microsservice
 ---
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
@@ -23,7 +11,7 @@ spec:
   approvePlan: auto
   sourceRef:
     kind: GitRepository
-    name: terraform-repo-{{ .Values.tenantId }}
+    name: {{ .Values.infra.tfVersion }}
   vars:
 {{- range $key, $value := .Values.infra.vars }}
     - name: {{ $key }}

@@ -1,5 +1,5 @@
 # Default values for tenant-chart.
-awsAccountId: "127913424329"
+awsAccountId: ""
 tenantId: "example-tenant"
 
 # Global settings for node selection and tolerations
@@ -11,13 +11,9 @@ global:
       operator: "Exists"
       effect: "NoSchedule"
 
-# Git configuration
-git:
-  url: "{CLONE_URL_CODECOMMIT_USER}"
-  tag: "v0.0.1"
-
 # Infrastructure variables (controlled by templates)
 infra:
+  tfVersion: "terraform-v0-0-1"
   vars:
     enable_producer: true
     enable_consumer: true

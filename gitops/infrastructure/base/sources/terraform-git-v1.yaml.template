@@ -1,0 +1,13 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: terraform-v0-0-1
+  namespace: flux-system
+spec:
+  interval: 300s
+  url: "{CLONE_URL_CODECOMMIT_USER}" # Same repository for gitops components, could be sliptted
+  secretRef:
+    name: flux-system
+  ref:
+    tag: "v0.0.1"

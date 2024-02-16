@@ -17,16 +17,6 @@ spec:
   values:
     tenantId: {TENANT_ID}
     awsAccountId: "127913424329"
-    global:
-      nodeSelector:
-        node-type: applications
-      tolerations:
-        - key: "applications"
-          operator: "Exists"
-          effect: "NoSchedule"
-    git:
-      url: "{CLONE_URL_CODECOMMIT_USER}"
-      tag: "v0.0.1"
     infra:
       vars:
         enable_producer: false  # Reflecting Terraform logic
@@ -34,9 +24,5 @@ spec:
     apps:
       producer:
         enabled: false  # Reflecting pool deployment logic, not deploying the app
-        ingress:
-          enabled: true  # Assuming we still manage ingress at a pool level
-          className: "alb"
-          pathType: "Prefix"
       consumer:
         enabled: true  # Direct deployment into the tenant-specific namespace

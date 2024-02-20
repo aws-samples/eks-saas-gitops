@@ -35,12 +35,12 @@ metadata:
   name: default
 spec:
   amiFamily: AL2 # Amazon Linux 2
-  role: "KarpenterNodeRole-eks-saas-gitops" # Replace with your cluster name
+  role: "KarpenterNodeRole-{cluster_name}" # Replace with your cluster name
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "eks-saas-gitops" # Replace with your cluster name
+        karpenter.sh/discovery: "{cluster_name}" # Replace with your cluster name
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "eks-saas-gitops" # Replace with your cluster name
+        karpenter.sh/discovery: "{cluster_name}" # Replace with your cluster name
   tags:
     Name: "karpenter-node"

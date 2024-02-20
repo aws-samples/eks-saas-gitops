@@ -7,5 +7,5 @@ metadata:
 spec:
   type: "oci"
   interval: 1m0s
-  url: oci://{TENANT_CHART_HELM_REPO}/
+  url: oci://{ecr_helm_chart_url_base}/
   provider: aws

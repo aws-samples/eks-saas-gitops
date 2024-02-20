@@ -27,3 +27,9 @@ variable "public_key_file_path" {
   type        = string
   default     = "~/.ssh/id_rsa_git.pub"
 }
+
+variable "kustomization_path" {
+  description = "Path for Kustomization tool"
+  type        = string
+  default     = "gitops/clusters/production"
+}

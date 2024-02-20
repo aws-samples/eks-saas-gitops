@@ -21,5 +21,7 @@ module "gitops_saas_infra" {
 #   git_branch         = var.git_branch
 #   git_url            = module.gitops_saas_infra.aws_codecommit_flux_clone_url_ssh
 #   kustomization_path = var.kustomization_path
-#   values_path        = var.values_path
+#   known_hosts = ""
+#   private_key_path = ""
+#   public_key_path = var.public_key_file_path
 # }

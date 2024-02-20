@@ -10,8 +10,8 @@ spec:
   sqs:
     tenant-deployment:
       jsonBody: true
-      region: "{AWS_REGION}"
-      queue: "argoworkflows-deployment-queue"
+      region: "{aws_region}"
+      queue: "argoworkflows-deployment-queue" # Static value defined in TF module
       waitTimeSeconds: 20
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -51,11 +51,11 @@ spec:
                     - name: RELEASE_VERSION
                       value: "" # Valid values are: silo, pool, hybrid
                     - name: REPO_URL
-                      value: "{REPO_URL}"
+                      value: "{aws_codecommit_flux_clone_url_ssh}"
                     - name: GIT_USER_EMAIL
-                      value: "{CODECOMMIT_USER_ID}"
+                      value: "{ssh_public_key_id}"
                     - name: GIT_USERNAME
-                      value: "{CODECOMMIT_USER_ID}"
+                      value: "{ssh_public_key_id}"
                     - name: GIT_BRANCH
                       value: "main" # Can change based on your configs
                 templates:

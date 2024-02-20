@@ -10,7 +10,7 @@ spec:
   sqs:
     tenant-provisioning:
       jsonBody: true
-      region: "{AWS_REGION}"
+      region: "{aws_region}"
       queue: "argoworkflows-onboarding-queue"
       waitTimeSeconds: 20
 ---
@@ -53,11 +53,11 @@ spec:
                     - name: RELEASE_VERSION
                       value: "" # I.E. 0.0 or 1.0
                     - name: REPO_URL
-                      value: "{REPO_URL}"
+                      value: "{aws_codecommit_flux_clone_url_ssh}"
                     - name: GIT_USER_EMAIL
-                      value: "{CODECOMMIT_USER_ID}"
+                      value: "{ssh_public_key_id}"
                     - name: GIT_USERNAME
-                      value: "{CODECOMMIT_USER_ID}"
+                      value: "{ssh_public_key_id}"
                     - name: GIT_BRANCH
                       value: "main" # Can change based on your configs
                 templates:

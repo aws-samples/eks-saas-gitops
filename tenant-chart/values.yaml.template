@@ -1,5 +1,5 @@
 # Default values for tenant-chart.
-awsAccountId: ""
+awsAccountId: "{account_id}"
 tenantId: "example-tenant"
 
 # Global settings for node selection and tolerations
@@ -13,7 +13,7 @@ global:
 
 # Infrastructure variables (controlled by templates)
 infra:
-  tfVersion: "terraform-v0-0-1"
+  tfVersion: "terraform-v0-0-1" # Version 1 is pre-created during template script execution
   vars:
     enable_producer: true
     enable_consumer: true
@@ -26,9 +26,9 @@ apps:
     imagePullSecrets: []
     replicaCount: 3
     image:
-      repository: "{PRODUCER_ECR}"
+      repository: "{ecr_repository_urls_producer}"
       pullPolicy: "Always"
-      tag: "0.1"
+      tag: "0.1" # This tag is the one generated during template script execution
     serviceAccount:
       create: true
     podAnnotations: {}
@@ -61,7 +61,7 @@ apps:
     imagePullSecrets: []
     replicaCount: 3
     image:
-      repository: "{CONSUMER_ECR}"
+      repository: "{ecr_repository_urls_consumer}"
       pullPolicy: "Always"
       tag: "0.1"
     serviceAccount:

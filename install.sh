@@ -128,7 +128,7 @@ done
 
 source /root/.bashrc
 
-# Defining variables for CodeCommit
+# Defining variables for CodeCommitecr_argoworkflow_container
 cd /home/ec2-user/environment/
 
 echo "Configuring Cloud9 User to CodeCommit"

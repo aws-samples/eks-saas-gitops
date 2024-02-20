@@ -21,10 +21,10 @@ spec:
       create: true
       name: tf-controller
       annotations:
-        eks.amazonaws.com/role-arn: {TF_CONTROLLER_IRSA_ROLE_ARN}
+        eks.amazonaws.com/role-arn: {tf_controller_irsa}
     runner:
       serviceAccount:
         create: true
         annotations:
-          eks.amazonaws.com/role-arn: {TF_CONTROLLER_IRSA_ROLE_ARN}
+          eks.amazonaws.com/role-arn: {tf_controller_irsa}
         name: tf-runner

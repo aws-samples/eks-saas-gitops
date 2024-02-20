@@ -8,7 +8,7 @@ spec:
   templates:
     - name: validate-if-tenant-exists
       container:
-        image: "{ARGO_WORKFLOW_CONTAINER}"
+        image: "{ecr_argoworkflow_container}"
         command: ["/bin/sh","-c"]
         args: ['cp /mnt/ssh/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./sec/00-validate-tenant.sh {{workflow.parameters.TENANT_ID}}']
         volumeMounts:
@@ -21,7 +21,7 @@ spec:
             value: "ssh -i /root/.ssh/id_rsa"
     - name: clone-repository
       container:
-        image: "{ARGO_WORKFLOW_CONTAINER}"
+        image: "{ecr_argoworkflow_container}"
         command: ["/bin/sh","-c"]
         args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && cp -r eks-saas-gitops-aws /mnt/vol/eks-saas-gitops'] # Create Tenant infra script
         volumeMounts:
@@ -34,7 +34,7 @@ spec:
             value: "ssh -i /root/.ssh/id_rsa"
     - name: create-tenant-infrastructure
       container:
-        image: "{ARGO_WORKFLOW_CONTAINER}"
+        image: "{ecr_argoworkflow_container}"
         command: ["/bin/sh","-c"]
         args: ['cp /mnt/ssh/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./02-tenant-onboarding-infra.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.TENANT_MODEL}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}'] # Create Tenant infra script
         volumeMounts:
@@ -47,7 +47,7 @@ spec:
             value: "ssh -i /root/.ssh/id_rsa"
     - name: create-tenant-helm-release
       container:
-        image: "{ARGO_WORKFLOW_CONTAINER}"
+        image: "{ecr_argoworkflow_container}"
         command: ["/bin/sh","-c"]
         args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./03-tenant-onboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.RELEASE_VERSION}} {{workflow.parameters.TENANT_MODEL}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}'] # Create Tenant infra script
         volumeMounts:

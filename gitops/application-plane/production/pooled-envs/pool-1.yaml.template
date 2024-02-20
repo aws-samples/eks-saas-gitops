@@ -21,16 +21,7 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: pool-1
-    awsAccountId: "127913424329"
-    global:
-      nodeSelector:
-        node-type: applications
-      tolerations:
-        - key: "applications"
-          operator: "Exists"
-          effect: "NoSchedule"
-    git:
-      tag: "v0.0.1"
+    awsAccountId: "{account_id}"
     infra:
       vars:
         enable_producer: true

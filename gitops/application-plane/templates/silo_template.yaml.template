@@ -1,17 +1,17 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {ENVIRONMENT_ID}
+  name: {TENANT_ID}
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: {ENVIRONMENT_ID}
+  name: {TENANT_ID}
   namespace: flux-system
 spec:
-  releaseName: {ENVIRONMENT_ID}
-  targetNamespace: {ENVIRONMENT_ID}
-  storageNamespace: {ENVIRONMENT_ID}
+  releaseName: {TENANT_ID}-silo
+  targetNamespace: {TENANT_ID}
+  storageNamespace: {TENANT_ID}
   interval: 1m0s
   chart:
     spec:
@@ -21,8 +21,8 @@ spec:
         kind: HelmRepository
         name: helm-tenant-chart
   values:
-    tenantId: {ENVIRONMENT_ID}
-    awsAccountId: "127913424329"
+    tenantId: {TENANT_ID}
+    awsAccountId: "{account_id}"
     infra:
       vars:
         enable_producer: true

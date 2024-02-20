@@ -6,8 +6,9 @@ metadata:
   namespace: flux-system
 spec:
   interval: 300s
-  url: "{CLONE_URL_CODECOMMIT_USER}" # Same repository for gitops components, could be sliptted
-  secretRef:
-    name: flux-system
+  url: "{aws_codecommit_flux_clone_url_ssh}" # Same repository for gitops components, could be sliptted
   ref:
     tag: "v0.0.1"
+  secretRef:
+    name: flux-system
+  

@@ -18,7 +18,7 @@ metadata:
   name: argo-events-sa
   namespace: argo-events
   annotations:
-    eks.amazonaws.com/role-arn: {ARGO_EVENTS_IRSA}
+    eks.amazonaws.com/role-arn: {argo_events_irsa}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

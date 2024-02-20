@@ -19,13 +19,6 @@ variable "git_branch" {
   default     = "main"
 }
 
-# variable "git_username" {
-# }
-
-
-# variable "git_password" {
-# }
-
 variable "git_url" {
   description = "Git URL to be used by Flux"
   type        = string
@@ -90,9 +83,19 @@ variable "kustomization_path" {
   type    = string
 }
 
-variable "values_path" {
-  description = "Path for Helm values"
-  type        = string
+variable "known_hosts" {
+  description = "Path to known hosts file"
+  default     = ""
+}
+
+variable "private_key_path" {
+  description = "Path to private key"
+  default     = ""
+}
+
+variable "public_key_path" {
+  description = "Path to public key"
+  default     = ""
 }
 
 variable "flux2_sync_version" {

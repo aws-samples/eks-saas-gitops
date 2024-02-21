@@ -13,7 +13,7 @@ resource "null_resource" "execute_templating_script" {
     command = "bash ${path.module}/templating.sh"
   }
 
-  depends_on = [ module.gitops_saas_infra ]
+  depends_on = [module.gitops_saas_infra]
 }
 
 

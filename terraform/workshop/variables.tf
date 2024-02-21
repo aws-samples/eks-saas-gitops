@@ -34,6 +34,12 @@ variable "private_key_file_path" {
   default     = "~/.ssh/id_rsa_git"
 }
 
+variable "clone_directory" {
+  description = "Directory to clone CodeCommit repos"
+  type = string
+  default = "/tmp"
+}
+
 variable "known_hosts" {
   default = "./temp_known_hosts"
 }

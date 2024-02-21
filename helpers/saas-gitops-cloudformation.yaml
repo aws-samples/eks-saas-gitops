@@ -420,9 +420,9 @@ Resources:
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE 2> /dev/null' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
             - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
-            - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
-            - cp /home/ec2-user/environment/eks-saas-gitops/cleanup.sh /home/ec2-user/environment/cleanup.sh && chmod +x /home/ec2-user/environment/cleanup.sh
-            - /home/ec2-user/environment/install.sh
+            # - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
+            # - cp /home/ec2-user/environment/eks-saas-gitops/cleanup.sh /home/ec2-user/environment/cleanup.sh && chmod +x /home/ec2-user/environment/cleanup.sh
+            # - /home/ec2-user/environment/install.sh
             - echo "Bootstrap completed with return code $?"
             - shutdown -r +1
 

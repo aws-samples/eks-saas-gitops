@@ -130,7 +130,7 @@ build_and_push_image() {
 
 # Script starts here
 repo_root="../.." # This could be a parameter
-clone_dir="/tmp" # No need to put / eg. /tmp/
+clone_dir="$1" # No need to put / eg. /tmp/
 terraform_output="./output.json"
 
 export_simple_outputs "$terraform_output"

@@ -10,7 +10,7 @@ module "gitops_saas_infra" {
 
 resource "null_resource" "execute_templating_script" {
   provisioner "local-exec" {
-    command = "bash ${path.module}/templating.sh"
+    command = "bash ${path.module}/templating.sh ${var.clone_directory}"
   }
 
   depends_on = [module.gitops_saas_infra]

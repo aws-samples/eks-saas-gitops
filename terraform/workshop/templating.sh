@@ -168,32 +168,32 @@ build_and_push_image "payments" "$ecr_repository_urls_payments"
 build_and_push_image "eks-saas-gitops/workflow-scripts" "$ecr_argoworkflow_container"
 cd "$original_dir" || exit
 
-# Commit and push changes to Git
-echo "Committing and pushing changes to Git"
-cd $clone_dir/consumer || exit
-git add .
-git commit -m "Initial Commit"
-git push origin main
+# # Commit and push changes to Git
+# echo "Committing and pushing changes to Git"
+# cd $clone_dir/consumer || exit
+# git add .
+# git commit -m "Initial Commit"
+# git push origin main
 
-cd $clone_dir/producer || exit
-git add .
-git commit -m "Initial Commit"
-git push origin main
+# cd $clone_dir/producer || exit
+# git add .
+# git commit -m "Initial Commit"
+# git push origin main
 
-cd $clone_dir/payments || exit
-git add .
-git commit -m "Initial Commit"
-git push origin main
+# cd $clone_dir/payments || exit
+# git add .
+# git commit -m "Initial Commit"
+# git push origin main
 
-cd $clone_dir/eks-saas-gitops || exit
-git add .
-git commit -m "Initial Commit"
-git push origin main
-# Tagging last commit ID
-LAST_COMMIT_ID=$(aws codecommit get-branch --repository-name "$cluster_name" --branch-name main | jq -r '.branch.commitId')
-git tag v0.0.1 $LAST_COMMIT_ID
-git push origin v0.0.1
-cd "$original_dir" || exit
+# cd $clone_dir/eks-saas-gitops || exit
+# git add .
+# git commit -m "Initial Commit"
+# git push origin main
+# # Tagging last commit ID
+# LAST_COMMIT_ID=$(aws codecommit get-branch --repository-name "$cluster_name" --branch-name main | jq -r '.branch.commitId')
+# git tag v0.0.1 $LAST_COMMIT_ID
+# git push origin v0.0.1
+# cd "$original_dir" || exit
 
-# Creating known hosts for Flux, use in terraform:
-ssh-keyscan "git-codecommit.$aws_region.amazonaws.com" > temp_known_hosts
+# # Creating known hosts for Flux, use in terraform:
+# ssh-keyscan "git-codecommit.$aws_region.amazonaws.com" > temp_known_hosts

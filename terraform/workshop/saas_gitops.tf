@@ -8,6 +8,14 @@ module "gitops_saas_infra" {
   public_key_file_path      = var.public_key_file_path # Upload to user created by this module, local executer should have the private key as well
 }
 
+resource "null_resource" "execute_templating_script" {
+  provisioner "local-exec" {
+    command = "bash ${path.module}/templating.sh"
+  }
+  
+  depends_on = [ module.gitops_saas_infra ]
+}
+
 
 
 ################################################################################

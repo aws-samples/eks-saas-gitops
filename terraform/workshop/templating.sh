@@ -71,35 +71,37 @@ debug_process_templates() {
 process_and_replace_templates() {
     local dir="$1"  # Directory containing the template files
 
-    # Find all .template files and process them
     find "$dir" -type f -name '*.template' | while IFS= read -r template_file; do
         echo "Processing template: $template_file"
 
-        # The path for the new file without the .template suffix
         local new_file_path="${template_file%.template}"
+        local temp_file="${new_file_path}.tmp"
 
-        # Read each line in the template file, look for placeholders to replace, and write to new file
-        while IFS= read -r line; do
+        # Ensure the temp file is empty
+        > "$temp_file"
+
+        # Ensure the last line is read even if it doesn't end with a newline
+        while IFS= read -r line || [[ -n "$line" ]]; do
             modified_line="$line"
-            # Iterate over all defined variables to check for a match within placeholders
             for var_name in $(compgen -v); do
                 placeholder="{${var_name}}"
-                # Check if the line contains the current placeholder
                 if [[ "$modified_line" == *"${placeholder}"* ]]; then
-                    # Fetch the value of the variable by name
                     local var_value="${!var_name}"
-                    # Replace the placeholder with the variable's value
                     modified_line="${modified_line//${placeholder}/${var_value}}"
                 fi
             done
-            # Write the modified line to the new file
-            echo "$modified_line" >> "$new_file_path"
+            echo "$modified_line" >> "$temp_file"
         done < "$template_file"
 
-        # Optionally, remove the original .template file if needed
-        rm "$template_file"
+        # Move the temp file to the new file path
+        mv "$temp_file" "$new_file_path"
 
         echo "Processed and saved to: $new_file_path"
+
+        # Delete the original template file
+        rm -f "$template_file"
+
+        echo "Deleted original template file: $template_file"
     done
 }
 

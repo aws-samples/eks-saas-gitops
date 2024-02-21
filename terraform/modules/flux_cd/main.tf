@@ -31,16 +31,26 @@ resource "helm_release" "flux2-sync" {
   chart      = "flux2-sync"
   version    = var.flux2_sync_version
 
-  values = [templatefile("${path.module}/flux-values.yaml.tpl", {
-    flux_private_key = file(local.private_key_path),
-    flux_public_key  = file(local.public_key_path),
-    known_hosts      = file(local.known_hosts)
-  })]
-
   set {
     name  = "secret.create"
     value = true
   }
+
+  set {
+    name  = "secret.data.identity"
+    value = file(local.private_key_path)
+  }
+
+  set {
+    name  = "secret.data.identity.pub"
+    value = file(local.public_key_path)
+  }
+
+  set {
+    name  = "secret.data.known_hosts"
+    value = file(local.known_hosts)
+  }
+
 
   set {
     name  = "gitRepository.spec.ref.branch"

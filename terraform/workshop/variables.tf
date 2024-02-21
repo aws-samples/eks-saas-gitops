@@ -28,6 +28,22 @@ variable "public_key_file_path" {
   default     = "~/.ssh/id_rsa_git.pub"
 }
 
+variable "private_key_file_path" {
+  description = "Private key file path, used for clone CodeCommit repo, you should have private key locally"
+  type        = string
+  default     = "~/.ssh/id_rsa_git"
+}
+
+variable "known_hosts" {
+  default = "./temp_known_hosts"
+}
+
+variable "git_branch" {
+  description = "Branch of the Git repository"
+  type        = string
+  default     = "main"
+}
+
 variable "kustomization_path" {
   description = "Path for Kustomization tool"
   type        = string

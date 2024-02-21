@@ -47,11 +47,11 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /health
+              path: /{{ $appName }}
               port: http
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /{{ $appName }}
               port: http
           resources:
             {{- toYaml $appConfig.resources | nindent 12 }}

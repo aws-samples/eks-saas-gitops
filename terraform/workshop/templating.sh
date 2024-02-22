@@ -171,21 +171,25 @@ cd "$original_dir" || exit
 # Commit and push changes to Git
 echo "Committing and pushing changes to Git"
 cd $clone_dir/consumer || exit
+git checkout -b main
 git add .
 git commit -m "Initial Commit"
 git push origin main
 
 cd $clone_dir/producer || exit
+git checkout -b main
 git add .
 git commit -m "Initial Commit"
 git push origin main
 
 cd $clone_dir/payments || exit
+git checkout -b main
 git add .
 git commit -m "Initial Commit"
 git push origin main
 
 cd $clone_dir/eks-saas-gitops || exit
+git checkout -b main
 git add .
 git commit -m "Initial Commit"
 git push origin main

@@ -115,12 +115,16 @@ build_and_push_image() {
 
     echo "Building and pushing Docker image for ${service_dir}..."
 
-    # Log in to Amazon ECR
-    aws ecr get-login-password --region "$aws_region" | \
-        helm registry login --username AWS --password-stdin "$account_id.dkr.ecr.$aws_region.amazonaws.com"
+    # Log in to Amazon ECR, region is outputed on terraform output
+    aws ecr get-login-password --region "$aws_region" | docker login --username AWS --password-stdin "$account_id".dkr.ecr."$aws_region".amazonaws.com
 
-    # Build the Docker image with a specific tag and for a specific platform
-    docker buildx build --platform linux/amd64 --build-arg aws_region=$aws_region -t "${ecr_repo_url}:${image_version}" . --load
+    if [ $(uname -m) = "arm" ]; then
+        # Build the Docker image with a specific tag and for a specific platform
+        docker buildx build --platform linux/amd64 --build-arg aws_region=$aws_region -t "${ecr_repo_url}:${image_version}" . --load
+    else 
+    # Build without buildx for non-ARM
+        docker build --build-arg aws_region=$aws_region -t "${ecr_repo_url}:${image_version}" .
+    fi
 
     # Push the Docker image to Amazon ECR
     docker push "${ecr_repo_url}:${image_version}"

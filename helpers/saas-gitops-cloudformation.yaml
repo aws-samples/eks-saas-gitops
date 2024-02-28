@@ -426,6 +426,7 @@ Resources:
             - cp /home/ec2-user/environment/flux.pub /root/.ssh/id_rsa.pub && chmod 600 /root/.ssh/id_rsa.pub
             - cp /home/ec2-user/environment/flux /home/ec2-user/.ssh/id_rsa && chmod 600 /home/ec2-user/.ssh/id_rsa && chown ec2-user:ec2-user /home/ec2-user/.ssh/id_rsa
             - cp /home/ec2-user/environment/flux.pub /home/ec2-user/.ssh/id_rsa.pub && chmod 600 /home/ec2-user/.ssh/id_rsa.pub && chown ec2-user:ec2-user /home/ec2-user/.ssh/id_rsa.pub
+            - openssl rsa -in /home/ec2-user/.ssh/id_rsa -pubout > /home/ec2-user/.ssh/id_rsa.pub && chmod 600 /home/ec2-user/.ssh/id_rsa.pub && chown ec2-user:ec2-user /home/ec2-user/.ssh/id_rsa.pub
             - mkdir /home/ec2-user/environment/workshop && chown -R ec2-user:ec2-user /home/ec2-user/environment/workshop
             - ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" > /home/ec2-user/.ssh/known_hosts && chmod 600 /home/ec2-user/.ssh/known_hosts && chown ec2-user:ec2-user /home/ec2-user/.ssh/known_hosts
             - ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" > /root/.ssh/known_hosts && chmod 600 /root/.ssh/known_hosts 

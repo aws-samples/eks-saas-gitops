@@ -9,7 +9,7 @@ output "cluster_endpoint" {
 
 output "cluster_name" {
   description = "The Amazon Resource Name (ARN) of the cluster, use"
-  value       = var.name
+  value       = module.eks.cluster_name
 }
 
 output "ssh_public_key_id" {

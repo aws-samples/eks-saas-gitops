@@ -6,4 +6,4 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1m0s
-  url: https://weaveworks.github.io/tf-controller/
+  url: https://flux-iac.github.io/tofu-controller/

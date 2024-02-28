@@ -38,3 +38,16 @@ for target in "${terraform_targets[@]}"; do
 done
 
 echo "All specified Terraform modules and resources have been applied."
+
+# Export EKS config to kubeconfig file
+aws eks --region us-west-2 update-kubeconfig --name eks-saas-gitops
+
+# Adjust not reconciled files
+helm uninstall metrics-server -nkube-system
+helm uninstall kubecost -nkubecost
+helm uninstall karpenter -nkarpenter
+
+# Reconciling again
+flux reconcile helmrelease metrics-server
+flux reconcile helmrelease kubecost
+flux reconcile helmrelease karpenter

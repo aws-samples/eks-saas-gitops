@@ -6,11 +6,13 @@ module "gitops_saas_infra" {
   vpc_id                    = module.vpc.vpc_id
   private_subnets           = module.vpc.private_subnets
   public_key_file_path      = var.public_key_file_path # Upload to user created by this module, local executer should have the private key as well
+  
+  depends_on = [ data.aws_availability_zones.available, data.aws_caller_identity.current, data.aws_region.current ]
 }
 
 resource "null_resource" "execute_templating_script" {
   provisioner "local-exec" {
-    command = "bash ${path.module}/templating.sh ${var.clone_directory}"
+    command = "bash ${path.module}/templating.sh ${var.clone_directory} "
   }
 
   depends_on = [module.gitops_saas_infra]

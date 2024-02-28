@@ -4,11 +4,10 @@
 BASE_DIR=$(dirname "$0")
 
 # Ask for public and private key file paths
-echo "Enter the public key file path:"
-read -r public_key_file_path
-
-echo "Enter the private key file path:"
-read -r private_key_file_path
+public_key_file_path=$1
+private_key_file_path=$2
+clone_directory=$3
+known_hosts=$4
 
 # Navigate to the workshop directory where the module implementations are
 cd "$BASE_DIR/workshop" || exit
@@ -33,6 +32,8 @@ for target in "${terraform_targets[@]}"; do
     terraform apply -target="$target" \
         -var "public_key_file_path=$public_key_file_path" \
         -var "private_key_file_path=$private_key_file_path" \
+        -var "clone_directory=$clone_directory" \
+        -var "known_hosts=$known_hosts" \
         -auto-approve
 done
 

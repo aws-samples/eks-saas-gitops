@@ -1,5 +1,5 @@
 output "aws_region" {
-  value = var.aws_region
+  value = data.aws_region.current.name
 }
 
 output "cluster_endpoint" {
@@ -15,10 +15,6 @@ output "cluster_name" {
 output "ssh_public_key_id" {
   value = module.gitops_saas_infra.ssh_public_key_id
 }
-
-# output "codecommit_repository_urls" {
-#   value = module.gitops_saas_infra.codecommit_repository_urls
-# }
 
 output "codecommit_repository_urls_producer" {
   value = try(module.gitops_saas_infra.codecommit_repository_urls.producer, null)

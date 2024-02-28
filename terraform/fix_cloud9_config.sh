@@ -1,5 +1,7 @@
 #!/bin/bash
 
+AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
+
 # Export EKS config to kubeconfig file
 aws eks --region "$AWS_REGION" update-kubeconfig --name eks-saas-gitops
 mkdir /home/ec2-user/.kube && cp /root/.kube/config /home/ec2-user/.kube/ && chown -R ec2-user:ec2-user /home/ec2-user/.kube/config

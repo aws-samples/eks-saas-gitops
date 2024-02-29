@@ -16,6 +16,8 @@ spec:
         kind: HelmRepository
         name: tf-controller
   values:
+    awsPackage: # Disabling this since using own modules
+      install: false
     allowCrossNamespaceRefs: true
     serviceAccount:
       create: true

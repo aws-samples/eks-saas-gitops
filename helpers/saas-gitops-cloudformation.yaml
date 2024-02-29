@@ -396,7 +396,7 @@ Resources:
             - mv /tmp/eksctl /usr/local/bin
             - /usr/local/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
             - echo '=== INSTALL Flux CLI ==='
-            - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v0.41.2/flux_0.41.2_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v2.2.3/flux_2.2.3_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
             - mv /tmp/flux /usr/local/bin
             - /usr/local/bin/flux completion bash > /etc/bash_completion.d/flux
             - echo '=== INSTALL YQ ==='

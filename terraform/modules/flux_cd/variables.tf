@@ -101,11 +101,11 @@ variable "public_key_path" {
 variable "flux2_sync_version" {
   description = "Flux2 sync helm chart version"
   type        = string
-  default     = "1.7.3"
+  default     = "1.8.2"
 }
 
 variable "flux2_version" {
   description = "Flux2 helm chart version"
   type        = string
-  default     = "2.11.1"
+  default     = "2.12.3"
 }

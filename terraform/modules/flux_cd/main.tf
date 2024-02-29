@@ -59,7 +59,11 @@ resource "helm_release" "flux2" {
   repository = "https://fluxcd-community.github.io/helm-charts"
   chart      = "flux2"
   version    = var.flux2_version
-
+  set {
+    name  = "awsPackage.install"
+    value = false
+  }
+  
   set {
     name  = "helmController.create"
     value = var.activate_helm_controller

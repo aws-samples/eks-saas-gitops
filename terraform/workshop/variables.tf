@@ -28,20 +28,25 @@ variable "public_key_file_path" {
   default     = ""
 }
 
-variable "private_key_file_path" {
-  description = "Private key file path, used for clone CodeCommit repo, you should have private key locally"
-  type        = string
-  default     = ""
-}
+# variable "private_key_file_path" {
+#   description = "Private key file path, used for clone CodeCommit repo, you should have private key locally"
+#   type        = string
+#   default     = ""
+# }
 
 variable "clone_directory" {
   description = "Directory to clone CodeCommit repos"
-  type = string
-  default = "/tmp"
+  type        = string
+  default     = "/tmp"
 }
 
-variable "known_hosts" {
-  default = ""
+# variable "known_hosts" {
+#   default = ""
+# }
+
+variable "flux2_sync_secret_values" {
+  description = "This is created by install.sh script during execution"
+  default     = "values.yaml"
 }
 
 variable "git_branch" {

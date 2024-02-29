@@ -9,6 +9,22 @@ private_key_file_path=$2
 clone_directory=$3
 known_hosts=$4
 
+# Path where values.yaml will be created
+values_yaml_path="$BASE_DIR/workshop/values.yaml"
+
+# Create values.yaml with the provided information
+cat <<EOF > "$values_yaml_path"
+secret:
+  create: true
+  data:
+    identity: |-
+$(sed 's/^/      /' $private_key_file_path)
+    identity.pub: |-
+$(sed 's/^/      /' $public_key_file_path)
+    known_hosts: |-
+$(sed 's/^/      /' $known_hosts)
+EOF
+
 # Navigate to the workshop directory where the module implementations are
 cd "$BASE_DIR/workshop" || exit
 
@@ -41,6 +57,7 @@ for target in "${terraform_targets[@]}"; do
             -var "private_key_file_path=$private_key_file_path" \
             -var "clone_directory=$clone_directory" \
             -var "known_hosts=$known_hosts" \
+            -var "flux2_sync_secret_values=$values_yaml_path" \
             -auto-approve
         
         # Check if Terraform apply was successful

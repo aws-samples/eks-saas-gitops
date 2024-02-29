@@ -118,7 +118,7 @@ build_and_push_image() {
     # Log in to Amazon ECR, region is outputed on terraform output
     aws ecr get-login-password --region "$aws_region" | docker login --username AWS --password-stdin "$account_id".dkr.ecr."$aws_region".amazonaws.com
 
-    if [ $(uname -m) = "arm" ]; then
+    if [ $(uname -m) = "arm64" ]; then
         # Build the Docker image with a specific tag and for a specific platform
         docker buildx build --platform linux/amd64 --build-arg aws_region=$aws_region -t "${ecr_repo_url}:${image_version}" . --load
     else 

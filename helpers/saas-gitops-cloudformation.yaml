@@ -429,8 +429,8 @@ Resources:
             - mkdir /home/ec2-user/environment/workshop
             - ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" > /home/ec2-user/.ssh/known_hosts && chmod 600 /home/ec2-user/.ssh/known_hosts && chown ec2-user:ec2-user /home/ec2-user/.ssh/known_hosts
             - ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" > /root/.ssh/known_hosts && chmod 600 /root/.ssh/known_hosts 
-            - /home/ec2-user/environment/eks-saas-gitops/terraform/install.sh /home/ec2-user/.ssh/id_rsa.pub /home/ec2-user/.ssh/id_rsa /home/ec2-user/environment/workshop /home/ec2-user/.ssh/known_hosts
-            - /home/ec2-user/environment/eks-saas-gitops/terraform/fix_cloud9_config.sh
+            # - /home/ec2-user/environment/eks-saas-gitops/terraform/install.sh /home/ec2-user/.ssh/id_rsa.pub /home/ec2-user/.ssh/id_rsa /home/ec2-user/environment/workshop /home/ec2-user/.ssh/known_hosts
+            # - /home/ec2-user/environment/eks-saas-gitops/terraform/fix_cloud9_config.sh
             - chown -R ec2-user:ec2-user /home/ec2-user/environment/workshop
             - echo "Bootstrap completed with return code $?"
             - shutdown -r +1

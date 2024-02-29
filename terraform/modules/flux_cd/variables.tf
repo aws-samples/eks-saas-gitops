@@ -109,3 +109,7 @@ variable "flux2_version" {
   type        = string
   default     = "2.12.3"
 }
+
+variable "flux2_sync_secret_values" {
+  default = ""
+}

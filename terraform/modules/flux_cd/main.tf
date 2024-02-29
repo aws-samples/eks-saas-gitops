@@ -31,44 +31,70 @@ resource "helm_release" "flux2-sync" {
   chart      = "flux2-sync"
   version    = var.flux2_sync_version
 
-  set {
-    name  = "secret.create"
-    value = true
-  }
-
-  set {
-    name  = "secret.data.identity"
-    value = file(local.private_key_path)
-  }
-
-  set {
-    name  = "secret.data.identity.pub"
-    value = file(local.public_key_path)
-  }
-
-  set {
-    name  = "secret.data.known_hosts"
-    value = file(local.known_hosts)
-  }
-
-
-  set {
-    name  = "gitRepository.spec.ref.branch"
-    value = var.git_branch
-  }
-
-  set {
-    name  = "gitRepository.spec.url"
-    value = var.git_url # The repository URL, can be an HTTP/S or SSH address.
-  }
-
-  set {
-    name  = "kustomization.spec.path"
-    value = var.kustomization_path
-  }
+  values = [
+    templatefile("${path.module}/flux2-sync-values.tpl", {
+      private_key        = file(local.private_key_path),
+      public_key         = file(local.public_key_path),
+      known_hosts        = file(local.known_hosts),
+      git_branch         = var.git_branch,
+      git_url            = var.git_url,
+      kustomization_path = var.kustomization_path,
+    })
+  ]
 
   depends_on = [helm_release.flux2, kubernetes_namespace.flux_system]
 }
+
+
+# resource "helm_release" "flux2-sync" {
+#   name       = "flux-system"
+#   namespace  = var.namespace
+#   repository = "https://fluxcd-community.github.io/helm-charts"
+#   chart      = "flux2-sync"
+#   version    = var.flux2_sync_version
+
+#   values = [
+#     "${file("${var.flux2_sync_secret_values}")}"
+#   ]
+
+#   set {
+#     name  = "secret.create"
+#     value = true
+#   }
+
+#   set {
+#     name  = "secret.data.identity"
+#     value = file(local.private_key_path)
+#   }
+
+#   set {
+#     name  = "secret.data.identity.pub"
+#     value = file(local.public_key_path)
+#   }
+
+#   set {
+#     name  = "secret.data.known_hosts"
+#     value = file(local.known_hosts)
+#   }
+
+
+#   set {
+#     name  = "gitRepository.spec.ref.branch"
+#     value = var.git_branch
+#   }
+
+#   set {
+#     name  = "gitRepository.spec.url"
+#     value = var.git_url # The repository URL, can be an HTTP/S or SSH address.
+#   }
+
+#   set {
+#     name  = "kustomization.spec.path"
+#     value = var.kustomization_path
+#   }
+
+#   depends_on = [helm_release.flux2, kubernetes_namespace.flux_system]
+# }
 
 # TODO: Implement IRSA and change the Service Account name, for Image Controller
 resource "helm_release" "flux2" {

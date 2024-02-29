@@ -148,7 +148,7 @@ cp -r $repo_root/tenant-microsservices/consumer/* $clone_dir/consumer
 cp -r $repo_root/tenant-microsservices/payments/* $clone_dir/payments
 cp -r $repo_root/tenant-microsservices/producer/* $clone_dir/producer
 cp -r $repo_root/* $clone_dir/eks-saas-gitops
-cp -r $repo_root/.gitignore $clone_dir/eks-saas-gitops
+cp $repo_root/.gitignore $clone_dir/eks-saas-gitops/.gitignore
 
 # Process templates in cloned repos
 repo_dir="$clone_dir/eks-saas-gitops"
@@ -202,6 +202,3 @@ LAST_COMMIT_ID=$(aws codecommit get-branch --repository-name "$cluster_name" --b
 git tag v0.0.1 $LAST_COMMIT_ID
 git push origin v0.0.1
 cd "$original_dir" || exit
-
-# Creating known hosts for Flux, use in terraform:
-ssh-keyscan "git-codecommit.$aws_region.amazonaws.com" > temp_known_hosts

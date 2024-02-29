@@ -8,8 +8,6 @@ kind: HelmRelease
 metadata:
   name: karpenter
   namespace: flux-system
-  labels:
-    add-on-version: "v0.33.1"
 spec:
   releaseName: karpenter
   targetNamespace: karpenter
@@ -18,7 +16,7 @@ spec:
   chart:
     spec:
       chart: karpenter
-      version: v0.33.1
+      version: v0.34.1
       sourceRef:
         kind: HelmRepository
         name: karpenter

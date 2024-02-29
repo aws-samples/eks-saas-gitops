@@ -38,9 +38,6 @@ kind: HelmRelease
 metadata:
   name: argo-events
   namespace: flux-system
-  labels:
-    self-managed-add-on: "true"
-    add-on-version: "2.4.1"
 spec:
   releaseName: argo-events
   targetNamespace: argo-events
@@ -49,7 +46,7 @@ spec:
   chart:
     spec:
       chart: argo-events
-      version: 2.4.1
+      version: 2.4.3
       sourceRef:
         kind: HelmRepository
         name: argo

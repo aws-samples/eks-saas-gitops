@@ -1,9 +1,3 @@
-locals {
-  known_hosts      = var.known_hosts
-  private_key_path = var.private_key_path
-  public_key_path  = var.public_key_path
-}
-
 provider "kubernetes" {
   host                   = var.cluster_endpoint
   cluster_ca_certificate = base64decode(var.ca)

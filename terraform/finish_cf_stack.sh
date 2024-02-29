@@ -1,21 +1,5 @@
 #!/bin/bash
-
-AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/')
-
-# Export EKS config to kubeconfig file
-aws eks --region "$AWS_REGION" update-kubeconfig --name eks-saas-gitops
-mkdir /home/ec2-user/.kube && cp /root/.kube/config /home/ec2-user/.kube/ && chown -R ec2-user:ec2-user /home/ec2-user/.kube/config
-
-sleep 100
-echo "Waiting for flux"
-# Removing Helm files that are not reconciled
-flux delete helmrelease metrics-server -nflux-system --kubeconfig /root/.kube/config
-flux delete helmrelease kubecost -nflux-system --kubeconfig /root/.kube/config
-flux delete helmrelease karpenter -nflux-system --kubeconfig /root/.kube/config
-
-# Reconciling again
-flux reconcile source git flux-system --kubeconfig /root/.kube/config
-
+# This script is used for AWS Provisioned environments only
 # Get cfn parameter from ssm created by Lambda function
 CFN_PARAMETER="$(aws ssm get-parameter --name "eks-saas-gitops-custom-resource-event" --query "Parameter.Value" --output text)" 
 

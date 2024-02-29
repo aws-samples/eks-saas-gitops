@@ -83,20 +83,20 @@ variable "kustomization_path" {
   type    = string
 }
 
-variable "known_hosts" {
-  description = "Path to known hosts file"
-  default     = ""
-}
+# variable "known_hosts" {
+#   description = "Path to known hosts file"
+#   default     = ""
+# }
 
-variable "private_key_path" {
-  description = "Path to private key"
-  default     = ""
-}
+# variable "private_key_path" {
+#   description = "Path to private key"
+#   default     = ""
+# }
 
-variable "public_key_path" {
-  description = "Path to public key"
-  default     = ""
-}
+# variable "public_key_path" {
+#   description = "Path to public key"
+#   default     = ""
+# }
 
 variable "flux2_sync_version" {
   description = "Flux2 sync helm chart version"

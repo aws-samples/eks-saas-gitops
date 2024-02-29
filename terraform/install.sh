@@ -54,9 +54,7 @@ for target in "${terraform_targets[@]}"; do
         # Run Terraform apply
         terraform apply -target="$target" \
             -var "public_key_file_path=$public_key_file_path" \
-            -var "private_key_file_path=$private_key_file_path" \
             -var "clone_directory=$clone_directory" \
-            -var "known_hosts=$known_hosts" \
             -var "flux2_sync_secret_values=$values_yaml_path" \
             -auto-approve
         

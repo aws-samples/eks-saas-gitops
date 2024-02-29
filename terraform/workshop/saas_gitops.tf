@@ -31,7 +31,4 @@ module "flux_v2" {
   git_url                  = module.gitops_saas_infra.aws_codecommit_flux_clone_url_ssh
   kustomization_path       = var.kustomization_path
   flux2_sync_secret_values = var.flux2_sync_secret_values
-  # known_hosts        = var.known_hosts
-  # private_key_path   = var.private_key_file_path
-  # public_key_path    = var.public_key_file_path
 }

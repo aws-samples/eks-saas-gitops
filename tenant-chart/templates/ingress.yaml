@@ -15,6 +15,10 @@ metadata:
     alb.ingress.kubernetes.io/target-type: "ip"
     alb.ingress.kubernetes.io/healthcheck-path: "/{{ $appName }}"
     alb.ingress.kubernetes.io/group.name: "tenants-lb"
+    alb.ingress.kubernetes.io/actions.{{ $appName }}: >
+      {"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"200","messageBody":"HTTP header TenantID need to be set"}}
+    alb.ingress.kubernetes.io/conditions.{{ $appName }}: >
+      [{"field":"http-header","httpHeaderConfig":{"httpHeaderName": "TenantID", "values":["{{ $.Values.tenantId }}"]}}]
     {{- with $appConfig.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}

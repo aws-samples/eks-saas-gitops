@@ -34,7 +34,7 @@ spec:
   type: ExternalName
   externalName: "{{ $appName }}.pool-1.svc.cluster.local"
   ports:
-    - port: 80 # Can be dynamic
+    - port: {{ $appConfig.service.port }}
       targetPort: http
       protocol: TCP
       name: http

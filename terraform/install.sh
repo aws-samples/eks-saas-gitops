@@ -3,14 +3,39 @@
 # Set the base directory to the parent directory of this script
 BASE_DIR=$(dirname "$0")
 
-# Ask for public and private key file paths
-public_key_file_path=$1
-private_key_file_path=$2
-clone_directory=$3
-known_hosts=$4
+# Check if parameters are passed; if not, ask for them
+if [ -z "$1" ]; then
+    read -p "Enter the path to your public key file: " public_key_file_path
+else
+    public_key_file_path=$1
+fi
+
+if [ -z "$2" ]; then
+    read -p "Enter the path to your private key file: " private_key_file_path
+else
+    private_key_file_path=$2
+fi
+
+if [ -z "$3" ]; then
+    read -p "Enter the clone directory: " clone_directory
+else
+    clone_directory=$3
+fi
+
+if [ -z "$4" ]; then
+    read -p "Enter the path to your known hosts file: " known_hosts
+else
+    known_hosts=$4
+fi
+
+# Verify if all required inputs are provided
+if [ -z "$public_key_file_path" ] || [ -z "$private_key_file_path" ] || [ -z "$clone_directory" ] || [ -z "$known_hosts" ]; then
+    echo "All inputs are required. Please provide the missing information."
+    exit 1
+fi
 
 # Path where values.yaml will be created
-values_yaml_path="$BASE_DIR/workshop/values.yaml"
+values_yaml_path="$BASE_DIR/workshop/flux-secrets.yaml"
 
 # Create values.yaml with the provided information
 cat <<EOF > "$values_yaml_path"
@@ -18,12 +43,14 @@ secret:
   create: true
   data:
     identity: |-
-$(sed 's/^/      /' $private_key_file_path)
+$(sed 's/^/      /' "$private_key_file_path")
     identity.pub: |-
-$(sed 's/^/      /' $public_key_file_path)
+$(sed 's/^/      /' "$public_key_file_path")
     known_hosts: |-
-$(sed 's/^/      /' $known_hosts)
+$(sed 's/^/      /' "$known_hosts")
 EOF
+
+echo "$values_yaml_path"
 
 # Navigate to the workshop directory where the module implementations are
 cd "$BASE_DIR/workshop" || exit
@@ -55,7 +82,7 @@ for target in "${terraform_targets[@]}"; do
         terraform apply -target="$target" \
             -var "public_key_file_path=$public_key_file_path" \
             -var "clone_directory=$clone_directory" \
-            -var "flux2_sync_secret_values=$values_yaml_path" \
+            -var "aws_region=$AWS_REGION" \
             -auto-approve
         
         # Check if Terraform apply was successful

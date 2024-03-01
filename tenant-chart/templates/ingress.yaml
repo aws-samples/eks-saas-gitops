@@ -27,7 +27,7 @@ spec:
         pathType: {{ $appConfig.ingress.pathType | default "ImplementationSpecific" }}
         backend:
           service:
-            name: "{{ if $appConfig.enabled }}{{ $.Values.tenantId }}-{{ $appName }}{{ else }}{{ $appName }}{{ end }}"
+            name: "{{ if $appConfig.enabled }}{{ $.Values.tenantId }}-{{ $appName }}{{ else }}{{ $.Values.tenantId }}-{{ $appName }}{{ end }}"
             port:
               number: {{ $appConfig.service.port }}
 {{- end }}

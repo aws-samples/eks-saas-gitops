@@ -24,7 +24,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ $appName }}"
+  name: "{{ $.Values.tenantId }}-{{ $appName }}"
   labels:
     app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
     app.kubernetes.io/instance: "{{ $.Release.Name }}"
@@ -33,5 +33,10 @@ metadata:
 spec:
   type: ExternalName
   externalName: "{{ $appName }}.pool-1.svc.cluster.local"
+  ports:
+    - port: 80 # Can be dynamic
+      targetPort: http
+      protocol: TCP
+      name: http
 {{- end }}
 {{- end }}

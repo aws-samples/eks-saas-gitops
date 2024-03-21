@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # map templates and helm release folders -- this is mounted on 01-tenant-clone-repo.sh
-tier_templates_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates"
-manifests_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants"
+repo_root_path="/mnt/vol/eks-saas-gitops"
+tier_templates_path="${repo_root_path}/gitops/application-plane/production/tier-templates"
+manifests_path="${repo_root_path}/gitops/application-plane/production/tenants"
 
 main() {
     local tenant_id="$1"
@@ -75,7 +76,7 @@ commit_files() {
     local repository_branch="$1"
     local tenant_id="$2"
     local tenant_tier="$3"
-    cd /mnt/vol/eks-saas-gitops/ || exit 1
+    cd ${repo_root_path} || exit 1
     git status
     git add .
     git commit -am "Adding new tenant ${tenant_id} in model ${tenant_tier}"

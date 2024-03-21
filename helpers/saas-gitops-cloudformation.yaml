@@ -420,7 +420,8 @@ Resources:
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE 2> /dev/null' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
             - git clone -b testing https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
-            - chown -R ec2-user:ec2-user /home/ec2-user/environment/eks-saas-gitops
+            - chmod +x /home/ec2-user/environment/eks-saas-gitops/scripts/*.sh
+            - chown -R ec2-user:ec2-user /home/ec2-user/environment/eks-saas-gitops            
             - /home/ec2-user/environment/eks-saas-gitops/scripts/resize-cloud9-ebs-vol.sh
             - ssh-keygen -t rsa -b 4096 -f /home/ec2-user/environment/flux -N ""
             - cp /home/ec2-user/environment/flux /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
@@ -437,8 +438,7 @@ Resources:
             - sleep 60 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
             - kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config
             - /home/ec2-user/environment/eks-saas-gitops/terraform/finish_cf_stack.sh
-            - echo "Bootstrap completed with return code $?"
-            - shutdown -r +1
+            - echo "Bootstrap completed with return code $?"            
 
   C9BootstrapAssociation: 
     Type: AWS::SSM::Association

@@ -22,7 +22,7 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {ENVIRONMENT_ID}
-    awsAccountId: "{account_id}"
+    awsAccountId: "528051384571"
     infra:
       vars:
         enable_producer: true

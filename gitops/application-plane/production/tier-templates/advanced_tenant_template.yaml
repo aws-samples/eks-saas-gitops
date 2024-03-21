@@ -6,10 +6,10 @@ metadata:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: {TENANT_ID}-hybrid
+  name: {TENANT_ID}-advanced
   namespace: flux-system
 spec:
-  releaseName: {TENANT_ID}-hybrid
+  releaseName: {TENANT_ID}-advanced
   targetNamespace: {TENANT_ID}  # Deploying into the tenant-specific namespace
   interval: 1m0s
   chart:
@@ -21,7 +21,7 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}
-    awsAccountId: "{account_id}"
+    awsAccountId: "528051384571"
     infra:
       vars:
         enable_producer: false  # Reflecting Terraform logic

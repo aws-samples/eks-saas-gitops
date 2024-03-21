@@ -46,7 +46,7 @@ spec:
                     name: workflow
                 arguments:
                   parameters:
-                    - name: TENANT_MODEL
+                    - name: TENANT_TIER
                       value: "" # Valid values are: silo, pool, hybrid
                     - name: RELEASE_VERSION
                       value: "" # Valid values are: silo, pool, hybrid
@@ -65,10 +65,6 @@ spec:
                           templateRef:
                             name: tenant-deployment-template
                             template: clone-repository
-                      - - name: update-tenant-infrastructure
-                          templateRef:
-                            name: tenant-deployment-template
-                            template: update-tenant-infrastructure
                       - - name: update-tenant-helm-release
                           templateRef:
                             name: tenant-deployment-template
@@ -91,7 +87,7 @@ spec:
           parameters:
             - src:
                 dependencyName: tenant-deployment-dep
-                dataKey: body.tenant_model
+                dataKey: body.tenant_tier
               dest: spec.arguments.parameters.0.value
             - src:
                 dependencyName: tenant-deployment-dep

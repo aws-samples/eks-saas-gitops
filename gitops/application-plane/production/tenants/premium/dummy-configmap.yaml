@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dummy-configmap-premium
+  namespace: default
+data:
+  note: "This is a dummy ConfigMap for Flux to avoid empty kustomization error."

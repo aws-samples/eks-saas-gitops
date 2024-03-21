@@ -8,7 +8,7 @@ spec:
   templates:
     - name: clone-repository
       container:
-        image: "{ecr_argoworkflow_container}"
+        image: "{ecr_argoworkflow_container}:0.1"
         command: ["/bin/sh","-c"]
         args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && cp -r eks-saas-gitops-aws /mnt/vol/eks-saas-gitops'] 
         volumeMounts:
@@ -21,7 +21,7 @@ spec:
             value: "ssh -i /root/.ssh/id_rsa"    
     - name: update-tenant-helm-release
       container:
-        image: "{ecr_argoworkflow_container}"
+        image: "{ecr_argoworkflow_container}:0.1"
         command: ["/bin/sh","-c"]
         args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./03-tenant-deployment.sh {{workflow.parameters.RELEASE_VERSION}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}'] 
         volumeMounts:

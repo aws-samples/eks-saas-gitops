@@ -47,3 +47,4 @@ terraform.rc
 .idea
 .build
 *.vscode
+.config

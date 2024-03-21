@@ -33,10 +33,19 @@ Our `install.sh` script streamlines the provisioning process. Specify paths to y
 > **Important**: Replace placeholder values with your actual file paths. The `clone_directory` is the destination for generated files.
 
 ### Step 3: Accessing the Environment
+
 Post-installation, use the `configure_kubectl` Terraform output to connect to your Kubernetes cluster:
 
 ```bash
 aws eks --region us-west-2 update-kubeconfig --name eks-saas-gitops
+```
+
+### Step 4: Create git ssh keys in EKS for Argo Workflows
+
+Argo Workflows needs access to the git repository. Create a secret to store the private keys that Argo will use to clone and push changes to git during workflows.
+
+```bash
+kubectl create secret generic github-ssh-key --from-file=ssh-privatekey= ~/.ssh/id_rsa --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig ~/.kube/config
 ```
 
 ## Ensuring Smooth Installation

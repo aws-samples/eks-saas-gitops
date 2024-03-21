@@ -261,7 +261,7 @@ Resources:
                       )
                       logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh')
                       
-                      run_ssm_command('root', instance['InstanceId'], 'cd /home/ec2-user/environment && ./cleanup.sh', 'cleanupoutput')
+                      run_ssm_command('root', instance['InstanceId'], 'cd /home/ec2-user/environment && ./scripts/cleanup.sh', 'cleanupoutput')
 
                   if event['RequestType'] == 'Create':                                  
                       ec2 = boto3.client('ec2')
@@ -421,6 +421,7 @@ Resources:
             - echo '====== Provision Terraform ======'
             - git clone -b testing https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
             - chown -R ec2-user:ec2-user /home/ec2-user/environment/eks-saas-gitops
+            - /home/ec2-user/environment/eks-saas-gitops/scripts/resize-cloud9-ebs-vol.sh
             - ssh-keygen -t rsa -b 4096 -f /home/ec2-user/environment/flux -N ""
             - cp /home/ec2-user/environment/flux /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
             - cp /home/ec2-user/environment/flux.pub /root/.ssh/id_rsa.pub && chmod 600 /root/.ssh/id_rsa.pub
@@ -434,6 +435,7 @@ Resources:
             - mkdir /home/ec2-user/.kube && cp /root/.kube/config /home/ec2-user/.kube/ && chown -R ec2-user:ec2-user /home/ec2-user/.kube/config
             - chown -R ec2-user:ec2-user /home/ec2-user/environment/workshop
             - sleep 60 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
+            - kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config
             - /home/ec2-user/environment/eks-saas-gitops/terraform/finish_cf_stack.sh
             - echo "Bootstrap completed with return code $?"
             - shutdown -r +1

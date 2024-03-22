@@ -17,7 +17,6 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}
-    awsAccountId: "528051384571"
     infra:
       vars:
         enable_producer: false

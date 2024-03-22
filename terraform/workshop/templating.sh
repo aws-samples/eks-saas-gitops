@@ -157,12 +157,21 @@ process_and_replace_templates "$repo_dir"
 # Push images to Amazon ECR
 original_dir="$PWD"
 
+# TBD: Create a loop for Helm Charts as well
 # Helm Chart for Tenant
 echo "Packaging and Pushing Helm Chart to ECR"
 cd $repo_dir/ || exit
 aws ecr get-login-password --region "$aws_region" | helm registry login --username AWS --password-stdin $account_id.dkr.ecr.$aws_region.amazonaws.com
 helm package tenant-chart
 helm push helm-tenant-chart-0.0.1.tgz oci://$ecr_helm_chart_url_base
+cd "$original_dir" || exit
+
+# Helm chart for Application
+echo "Packaging and Pushing Helm Chart to ECR"
+cd $repo_dir/helm-charts/application-chart || exit
+aws ecr get-login-password --region "$aws_region" | helm registry login --username AWS --password-stdin $account_id.dkr.ecr.$aws_region.amazonaws.com
+helm package application-chart
+helm push application-chart-0.0.1.tgz oci://$ecr_helm_chart_url_application_base
 cd "$original_dir" || exit
 
 # Docker images for consumer, producer and payments

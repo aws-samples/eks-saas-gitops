@@ -58,6 +58,10 @@ output "ecr_helm_chart_url_base" {
   value = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url)) - 1))
 }
 
+output "ecr_helm_chart_url_application_base" {
+  value = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url_application), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url_application)) - 1))
+}
+
 output "ecr_helm_chart_url" {
   description = "URL for Amazon ECR stored chart"
   value       = module.gitops_saas_infra.ecr_helm_chart_url

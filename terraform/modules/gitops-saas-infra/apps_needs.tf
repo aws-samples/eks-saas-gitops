@@ -10,6 +10,15 @@ resource "aws_ecr_repository" "tenant_helm_chart" {
   }
 }
 
+resource "aws_ecr_repository" "application_helm_chart" {
+  name                 = var.application_helm_chart_repo
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
 resource "aws_ecr_repository" "argoworkflow_container" {
   name                 = var.argoworkflow_container_repo
   image_tag_mutability = "MUTABLE"

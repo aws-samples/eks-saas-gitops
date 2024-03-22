@@ -37,6 +37,11 @@ output "ecr_helm_chart_url" {
   value       = aws_ecr_repository.tenant_helm_chart.repository_url
 }
 
+output "ecr_helm_chart_url_application" {
+  description = "URL for Amazon ECR stored chart"
+  value       = aws_ecr_repository.application_helm_chart.repository_url
+}
+
 output "ecr_argoworkflow_container" {
   description = "URL for Amazon ECR stored Argo Workflows container"
   value       = aws_ecr_repository.argoworkflow_container.repository_url

@@ -13,10 +13,15 @@ variable "cluster_oidc_provider_arn" {
   default = ""
 }
 
+# TBD: This could be a loop like we are using for microsservices
 variable "tenant_helm_chart_repo" {
   description = "Repository for Tenant Helm chart"
   type        = string
   default     = "gitops-saas/helm-tenant-chart"
+}
+
+variable "application_helm_chart_repo" {
+  description = "gitops-saas/application-chart"
 }
 
 variable "argoworkflow_container_repo" {

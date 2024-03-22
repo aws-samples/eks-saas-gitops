@@ -21,7 +21,9 @@ variable "tenant_helm_chart_repo" {
 }
 
 variable "application_helm_chart_repo" {
-  description = "gitops-saas/application-chart"
+  description = "Repository for Application chart"
+  type        = string
+  default = "gitops-saas/application-chart"
 }
 
 variable "argoworkflow_container_repo" {

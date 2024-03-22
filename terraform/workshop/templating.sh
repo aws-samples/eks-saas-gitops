@@ -172,7 +172,7 @@ original_dir="$PWD"
 
 # Package and push Helm Charts to ECR
 package_and_push_helm_chart "$repo_dir/helm-charts" "helm-tenant-chart" "$ecr_helm_chart_url_base"
-package_and_push_helm_chart "$repo_dir/helm-charts" "application-chart" "$ecr_helm_chart_url_application_base"
+package_and_push_helm_chart "$repo_dir/helm-charts" "application-chart" "$ecr_helm_chart_url_base"
 
 # Docker images for consumer, producer and payments
 build_and_push_image "consumer" "$ecr_repository_urls_consumer"

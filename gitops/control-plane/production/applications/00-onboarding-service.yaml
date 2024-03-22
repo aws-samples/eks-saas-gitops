@@ -21,5 +21,5 @@ spec:
         name: helm-application-chart
   values:
     image:
-      repository: nginx # TBD: Create Onboarding Service
-      tag: "0.x"
+      repository: nginx # TBD: Use On-boarding service ECR URL
+      tag: "latest" # TBD: Can use same deployment style with .x here as well

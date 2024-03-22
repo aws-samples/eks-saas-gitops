@@ -8,5 +8,5 @@ spec:
   type: "oci"
   interval: 1m0s
   provider: aws
-  url: oci://{ecr_helm_chart_url_application_base}/
+  url: oci://{ecr_helm_chart_url_base}/
   

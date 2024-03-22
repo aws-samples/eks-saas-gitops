@@ -28,6 +28,10 @@ output "codecommit_repository_urls_payments" {
   value = try(module.gitops_saas_infra.codecommit_repository_urls.payments, null)
 }
 
+output "codecommit_repository_urls_onboarding" {
+  value = try(module.gitops_saas_infra.codecommit_repository_urls.onboarding_service, null)
+}
+
 # output "ecr_repository_urls" {
 #   value = module.gitops_saas_infra.ecr_repository_urls
 # }
@@ -44,6 +48,10 @@ output "ecr_repository_urls_payments" {
   value = try(module.gitops_saas_infra.ecr_repository_urls.payments, null)
 }
 
+output "ecr_repository_urls_onboarding" {
+  value = try(module.gitops_saas_infra.ecr_repository_urls.onboarding_service, null)
+}
+
 output "aws_codecommit_flux_clone_url_ssh" {
   description = "AWS CodeCommit SSH based clone URL"
   value       = module.gitops_saas_infra.aws_codecommit_flux_clone_url_ssh
@@ -58,8 +66,9 @@ output "ecr_helm_chart_url_base" {
   value = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url)) - 1))
 }
 
-output "ecr_helm_chart_url_application_base" {
-  value = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url_application), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url_application)) - 1))
+output "ecr_helm_chart_application_url" {
+  description = "URL for the ECR stored application helm chart, including the application chart segment."
+  value       = module.gitops_saas_infra.ecr_helm_chart_url_application
 }
 
 output "ecr_helm_chart_url" {

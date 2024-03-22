@@ -66,6 +66,12 @@ variable "microservices" {
       default_branch = "main",
       codebuild_project_name = "payments-codebuild",
       pipeline_name = "payments-pipeline",
+    },
+    "onboarding_service" = {
+      description = "Onboarding microservice repository",
+      default_branch = "main",
+      codebuild_project_name = "onboarding-codebuild",
+      pipeline_name = "onboarding-pipeline",
     }
   }
 }

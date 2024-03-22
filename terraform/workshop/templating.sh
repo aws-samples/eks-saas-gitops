@@ -132,6 +132,20 @@ build_and_push_image() {
     echo "Image for ${service_dir} pushed successfully."
 }
 
+package_and_push_helm_chart() {
+    local chart_dir="$1"  # Directory of the Helm Chart
+    local chart_name="$2"  # Name of the Helm Chart
+    local ecr_chart_url="$3"  # ECR URL to push the Helm Chart
+
+    echo "Packaging and Pushing Helm Chart $chart_name to ECR"
+    cd "$chart_dir" || exit
+    aws ecr get-login-password --region "$aws_region" | helm registry login --username AWS --password-stdin $account_id.dkr.ecr.$aws_region.amazonaws.com
+    helm package "$chart_name"
+    helm_chart_version=$(grep 'version:' "$chart_name/Chart.yaml" | awk '{print $2}')
+    helm push "${chart_name}-${helm_chart_version}.tgz" oci://$ecr_chart_url
+    cd - > /dev/null 2>&1 || return
+}
+
 # Script starts here
 repo_root="../.." # This could be a parameter
 clone_dir="$1" # No need to put / eg. /tmp/
@@ -154,25 +168,11 @@ cp $repo_root/.gitignore $clone_dir/eks-saas-gitops/.gitignore
 repo_dir="$clone_dir/eks-saas-gitops"
 process_and_replace_templates "$repo_dir"
 
-# Push images to Amazon ECR
 original_dir="$PWD"
 
-# TBD: Create a loop for Helm Charts as well
-# Helm Chart for Tenant
-echo "Packaging and Pushing Helm Chart to ECR"
-cd $repo_dir/helm-charts/ || exit
-aws ecr get-login-password --region "$aws_region" | helm registry login --username AWS --password-stdin $account_id.dkr.ecr.$aws_region.amazonaws.com
-helm package tenant-chart
-helm push helm-tenant-chart-0.0.1.tgz oci://$ecr_helm_chart_url_base
-cd "$original_dir" || exit
-
-# Helm chart for Application
-echo "Packaging and Pushing Helm Chart to ECR"
-cd $repo_dir/helm-charts/ || exit
-aws ecr get-login-password --region "$aws_region" | helm registry login --username AWS --password-stdin $account_id.dkr.ecr.$aws_region.amazonaws.com
-helm package application-chart
-helm push application-chart-0.0.1.tgz oci://$ecr_helm_chart_url_base
-cd "$original_dir" || exit
+# Package and push Helm Charts to ECR
+package_and_push_helm_chart "$repo_dir/helm-charts" "helm-tenant-chart" "$ecr_helm_chart_url_base"
+package_and_push_helm_chart "$repo_dir/helm-charts" "application-chart" "$ecr_helm_chart_url_application_base"
 
 # Docker images for consumer, producer and payments
 build_and_push_image "consumer" "$ecr_repository_urls_consumer"

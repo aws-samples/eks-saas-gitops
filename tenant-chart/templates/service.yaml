@@ -32,7 +32,7 @@ metadata:
     app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
 spec:
   type: ExternalName
-  externalName: "{{ $appName }}.pool-1.svc.cluster.local"
+  externalName: "pool-1-{{ $appName }}.pool-1.svc.cluster.local"
   ports:
     - port: {{ $appConfig.service.port }}
       targetPort: http

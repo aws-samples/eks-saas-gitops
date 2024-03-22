@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
     app.kubernetes.io/managed-by: "Helm"
   annotations:
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
     alb.ingress.kubernetes.io/target-type: "ip"
     alb.ingress.kubernetes.io/healthcheck-path: "/{{ $appName }}"
     alb.ingress.kubernetes.io/group.name: "tenants-lb"

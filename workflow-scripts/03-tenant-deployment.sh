@@ -4,27 +4,32 @@
 tier_templates_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates"
 manifests_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants"
 pooled_envs_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/pooled-envs"
+pool_env_template_file="${tier_templates_path}/basic_env_template.yaml"
 
 main() {
-	release_version="$1"
-	tenant_tier="$2"
-	git_user_email="$3"
-	git_user_name="$4"
-	repository_branch="$5"
+    release_version="$1"
+    tenant_tier="$2"
+    git_user_email="$3"
+    git_user_name="$4"
 
-	# get tier template file based on the tier for the tenant being deployed (e.g. premium_tenant_template.yaml)
-	local tier_template_file
-	tier_template_file=$(get_tier_template_file "$tenant_tier" "$tier_templates_path")
+    # get tier template file based on the tier for the tenant being deployed
+    # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates/premium_tenant_template.yaml)
+    local tier_template_file
+    tier_template_file=$(get_tier_template_file "$tenant_tier")
 
-	if [[ $tenant_tier == "basic" ]]; then
-        process_basic_pooled_envs "$release_version" "$pooled_envs_path" "$tier_template_file"
+    # if tier is basic, update helm release for basic pool environment
+    if [[ $tenant_tier == "basic" ]]; then
+        update_pool_envs "$release_version"
     fi
 
-	# configure git user and ssh key so we can push changes to the gitops repo
-	configure_git "${git_user_email}" "${git_user_name}"
+    # update tenant helm releases for a given tier
+    update_tenants "$release_version" "$tier_template_file"
 
-	# push new helm release for the tenant and kustomization update to the gitops repo
-	commit_files "${repository_branch}" "${tenant_id}" "${tenant_tier}"
+    # configure git user and ssh key so we can push changes to the gitops repo
+    configure_git "${git_user_email}" "${git_user_name}"
+
+    # push updated helm releases
+    commit_files "${repository_branch}" "${tenant_id}" "${tenant_tier}"
 }
 
 get_tier_template_file() {
@@ -38,36 +43,29 @@ get_tier_template_file() {
 }
 
 update_pool_envs() {
-	# if [[ $tenant_tier == "basic" ]]; then
-	# 	for POOLED_ENV in $(ls $POOLED_ENVS/pool-*)
-	# 		do
-	# 			ENVIRONMENT_ID=$(echo $POOLED_ENV | tr '/' '\n' | tail -n1 | cut -d '.' -f1)
-	# 			cp "$TENANT_BASIC_ENV_TEMPLATE" "${POOLED_ENV}"
-	# 			sed -i "s|{ENVIRONMENT_ID}|$ENVIRONMENT_ID|g" "${POOLED_ENV}"
-	# 			sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${POOLED_ENV}"
-	# 		done
-	# fi
+    local release_version="$1"
 
-	local release_version="$1"
-    local pooled_envs="$2"
-    local template_file="$3"
-
-    for pooled_env in "${pooled_envs}"/pool-*; do
+    # loop through all pooled_envs helm releases, recreate each file with template, and substitute release version
+    for pooled_env in "${pooled_envs_path}"/pool-*; do
         local environment_id
         environment_id=$(basename "$pooled_env" | cut -d '.' -f1)
-        cp "$template_file" "$pooled_env"
+        cp "$pool_env_template_file" "$pooled_env"
         sed -i "s|{ENVIRONMENT_ID}|${environment_id}|g; s|{RELEASE_VERSION}|${release_version}|g" "$pooled_env"
     done
 }
 
 update_tenants() {
-	for TENANT_FILE in $(ls $MANIFESTS_PATH/tenant*)
-		do
-			TENANT_ID=$(echo $TENANT_FILE | tr '/' '\n' | tail -n1 | cut -d '-' -f1,2)
-			cp "$TEMPLATE_FILE" "${TENANT_FILE}"
-			sed -i "s|{TENANT_ID}|$TENANT_ID|g" "$TENANT_FILE"
-			sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${TENANT_FILE}"
-	done
+    local release_version="$1"
+    local template_file="$2"
+
+    # loop through all tenant helm releases, recreate each file with template, and substitute release version
+    for tenant_file in "${manifests_path}/${tenant_tier}"/*; do
+        local tenant_id
+        tenant_id=$(basename "$tenant_file" | cut -d '.' -f1)
+        cp "$template_file" "${tenant_file}"
+        sed -i "s|{TENANT_ID}|$tenant_id|g" "$tenant_file"
+        sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${tenant_file}"
+    done
 }
 
 configure_git() {
@@ -77,8 +75,8 @@ configure_git() {
     git config --global user.name "${git_user_name}"
     cat <<EOF > /root/.ssh/config
 Host git-codecommit.*.amazonaws.com
-	User ${git_user_name}
-	IdentityFile /root/.ssh/id_rsa
+    User ${git_user_name}
+    IdentityFile /root/.ssh/id_rsa
 EOF
     chmod 600 /root/.ssh/config
 }
@@ -95,6 +93,3 @@ commit_files() {
 }
 
 main "$@"
-
-
-

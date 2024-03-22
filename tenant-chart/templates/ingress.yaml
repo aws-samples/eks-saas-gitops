@@ -5,13 +5,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: "{{ $.Values.tenantId }}-ingress-{{ $appName }}"
+  namespace: {{ if and (not $appConfig.enabled) $appConfig.ingress.enabled }}pool-1{{ else }}{{ $.Values.tenantId }}{{ end }}
   labels:
     app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
     app.kubernetes.io/instance: "{{ $.Release.Name }}"
     app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
     app.kubernetes.io/managed-by: "Helm"
   annotations:
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
     alb.ingress.kubernetes.io/target-type: "ip"
     alb.ingress.kubernetes.io/healthcheck-path: "/{{ $appName }}"
     alb.ingress.kubernetes.io/group.name: "tenants-lb"

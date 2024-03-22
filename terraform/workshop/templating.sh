@@ -168,7 +168,7 @@ cd "$original_dir" || exit
 
 # Helm chart for Application
 echo "Packaging and Pushing Helm Chart to ECR"
-cd $repo_dir/helm-charts/application-chart || exit
+cd $repo_dir/helm-charts/ || exit
 aws ecr get-login-password --region "$aws_region" | helm registry login --username AWS --password-stdin $account_id.dkr.ecr.$aws_region.amazonaws.com
 helm package application-chart
 helm push application-chart-0.0.1.tgz oci://$ecr_helm_chart_url_base

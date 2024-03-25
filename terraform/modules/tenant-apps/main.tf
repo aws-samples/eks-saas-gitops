@@ -62,7 +62,7 @@ module "producer_irsa_role" {
 # IF SHARED PRODUCER AND DEDICATED CONSUMER (HYBRID):
 resource "aws_iam_role_policy_attachment" "sto-readonly-role-policy-attach" {
   count      = var.enable_producer == false && var.enable_consumer == true ? 1 : 0
-  role       = "producer-role-pooled-1"
+  role       = "producer-role-pool-1"
   policy_arn = aws_iam_policy.producer-iampolicy[0].arn
 }
 

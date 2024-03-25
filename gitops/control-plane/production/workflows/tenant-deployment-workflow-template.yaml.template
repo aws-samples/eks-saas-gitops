@@ -10,7 +10,7 @@ spec:
       container:
         image: "{ecr_argoworkflow_container}:0.1"
         command: ["/bin/sh","-c"]
-        args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && cp -r eks-saas-gitops-aws /mnt/vol/eks-saas-gitops'] 
+        args: ['cp /tmp/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && cp -r eks-saas-gitops /mnt/vol/eks-saas-gitops'] 
         volumeMounts:
         - name: workdir
           mountPath: /mnt/vol

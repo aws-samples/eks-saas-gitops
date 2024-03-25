@@ -11,6 +11,7 @@ main() {
     tenant_tier="$2"
     git_user_email="$3"
     git_user_name="$4"
+    repository_branch="$5"
 
     # get tier template file based on the tier for the tenant being deployed
     # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates/premium_tenant_template.yaml)
@@ -29,7 +30,7 @@ main() {
     configure_git "${git_user_email}" "${git_user_name}"
 
     # push updated helm releases
-    commit_files "${repository_branch}" "${tenant_id}" "${tenant_tier}"
+    commit_files "${repository_branch}" "${tenant_tier}"
 }
 
 get_tier_template_file() {
@@ -83,8 +84,7 @@ EOF
 
 commit_files() {
     local repository_branch="$1"
-    local tenant_id="$2"
-    local tenant_tier="$3"
+    local tenant_tier="$2"
     cd /mnt/vol/eks-saas-gitops/ || exit 1
     git status
     git add .

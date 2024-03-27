@@ -18,13 +18,13 @@ main() {
     local tier_template_file
     tier_template_file=$(get_tier_template_file "$tenant_tier")
 
+    # update tenant helm releases for a given tier
+    update_tenants "$tier_template_file"  
+    
     # if tier is basic, update helm release for basic pool environment
     if [[ $tenant_tier == "basic" ]]; then
-        update_pool_envs "$release_version"
+        update_pool_envs
     fi
-
-    # update tenant helm releases for a given tier
-    update_tenants "$release_version" "$tier_template_file"
 
     # configure git user and ssh key so we can push changes to the gitops repo
     configure_git "${git_user_email}" "${git_user_name}"
@@ -43,30 +43,30 @@ get_tier_template_file() {
     esac
 }
 
-update_pool_envs() {
+update_deployment_files() {
     local release_version="$1"
+    local template_file="$2"
+    local manifests_folder="$3"
 
-    # loop through all pooled_envs helm releases, recreate each file with template, and substitute release version
-    for pooled_env in "${pooled_envs_path}"/pool-*; do
-        local environment_id
-        environment_id=$(basename "$pooled_env" | cut -d '.' -f1)
-        cp "$pool_env_template_file" "$pooled_env"
-        sed -i "s|{ENVIRONMENT_ID}|${environment_id}|g; s|{RELEASE_VERSION}|${release_version}|g" "$pooled_env"
+    # loop through all tenant helm releases, recreate each file with template, and substitute release version
+    for release_file in "${manifests_folder}"/*; do
+        if [ "$release_file" != "kustomization.yaml" ]; then #kustomization file doesn't need to change
+            local id
+            id=$(basename "$release_file" | cut -d '.' -f1)
+            cp "$template_file" "${release_file}"
+            sed -i "s|{TENANT_ID}|$id|g" "$release_file"
+            sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${release_file}"
+        fi
     done
 }
 
-update_tenants() {
-    local release_version="$1"
-    local template_file="$2"
+update_pool_envs() {    
+    update_deployment_files "$release_version" "$pool_env_template_file" "$pooled_envs_path"
+}
 
-    # loop through all tenant helm releases, recreate each file with template, and substitute release version
-    for tenant_file in "${manifests_path}/${tenant_tier}"/*; do
-        local tenant_id
-        tenant_id=$(basename "$tenant_file" | cut -d '.' -f1)
-        cp "$template_file" "${tenant_file}"
-        sed -i "s|{TENANT_ID}|$tenant_id|g" "$tenant_file"
-        sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${tenant_file}"
-    done
+update_tenants() {    
+    local template_file="$1"    
+    update_deployment_files "$release_version" "$template_file" "${manifests_path}/${tenant_tier}"
 }
 
 configure_git() {

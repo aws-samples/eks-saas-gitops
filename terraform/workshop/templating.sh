@@ -158,9 +158,9 @@ git_list="$codecommit_repository_urls_consumer $codecommit_repository_urls_payme
 clone_git_repos "$git_list" $clone_dir
 
 # Copy folders to cloned repos as is
-cp -r $repo_root/tenant-microsservices/consumer/* $clone_dir/consumer
-cp -r $repo_root/tenant-microsservices/payments/* $clone_dir/payments
-cp -r $repo_root/tenant-microsservices/producer/* $clone_dir/producer
+cp -r $repo_root/tenant-microservices/consumer/* $clone_dir/consumer
+cp -r $repo_root/tenant-microservices/payments/* $clone_dir/payments
+cp -r $repo_root/tenant-microservices/producer/* $clone_dir/producer
 cp -r $repo_root/* $clone_dir/eks-saas-gitops
 cp $repo_root/.gitignore $clone_dir/eks-saas-gitops/.gitignore
 

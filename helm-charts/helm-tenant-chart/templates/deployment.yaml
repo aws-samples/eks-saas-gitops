@@ -51,8 +51,10 @@ spec:
               port: http
           readinessProbe:
             httpGet:
-              path: /{{ $appName }}
+              path: /{{ $appName }}/readiness-probe
               port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
           resources:
             {{- toYaml $appConfig.resources | nindent 12 }}
       nodeSelector:

@@ -13,6 +13,7 @@ logger = logging.getLogger("consumer")
 logger.setLevel(logging.INFO)
 logging.basicConfig(stream=sys.stdout)
 
+sts_client = boto3.client('sts')
 ssm_client = boto3.client("ssm")
 sqs_client = boto3.client("sqs")
 ddb_client = boto3.client("dynamodb")
@@ -52,6 +53,20 @@ def index():
         "version": ms_version, 
         "microservice": service_name 
     }
+
+
+@app.route("/consumer/readiness-probe", methods = ['GET'])
+def index():    
+    try:
+        sts_client.get_caller_identity()        
+        
+        # Ready, lets start the thread to process messages.
+        Thread(target = process_messages).start()
+        
+        return { "Status": "OK" }
+        
+    except Exception as e:
+        return { "Status": "NotReady" }, 500
 
 
 def receive_message_from_sqs(queue_url, max_messages=5):
@@ -112,7 +127,6 @@ def process_messages():
             logger.error("Exception raised! " + str(e))        
 
 
-if __name__ == "__main__":    
-    Thread(target = process_messages).start() 
+if __name__ == "__main__":        
     # run in 0.0.0.0 so that it can be accessed from outside the container
     app.run(host="0.0.0.0", port=80)

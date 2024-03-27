@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import request
-from flask import jsonify
 import boto3
 import os
 import logging
@@ -8,6 +7,7 @@ import logging
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
 
+sts_client = boto3.client('sts')
 ssm_client = boto3.client("ssm")
 sqs_client = boto3.client("sqs")
 sms_queue_param_name_suffix = "consumer_sqs"
@@ -27,20 +27,28 @@ def get_queue_url(tenant_id):
     return queue_url
 
 
+@app.route("/producer/readiness-probe", methods = ['GET'])
+def readiness_probe():    
+    try:
+        sts_client.get_caller_identity()                
+        return { "Status": "OK" }
+    except Exception as e:
+        return { "Status": "NotReady" }, 500
+
+
 @app.route("/producer", methods = ['GET'])
-def version():
+def get():
     tenant_id = request.headers.get("tenantID")
-    message = { 
+    return { 
         "tenant_id": tenant_id, 
         "environment": environment, 
         "version": ms_version, 
         "microservice": service_name,            
-    }
-    return jsonify(message)
+    }    
 
 
 @app.route("/producer", methods = ['POST'])
-def index():
+def post():
     try:
         tenant_id = request.headers.get("tenantID")
 
@@ -70,7 +78,7 @@ def index():
             "message_id": response["MessageId"]
         }
         app.logger.info(f"Message produced: {message}")
-        return jsonify(message)
+        return message
     
     except Exception as e:
         app.logger.error("Exception raised! " + str(e))

@@ -7,11 +7,11 @@ pooled_envs_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/p
 pool_env_template_file="${tier_templates_path}/basic_env_template.yaml"
 
 main() {
-    release_version="$1"
-    tenant_tier="$2"
-    git_user_email="$3"
-    git_user_name="$4"
-    repository_branch="$5"
+    local release_version="$1"
+    local tenant_tier="$2"
+    local git_user_email="$3"
+    local git_user_name="$4"
+    local repository_branch="$5"
 
     # get tier template file based on the tier for the tenant being deployed
     # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates/premium_tenant_template.yaml)
@@ -19,11 +19,11 @@ main() {
     tier_template_file=$(get_tier_template_file "$tenant_tier")
 
     # update tenant helm releases for a given tier
-    update_tenants "$tier_template_file"  
+    update_tenants "$release_version" "$tier_template_file" "$tenant_tier"
     
     # if tier is basic, update helm release for basic pool environment
     if [[ $tenant_tier == "basic" ]]; then
-        update_pool_envs
+        update_pool_envs "$release_version"
     fi
 
     # configure git user and ssh key so we can push changes to the gitops repo
@@ -61,11 +61,14 @@ update_deployment_files() {
 }
 
 update_pool_envs() {    
+    local release_version="$1"
     update_deployment_files "$release_version" "$pool_env_template_file" "$pooled_envs_path"
 }
 
 update_tenants() {    
-    local template_file="$1"    
+    local release_version="$1"
+    local template_file="$2"
+    local tenant_tier="$3"    
     update_deployment_files "$release_version" "$template_file" "${manifests_path}/${tenant_tier}"
 }
 

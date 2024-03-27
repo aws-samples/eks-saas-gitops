@@ -1,0 +1,103 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: aws-sqs-offboarding
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: argo-events-sa
+  sqs:
+    tenant-provisioning:
+      jsonBody: true
+      region: "{aws_region}"
+      queue: "argoworkflows-offboarding-queue"
+      waitTimeSeconds: 20
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: aws-sqs-offboarding
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: argo-events-sa
+  dependencies:
+    - name: tenant-provisioning-dep
+      eventSourceName: aws-sqs-offboarding
+      eventName: tenant-provisioning
+  triggers:
+    - template:
+        name: tenant-offboarding-template
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: tenant-offboarding-
+                namespace: argo-workflows
+              spec:
+                serviceAccountName: argoworkflows-sa
+                entrypoint: tenant-provisioning
+                synchronization:
+                  mutex:
+                    name: workflow
+                arguments:
+                  parameters:
+                    - name: TENANT_ID
+                      value: "" # ID of your tenant, use this patter eg. tenant-xx (tenant-10, tenant-11)
+                    - name: TENANT_TIER
+                      value: "" # Valid values are: premium, advanced, basic
+                    - name: REPO_URL
+                      value: "{aws_codecommit_flux_clone_url_ssh}"
+                    - name: GIT_USER_EMAIL
+                      value: "{ssh_public_key_id}"
+                    - name: GIT_USERNAME
+                      value: "{ssh_public_key_id}"
+                    - name: GIT_BRANCH
+                      value: "main" # Can change based on your configs
+                templates:
+                  - name: tenant-provisioning
+                    steps:
+                      - - name: clone-repository
+                          templateRef:
+                            name: tenant-offboarding-template
+                            template: clone-repository
+                      - - name: validate-if-tenant-exists
+                          templateRef:
+                            name: tenant-offboarding-template
+                            template: validate-if-tenant-exists
+                      - - name: remove-tenant-helm-release
+                          templateRef:
+                            name: tenant-offboarding-template
+                            template: remove-tenant-helm-release
+                volumeClaimTemplates:
+                  - metadata:
+                      name: workdir
+                    spec:
+                      accessModes: [ "ReadWriteOnce" ]
+                      resources:
+                        requests:
+                          storage: 1Gi
+                volumes:
+                  - name: ssh-key
+                    secret:
+                      secretName: github-ssh-key # Secret created earlier
+                      items:
+                        - key: ssh-privatekey
+                          path: id_rsa
+          parameters:
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.tenant_id
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.tenant_tier
+              dest: spec.arguments.parameters.1.value
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.release_version
+              dest: spec.arguments.parameters.2.value

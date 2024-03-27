@@ -253,6 +253,9 @@ resource "aws_s3_bucket" "argo_artifacts" {
 resource "aws_sqs_queue" "argoworkflows_onboarding_queue" {
   name = "argoworkflows-onboarding-queue"
 }
+resource "aws_sqs_queue" "argoworkflows_offboarding_queue" {
+  name = "argoworkflows-offboarding-queue"
+}
 resource "aws_sqs_queue" "argoworkflows_deployment_queue" {
   name = "argoworkflows-deployment-queue"
 }
@@ -279,7 +282,8 @@ resource "aws_iam_policy" "argosensor-policy" {
         "Effect" : "Allow",
         "Resource" : [
           aws_sqs_queue.argoworkflows_onboarding_queue.arn,
-          aws_sqs_queue.argoworkflows_deployment_queue.arn
+          aws_sqs_queue.argoworkflows_offboarding_queue.arn,
+          aws_sqs_queue.argoworkflows_deployment_queue.arn,
         ]
       }
     ]

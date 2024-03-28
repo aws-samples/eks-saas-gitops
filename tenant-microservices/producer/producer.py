@@ -17,8 +17,11 @@ service_name = "producer"
 ms_version = "0.0.1"
 
 
-def get_queue_url(tenant_id):
-    response = ssm_client.get_parameter(Name=f"/{tenant_id}/{sms_queue_param_name_suffix}")
+def get_queue_url(tenant_id, tier):
+    # basic tier uses pool environment parameters, otherwise tenant specific
+    env_id = environment if tier == "basic" else tenant_id
+    
+    response = ssm_client.get_parameter(Name=f"/{env_id}/{sms_queue_param_name_suffix}")
     parts = response["Parameter"]["Value"].split(":")
     aws_region = parts[3]
     aws_account_id = parts[4]
@@ -28,7 +31,7 @@ def get_queue_url(tenant_id):
 
 
 @app.route("/producer/readiness-probe", methods = ['GET'])
-def readiness_probe():    
+def probe():    
     try:
         sts_client.get_caller_identity()                
         return { "Status": "OK" }
@@ -51,12 +54,16 @@ def get():
 def post():
     try:
         tenant_id = request.headers.get("tenantID")
+        tier = request.headers.get("tier", default="basic")
+
+        if (tier not in ["basic", "advanced", "premium"]):
+            return { "msg": "BadRequest: invalid tier" }, 400
 
         if (tenant_id is None):
             return { "msg": "NotFound" }, 404
         
         response = sqs_client.send_message(
-            QueueUrl=get_queue_url(tenant_id),
+            QueueUrl=get_queue_url(tenant_id, tier),
             MessageAttributes={
                 "tenant_id": {
                     "StringValue": tenant_id,

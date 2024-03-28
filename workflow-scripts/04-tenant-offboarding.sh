@@ -6,9 +6,9 @@ manifests_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/ten
 main() {
     local tenant_id="$1"
     local tenant_tier="$2"
-    local git_user_email="$4"
-    local git_user_name="$5"
-    local repository_branch="$6"
+    local git_user_email="$3"
+    local git_user_name="$4"
+    local repository_branch="$5"
 
     # remove tenant helm release file and update kustomization
     remove_tenant_helm_release "${tenant_id}" "${tenant_tier}"
@@ -56,7 +56,7 @@ commit_files() {
     cd /mnt/vol/eks-saas-gitops/ || exit 1
     git status
     git add .
-    git commit -am "Deploying to $tenant_tier tenants, version $release_version"
+    git commit -am "Removing tenant ${tenant_id} in tier ${tenant_tier}"
     git push origin "${repository_branch}"
 }
 

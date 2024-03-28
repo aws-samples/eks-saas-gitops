@@ -50,7 +50,7 @@ update_deployment_files() {
 
     # loop through all tenant helm releases, recreate each file with template, and substitute release version
     for release_file in "${manifests_folder}"/*; do
-        if [ "$release_file" != "kustomization.yaml" ]; then #kustomization file doesn't need to change
+         if [[ "$release_file" != *kustomization.yaml && "$release_file" != *dummy-configmap.yaml ]]; then #kustomization file doesn't need to change
             local id
             id=$(basename "$release_file" | cut -d '.' -f1)
             cp "$template_file" "${release_file}"

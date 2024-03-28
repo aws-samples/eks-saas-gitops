@@ -1,5 +1,4 @@
 from flask import Flask
-from flask import jsonify
 from flask import request
 import os
 
@@ -12,14 +11,16 @@ ms_version = "1.0.0"
 @app.route("/payments")
 def index():        
     tenant_id = request.headers.get('tenantID')
-
-    message = { 
+    return { 
         "tenant_id": tenant_id, 
         "environment": environment, 
         "version": ms_version, 
         "microservice": service_name,            
-    }
-    return jsonify(message)
+    }    
+
+@app.route("/payments/readiness-probe", methods = ['GET'])
+def probe():
+    return { "Status": "OK" }
 
 if __name__ == "__main__":
     # run in 0.0.0.0 so that it can be accessed from outside the container

@@ -6,7 +6,7 @@ metadata:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: {TENANT_ID}
+  name: {TENANT_ID}-premium
   namespace: flux-system
 spec:
   releaseName: {TENANT_ID}-premium

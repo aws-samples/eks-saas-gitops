@@ -97,7 +97,3 @@ spec:
                 dependencyName: tenant-provisioning-dep
                 dataKey: body.tenant_tier
               dest: spec.arguments.parameters.1.value
-            - src:
-                dependencyName: tenant-provisioning-dep
-                dataKey: body.release_version
-              dest: spec.arguments.parameters.2.value

@@ -201,6 +201,10 @@ git add .
 git commit -m "Initial Commit"
 git push origin main
 
+# remove unnecessary folders from cloud9 before pushing to CodeCommit
+rm -rf $clone_dir/eks-saas-gitops/helpers
+rm -rf $clone_dir/eks-saas-gitops/tenant-microservices
+
 cd $clone_dir/eks-saas-gitops || exit
 git checkout -b main
 git add .

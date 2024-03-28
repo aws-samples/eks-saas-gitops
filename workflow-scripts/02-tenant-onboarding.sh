@@ -79,7 +79,7 @@ commit_files() {
     cd ${repo_root_path} || exit 1
     git status
     git add .
-    git commit -am "Adding new tenant ${tenant_id} in model ${tenant_tier}"
+    git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}"
     git push origin "${repository_branch}"
 }
 

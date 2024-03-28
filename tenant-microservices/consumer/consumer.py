@@ -56,7 +56,7 @@ def index():
 
 
 @app.route("/consumer/readiness-probe", methods = ['GET'])
-def index():    
+def probe():    
     try:
         sts_client.get_caller_identity()        
         

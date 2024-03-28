@@ -14,9 +14,9 @@ global:
 # Infrastructure variables (controlled by templates)
 infra:
   tfVersion: "terraform-v0-0-1" # Version 1 is pre-created during template script execution
-  vars:
-    enable_producer: true
-    enable_consumer: true
+  # vars:
+    # enable_producer: true
+    # enable_consumer: true
     # enable_payments: true
 
 # Application configurations

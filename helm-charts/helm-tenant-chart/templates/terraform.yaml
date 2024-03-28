@@ -15,9 +15,12 @@ spec:
   vars:
     - name: tenant_id
       value: {{ .Values.tenantId }}
-{{- range $key, $value := .Values.infra.vars }}
-    - name: {{ $key }}
-      value: {{ $value }}
+# {{- range $key, $value := .Values.infra.vars }}
+#     - name: {{ $key }}
+#       value: {{ $value }}
+{{- range $appName, $appConfig := .Values.apps }}
+    - name: "enable_"{{ $appName }}
+      value: {{ $appConfig.enabled }}
 {{- end }}
   writeOutputsToSecret:
     name: {{ .Values.tenantId }}-infra-output

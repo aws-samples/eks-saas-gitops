@@ -22,12 +22,12 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}
-    infra:
-      vars:
-        enable_producer: true
-        enable_consumer: true
+    # infra:
+    #   vars:
+    #     enable_producer: true
+    #     enable_consumer: true
     apps:
       producer:
-        enabled: true
+        enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
       consumer:
-        enabled: true
+        enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant

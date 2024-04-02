@@ -34,7 +34,7 @@ remove_tenant_helm_release() {
     rm "${tenant_manifest_path}"
 
     # update kustomization file by removing the tenant helm release file
-    sed -i "/- \${tenant_id}\.yaml/d" "${manifests_path}/${tenant_tier}/kustomization.yaml"
+    sed -i "/- ${tenant_id}\.yaml/d" "${manifests_path}/${tenant_tier}/kustomization.yaml"
 }
 
 configure_git() {

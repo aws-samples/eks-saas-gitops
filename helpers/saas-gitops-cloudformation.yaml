@@ -437,7 +437,6 @@ Resources:
             - chown -R ec2-user:ec2-user /home/ec2-user/environment/workshop
             - cp -a /home/ec2-user/environment/eks-saas-gitops/scripts/. /home/ec2-user/environment/scripts
             - sleep 120 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
-            - kubectl create namespace argo-workflows
             - kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config
             - /home/ec2-user/environment/eks-saas-gitops/terraform/finish_cf_stack.sh
             - rm -rf /home/ec2-user/environment/eks-saas-gitops/

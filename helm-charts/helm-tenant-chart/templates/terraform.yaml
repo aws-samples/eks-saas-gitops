@@ -9,6 +9,7 @@ spec:
   path: ./terraform/modules/tenant-apps
   interval: 1m
   approvePlan: auto
+  destroyResourcesOnDeletion: true
   sourceRef:
     kind: GitRepository
     name: {{ .Values.infra.tfVersion }}

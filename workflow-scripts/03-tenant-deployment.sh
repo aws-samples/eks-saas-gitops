@@ -62,7 +62,9 @@ update_deployment_files() {
 
 update_pool_envs() {    
     local release_version="$1"
+    local pool_env="pool-1" # This should be dynamic to allow creation of multiple pool environments, for testing and shard tenants
     update_deployment_files "$release_version" "$pool_env_template_file" "$pooled_envs_path"
+    sed -i "s|{ENVIRONMENT_ID}|$pool_env|g" "${pooled_envs_path}/${pool_env}.yaml"
 }
 
 update_tenants() {    

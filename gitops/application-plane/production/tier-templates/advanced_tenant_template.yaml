@@ -21,10 +21,6 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}
-    # infra:
-    #   vars:
-    #     enable_producer: false  # Reflecting Terraform logic
-    #     enable_consumer: true
     apps:
       producer:
         enabled: false # Pool deployment -- advanced tier shares resources with other tenants

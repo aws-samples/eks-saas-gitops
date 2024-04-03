@@ -22,10 +22,6 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {ENVIRONMENT_ID}
-    # infra:
-    #   vars:
-    #     enable_producer: true
-    #     enable_consumer: true
     apps:
       producer:
         enabled: true

@@ -434,7 +434,7 @@ Resources:
             - /home/ec2-user/environment/eks-saas-gitops/terraform/install.sh /home/ec2-user/.ssh/id_rsa.pub /home/ec2-user/.ssh/id_rsa /home/ec2-user/environment/workshop /home/ec2-user/.ssh/known_hosts
             - aws eks --region "$AWS_REGION" update-kubeconfig --name eks-saas-gitops
             - mkdir /home/ec2-user/.kube && cp /root/.kube/config /home/ec2-user/.kube/ && chown -R ec2-user:ec2-user /home/ec2-user/.kube/config
-            - chown -R ec2-user:ec2-user /home/ec2-user/environment/workshop
+            - chown -R ec2-user:ec2-user /home/ec2-user/environment/
             - cp -a /home/ec2-user/environment/eks-saas-gitops/scripts/. /home/ec2-user/environment/scripts
             - sleep 120 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
             - kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config

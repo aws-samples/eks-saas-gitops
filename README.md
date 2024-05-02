@@ -1,14 +1,18 @@
 # EKS SaaS GitOps Workshop Source Repository
 
-Welcome to the source repository for the **EKS SaaS GitOps Workshop**. This repository is designed to support the AWS Workshop, providing you with all necessary patterns, configurations, and scripts to deploy a SaaS application using Amazon EKS and GitOps methodologies. Through this workshop, you'll learn how to leverage Kubernetes, FluxCD, and Terraform to automate the provisioning and management of a scalable SaaS platform.
+Welcome to the source repository for the **EKS SaaS GitOps Workshop**. This repository serves as a template to generate multiple other repositories, enabling a hands-on GitOps experience using Amazon EKS. It provides you with all the necessary patterns, configurations, and scripts to deploy a scalable SaaS application.
 
 ## Repository Overview
+
+This template repository is the foundation for creating individual repositories for the components of your SaaS architecture, as shown in the diagram below. These repositories include configurations for various microservices like Producer, Consumer, and Payments, each tailored to demonstrate best practices in a GitOps workflow.
+
+![Repository Structure Diagram](./static/github-repo-template.png)
 
 This repository is organized to facilitate a hands-on learning experience, structured as follows:
 
 - **`/gitops`**: Contains GitOps configurations and templates for setting up the application plane, clusters, control plane, and infrastructure necessary for the SaaS architecture.
-- **`/helpers`**: Includes CloudFormation templates to assist in setting up the required AWS resources.
-- **`/tenant-chart`**: Houses Helm chart definitions for deploying tenant-specific resources within the Kubernetes cluster.
+- **`/helpers`**: Includes CloudFormation templates to assist in setting up the required AWS resources. (Only used if want to deploy Cloud9 and run this architecture all in AWS)
+- **`/helm-charts`**: Houses Helm chart definitions for deploying tenant-specific resources within the Kubernetes cluster and shared services resources.
 - **`/tenant-microservices`**: Contains the source code and Dockerfiles for the sample microservices used in the workshop (consumer, payments, producer).
 - **`/terraform`**: Features Terraform modules and scripts for provisioning the AWS infrastructure and Kubernetes resources. Detailed setup instructions are provided within this folder's README.md.
 - **`/workflow-scripts`**: Provides scripts to automate the workflow for tenant onboarding and application deployment within the GitOps framework.

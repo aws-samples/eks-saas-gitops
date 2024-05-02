@@ -71,6 +71,16 @@ Should these or similar errors arise, run the `quick_fix_flux.sh` script to reso
 
 This script dynamically identifies and deletes failed Helm releases, then reconciles your `flux-system` source to reattempt their installation. Running `quick_fix_flux.sh` ensures your environment stabilizes by rectifying transient errors that commonly occur due to race conditions during initial setup.
 
+To link your GitHub Gists directly in your README file for easy access and reference, you can incorporate them as follows. I'll guide you on how to add a link to your Gist under the appropriate section of your README. Here's how you might format it:
+
+### How to Test the Architecture
+
+For a detailed guide on deploying and testing the architecture, including the deployment of tenants, setting up SQS queues, and managing Kubernetes deployments, please refer to the following Gist:
+
+[Testing Guide](https://gist.github.com/lusoal/4de3dea19ded8f71f12dfcd82111ee57)
+
+This Gist includes step-by-step instructions and the necessary scripts to perform initial setup, deployments, and demonstrations of the system's capabilities.
+
 ## Conclusion
 
 Following this guide will help you establish a robust environment tailored to your requirements. Should you encounter any issues, refer to the troubleshooting section for solutions or consider revisiting the prerequisites to ensure all components are correctly installed and configured.

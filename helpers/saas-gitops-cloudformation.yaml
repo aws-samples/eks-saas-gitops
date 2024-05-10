@@ -419,7 +419,7 @@ Resources:
             - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)" && echo "export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}" >> /home/ec2-user/.bashrc
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE 2> /dev/null' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
-            - git clone -b testing https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
+            - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
             - chmod +x /home/ec2-user/environment/eks-saas-gitops/scripts/*.sh
             - chown -R ec2-user:ec2-user /home/ec2-user/environment/eks-saas-gitops            
             - /home/ec2-user/environment/eks-saas-gitops/scripts/resize-cloud9-ebs-vol.sh

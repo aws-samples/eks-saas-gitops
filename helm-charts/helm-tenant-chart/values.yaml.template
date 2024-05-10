@@ -1,0 +1,88 @@
+# Default values for tenant-chart.
+awsAccountId: "{account_id}"
+tenantId: "example-tenant"
+
+# Global settings for node selection and tolerations
+global:
+  nodeSelector:
+    node-type: applications
+  tolerations:
+    - key: "applications"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Infrastructure variables (controlled by templates)
+infra:
+  tfVersion: "terraform-v0-0-1" # Version 1 is pre-created during template script execution
+
+# Application configurations
+apps:
+  producer:
+    enabled: true
+    imagePullSecrets: []
+    replicaCount: 3
+    image:
+      repository: "{ecr_repository_urls_producer}"
+      pullPolicy: "Always"
+      tag: "0.1" # This tag is the one generated during template script execution
+    serviceAccount:
+      create: true
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    service:
+      type: "ClusterIP"
+      port: 80
+    resources:
+      limits:
+        cpu: "100m"
+        memory: "128Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+    affinity: {}
+    ingress:
+      enabled: true
+      className: "alb"
+      pathType: "Prefix"
+      tls: []
+
+  consumer:
+    enabled: true
+    imagePullSecrets: []
+    replicaCount: 3
+    image:
+      repository: "{ecr_repository_urls_consumer}"
+      pullPolicy: "Always"
+      tag: "0.1"
+    serviceAccount:
+      create: true
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    service:
+      type: "ClusterIP"
+      port: 80
+    resources:
+      limits:
+        cpu: "100m"
+        memory: "128Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+    affinity: {}
+    ingress:
+      enabled: true
+      className: "alb"
+      pathType: "Prefix"
+      tls: []

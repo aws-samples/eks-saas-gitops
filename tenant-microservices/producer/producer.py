@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import request
-from flask import jsonify
 import boto3
 import os
 import logging
@@ -8,6 +7,7 @@ import logging
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
 
+sts_client = boto3.client('sts')
 ssm_client = boto3.client("ssm")
 sqs_client = boto3.client("sqs")
 sms_queue_param_name_suffix = "consumer_sqs"
@@ -17,8 +17,11 @@ service_name = "producer"
 ms_version = "0.0.1"
 
 
-def get_queue_url(tenant_id):
-    response = ssm_client.get_parameter(Name=f"/{tenant_id}/{sms_queue_param_name_suffix}")
+def get_queue_url(tenant_id, tier):
+    # basic tier uses pool environment parameters, otherwise tenant specific
+    env_id = environment if tier == "basic" else tenant_id
+    
+    response = ssm_client.get_parameter(Name=f"/{env_id}/{sms_queue_param_name_suffix}")
     parts = response["Parameter"]["Value"].split(":")
     aws_region = parts[3]
     aws_account_id = parts[4]
@@ -27,28 +30,40 @@ def get_queue_url(tenant_id):
     return queue_url
 
 
+@app.route("/producer/readiness-probe", methods = ['GET'])
+def probe():    
+    try:
+        sts_client.get_caller_identity()                
+        return { "Status": "OK" }
+    except Exception as e:
+        return { "Status": "NotReady" }, 500
+
+
 @app.route("/producer", methods = ['GET'])
-def version():
+def get():
     tenant_id = request.headers.get("tenantID")
-    message = { 
+    return { 
         "tenant_id": tenant_id, 
         "environment": environment, 
         "version": ms_version, 
         "microservice": service_name,            
-    }
-    return jsonify(message)
+    }    
 
 
 @app.route("/producer", methods = ['POST'])
-def index():
+def post():
     try:
         tenant_id = request.headers.get("tenantID")
+        tier = request.headers.get("tier", default="basic")
+
+        if (tier not in ["basic", "advanced", "premium"]):
+            return { "msg": "BadRequest: invalid tier" }, 400
 
         if (tenant_id is None):
             return { "msg": "NotFound" }, 404
         
         response = sqs_client.send_message(
-            QueueUrl=get_queue_url(tenant_id),
+            QueueUrl=get_queue_url(tenant_id, tier),
             MessageAttributes={
                 "tenant_id": {
                     "StringValue": tenant_id,
@@ -70,7 +85,7 @@ def index():
             "message_id": response["MessageId"]
         }
         app.logger.info(f"Message produced: {message}")
-        return jsonify(message)
+        return message
     
     except Exception as e:
         app.logger.error("Exception raised! " + str(e))

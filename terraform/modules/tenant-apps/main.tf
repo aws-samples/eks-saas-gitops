@@ -54,7 +54,7 @@ module "producer_irsa_role" {
   oidc_providers = {
     main = {
       provider_arn               = local.irsa_principal_arn
-      namespace_service_accounts = ["${var.tenant_id}:producer"]
+      namespace_service_accounts = ["${var.tenant_id}:${var.tenant_id}-producer"]
     }
   }
 }
@@ -62,7 +62,7 @@ module "producer_irsa_role" {
 # IF SHARED PRODUCER AND DEDICATED CONSUMER (HYBRID):
 resource "aws_iam_role_policy_attachment" "sto-readonly-role-policy-attach" {
   count      = var.enable_producer == false && var.enable_consumer == true ? 1 : 0
-  role       = "producer-role-pooled-1"
+  role       = "producer-role-pool-1"
   policy_arn = aws_iam_policy.producer-iampolicy[0].arn
 }
 
@@ -114,7 +114,7 @@ module "consumer_irsa_role" {
   oidc_providers = {
     main = {
       provider_arn               = local.irsa_principal_arn
-      namespace_service_accounts = ["${var.tenant_id}:consumer"]
+      namespace_service_accounts = ["${var.tenant_id}:${var.tenant_id}-consumer"]
     }
   }
 }
@@ -235,7 +235,7 @@ resource "aws_ssm_parameter" "shared_consumer_ddb" {
 #   oidc_providers = {
 #     main = {
 #       provider_arn               = local.irsa_principal_arn
-#       namespace_service_accounts = ["${var.tenant_id}:payments"]
+#       namespace_service_accounts = ["${var.tenant_id}:${var.tenant_id}-payments"]
 #     }
 #   }
 # }

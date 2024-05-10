@@ -1,0 +1,39 @@
+{{- range $appName, $appConfig := .Values.apps }}
+{{- if $appConfig.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "{{ $.Values.tenantId }}-ingress-{{ $appName }}"
+  namespace: {{ if and (not $appConfig.enabled) $appConfig.ingress.enabled }}pool-1{{ else }}{{ $.Values.tenantId }}{{ end }}
+  labels:
+    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
+    app.kubernetes.io/instance: "{{ $.Release.Name }}"
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "Helm"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/healthcheck-path: "/{{ $appName }}"
+    alb.ingress.kubernetes.io/group.name: "tenants-lb"
+    alb.ingress.kubernetes.io/actions.{{ $.Values.tenantId }}-{{ $appName }}: >
+      {"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"200","messageBody":"HTTP header TenantID need to be set"}}
+    alb.ingress.kubernetes.io/conditions.{{ $.Values.tenantId }}-{{ $appName }}: >
+      [{"field":"http-header","httpHeaderConfig":{"httpHeaderName": "TenantID", "values":["{{ $.Values.tenantId }}"]}}]
+    {{- with $appConfig.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ $appConfig.ingress.className | quote }}
+  rules:
+  - http:
+      paths:
+      - path: /{{ $appName }}
+        pathType: {{ $appConfig.ingress.pathType | default "ImplementationSpecific" }}
+        backend:
+          service:
+            name: "{{ if $appConfig.enabled }}{{ $.Values.tenantId }}-{{ $appName }}{{ else }}{{ $.Values.tenantId }}-{{ $appName }}{{ end }}"
+            port:
+              number: {{ $appConfig.service.port }}
+{{- end }}
+{{- end }}

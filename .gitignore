@@ -1,6 +1,6 @@
 # Chart ignore
 *chart*.tgz
-
+flux-secrets.yaml
 # Created by https://www.toptal.com/developers/gitignore/api/terraform
 # Edit at https://www.toptal.com/developers/gitignore?templates=terraform
 *.terraform.lock.hcl
@@ -11,7 +11,7 @@ tenant-infra-main.tf
 # .tfstate files
 *.tfstate
 *.tfstate.*
-
+output.json
 # Crash log files
 crash.log
 crash.*.log
@@ -47,3 +47,4 @@ terraform.rc
 .idea
 .build
 *.vscode
+.config

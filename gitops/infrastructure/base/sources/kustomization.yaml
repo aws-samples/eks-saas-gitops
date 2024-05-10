@@ -4,6 +4,9 @@ resources:
   - metric-server-helm.yaml
   - argo-workflows-helm.yaml
   - tenant-chart-helm.yaml
+  - application-chart-helm.yaml
   - eks-charts-helm.yaml
   - kubecost-helm.yaml
   - karpenter-helm.yaml
+  - tf-controller-helm.yaml
+  - terraform-git-v1.yaml

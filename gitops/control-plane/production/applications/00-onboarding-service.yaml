@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: onboarding-service
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: onboarding-service
+  namespace: flux-system
+spec:
+  releaseName: onboarding-service
+  targetNamespace: onboarding-service
+  interval: 1m0s
+  chart:
+    spec:
+      chart: application-chart
+      version: "0.0.x"
+      sourceRef:
+        kind: HelmRepository
+        name: helm-application-chart
+  values:
+    image:
+      repository: nginx # TBD: Use On-boarding service ECR URL
+      tag: "latest" # TBD: Can use same deployment style with .x here as well

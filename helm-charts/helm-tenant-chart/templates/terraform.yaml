@@ -1,0 +1,25 @@
+{{- if .Values.infra -}}
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: {{ .Values.tenantId }}
+  namespace: flux-system
+spec:
+  path: ./terraform/modules/tenant-apps
+  interval: 1m
+  approvePlan: auto
+  destroyResourcesOnDeletion: true
+  sourceRef:
+    kind: GitRepository
+    name: {{ .Values.infra.tfVersion }}
+  vars:
+    - name: tenant_id
+      value: {{ .Values.tenantId }}
+{{- range $appName, $appConfig := .Values.apps }}
+    - name: "enable_{{ $appName }}"
+      value: {{ $appConfig.enabled }}
+{{- end }}
+  writeOutputsToSecret:
+    name: {{ .Values.tenantId }}-infra-output
+{{ end }}

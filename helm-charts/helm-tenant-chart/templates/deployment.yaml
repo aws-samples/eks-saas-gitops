@@ -1,0 +1,67 @@
+{{- range $appName, $appConfig := .Values.apps }}
+{{- if $appConfig.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Values.tenantId }}-{{ $appName }}
+  labels:
+    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
+    app.kubernetes.io/instance: "{{ $.Release.Name }}"
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
+    app: {{ $.Values.tenantId }}-{{ $appName }}
+spec:
+  replicas: {{ $appConfig.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
+      app.kubernetes.io/instance: "{{ $.Release.Name }}"
+      app: {{ $.Values.tenantId }}-{{ $appName }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml $appConfig.podAnnotations | nindent 8 }}
+      labels:
+        app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
+        app.kubernetes.io/instance: "{{ $.Release.Name }}"
+        app: {{ $.Values.tenantId }}-{{ $appName }}
+    spec:
+      imagePullSecrets:
+        {{- toYaml $appConfig.imagePullSecrets | nindent 8 }}
+      serviceAccountName: {{ if $appConfig.serviceAccount.create }}{{ $.Values.tenantId }}-{{ $appName }}{{- else }}default{{- end }}
+      securityContext:
+        {{- toYaml $appConfig.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ $appName }}
+          securityContext:
+            {{- toYaml $appConfig.securityContext | nindent 12 }}
+          image: "{{ $appConfig.image.repository }}:{{ $appConfig.image.tag }}"
+          imagePullPolicy: {{ $appConfig.image.pullPolicy }}
+          env:
+            - name: ENVIRONMENT
+              value: "{{ $.Values.tenantId }}"
+          ports:
+            - name: http
+              containerPort: {{ $appConfig.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /{{ $appName }}
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /{{ $appName }}/readiness-probe
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml $appConfig.resources | nindent 12 }}
+      nodeSelector:
+        {{- toYaml $.Values.global.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml $appConfig.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml $.Values.global.tolerations | nindent 8 }}
+{{- end }}
+{{- end }}

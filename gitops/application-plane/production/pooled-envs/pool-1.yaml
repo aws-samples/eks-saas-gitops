@@ -11,17 +11,22 @@ metadata:
 spec:
   releaseName: pool-1
   targetNamespace: pool-1
-  storageNamespace: pool-1
   interval: 1m0s
   chart:
     spec:
       chart: helm-tenant-chart
-      version: 0.0.x
+      version: "0.0.x"
       sourceRef:
         kind: HelmRepository
         name: helm-tenant-chart
   values:
-    tenantId: pool-1
-    deployApps: true
-    deployIngress: true # to simplify cleaning the stack
-    infraValues:
+    tenantId: pool-1    
+    # infra:
+    #   vars:
+    #     enable_producer: true
+    #     enable_consumer: true
+    apps:
+      producer:
+        enabled: true
+      consumer:
+        enabled: true

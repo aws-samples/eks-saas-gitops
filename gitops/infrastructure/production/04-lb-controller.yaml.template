@@ -26,5 +26,5 @@ spec:
       create: true
       name: aws-load-balancer-controller
       annotations:
-        eks.amazonaws.com/role-arn: {LB_CONTROLLER_IRSA}
+        eks.amazonaws.com/role-arn: {lb_controller_irsa}
   install: {}

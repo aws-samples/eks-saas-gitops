@@ -5,7 +5,6 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-# Assign the tenant_id and tenant_model arguments to variables
 REPOSITORY_URL="$1"
 REPOSITORY_BRANCH="$2"
 

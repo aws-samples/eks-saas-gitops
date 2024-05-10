@@ -1,0 +1,26 @@
+{{- range $appName, $appConfig := .Values.apps }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ $.Values.tenantId }}-{{ $appName }}"
+  namespace: {{ if and (not $appConfig.enabled) $appConfig.ingress.enabled }}pool-1{{ else }}{{ $.Values.tenantId }}{{ end }}
+  labels:
+    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
+    app.kubernetes.io/instance: "{{ $.Release.Name }}"
+    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
+spec:
+  type: {{ $appConfig.service.type }}
+  ports:
+    - port: {{ $appConfig.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- if and $appConfig.enabled (or $appConfig.ingress.enabled) }}
+    app: "{{ $.Values.tenantId }}-{{ $appName }}"
+    {{- else }}
+    app: "pool-1-{{ $appName }}"
+    {{- end }}
+{{- end }}

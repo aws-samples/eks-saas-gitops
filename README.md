@@ -1,75 +1,34 @@
-# GitOps SaaS for Multi-Tenancy
+# EKS SaaS GitOps Workshop Source Repository
 
-This repository offers a sample pattern to manage multi-tenancy in a Kubernetes cluster using GitOps with Flux. The provided CloudFormation template automates the deployment of necessary AWS resources and sets up an environment ready for GitOps practices.
+Welcome to the source repository for the **EKS SaaS GitOps Workshop**. This repository serves as a template to generate multiple other repositories, enabling a hands-on GitOps experience using Amazon EKS. It provides you with all the necessary patterns, configurations, and scripts to deploy a scalable SaaS application.
 
-## 🛠 Pre-requisites
+## Repository Overview
 
-- **AWS CLI**: Ensure you have the AWS CLI installed and configured with the necessary permissions.
-- **Git**: Make sure Git is installed for cloning this repository.
+This template repository is the foundation for creating individual repositories for the components of your SaaS architecture, as shown in the diagram below. These repositories include configurations for various microservices like Producer, Consumer, and Payments, each tailored to demonstrate best practices in a GitOps workflow.
 
-## 🚀 Deployment Steps
+![Repository Structure Diagram](./static/github-repo-template.png)
 
-### Step 1: Clone the Repository
+This repository is organized to facilitate a hands-on learning experience, structured as follows:
 
-Clone this repository to your local machine to get the CloudFormation template and other helper scripts.
+- **`/gitops`**: Contains GitOps configurations and templates for setting up the application plane, clusters, control plane, and infrastructure necessary for the SaaS architecture.
+- **`/helpers`**: Includes CloudFormation templates to assist in setting up the required AWS resources. (Only used if want to deploy Cloud9 and run this architecture all in AWS)
+- **`/helm-charts`**: Houses Helm chart definitions for deploying tenant-specific resources within the Kubernetes cluster and shared services resources.
+- **`/tenant-microservices`**: Contains the source code and Dockerfiles for the sample microservices used in the workshop (consumer, payments, producer).
+- **`/terraform`**: Features Terraform modules and scripts for provisioning the AWS infrastructure and Kubernetes resources. Detailed setup instructions are provided within this folder's README.md.
+- **`/workflow-scripts`**: Provides scripts to automate the workflow for tenant onboarding and application deployment within the GitOps framework.
 
-```bash
-git clone https://github.com/aws-samples/eks-saas-gitops.git
-```
+## Getting Started
 
-### Step 2: Navigate to the Directory
+Begin your journey to deploying a SaaS architecture on Amazon EKS by closely following the detailed instructions provided in the [/terraform folder's README.](terraform/README.md) This guide is your starting point for setting up the AWS environment, configuring your Kubernetes cluster, and applying GitOps principles for efficient resource management.
 
-Open your terminal and navigate to the directory where your CloudFormation template is saved.
+## Contributing
 
-```bash
-cd eks-saas-gitops/
-```
+Your contributions are welcome! If you'd like to improve the workshop or suggest changes, please feel free to submit issues or pull requests.
 
-### Step 3: Create the CloudFormation Stack
+## Code of Conduct & Contributing
 
-Execute the following AWS CLI command to deploy the stack. Make sure to replace placeholders accordingly.
-
-```bash
-aws cloudformation create-stack \
---stack-name eks-saas-gitops \
---template-body file://helpers/saas-gitops-cloudformation.yaml \
---parameters ParameterKey=C9EnvType,ParameterValue=self \
---capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM"
-```
-
-- `YOUR_CHOICE_HERE`: Use either `self` or `event-engine` based on your specific installation requirement.
-
-### Step 4: Verify Stack Creation
-
-Once the command is executed, navigate to the [AWS CloudFormation Console](https://console.aws.amazon.com/cloudformation/) to monitor the stack's status.
-
-## ⏳ Wait for Environment Setup
-
-Post stack deployment, it might take a few minutes for the environment to become operational. This is mainly because the Terraform setup includes provisioning a Cloud9 instance and running the [`install.sh`](./install.sh) script. To check the progress, you can visit the [SSM Run Command Console](https://console.aws.amazon.com/systems-manager/run-command/executing-commands).
-
-> **Note**: Make sure you're operating in the region where the stack was deployed.
-
-## 🖥 Accessing Cloud9
-
-To access your newly created Cloud9 environment:
-
-1. Go to the [AWS Cloud9 Console](https://console.aws.amazon.com/cloud9/).
-2. Find your Cloud9 instance listed under "Your environments."
-3. Click "Open IDE" to start working in your Cloud9 environment.
-
-## Removing the stack
-
-To remove the resources that have been created for this workshop, execute the following AWS CLI command:
-
-```bash
-aws cloudformation delete-stack --stack-name "eks-saas-gitops"
-```
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+We value your input and contributions! Please review our [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing Guidelines](CONTRIBUTING.md) for how to participate in making this project better.
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
+This project is licensed under the terms of the [MIT license](LICENSE).

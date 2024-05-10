@@ -261,7 +261,7 @@ Resources:
                       )
                       logger.info('SSM parameter eks-saas-gitops-custom-resource-event set - running cleanup.sh')
                       
-                      run_ssm_command('root', instance['InstanceId'], 'cd /home/ec2-user/environment && ./cleanup.sh', 'cleanupoutput')
+                      run_ssm_command('root', instance['InstanceId'], 'cd /home/ec2-user/environment && ./scripts/cleanup.sh', 'cleanupoutput')
 
                   if event['RequestType'] == 'Create':                                  
                       ec2 = boto3.client('ec2')
@@ -396,7 +396,7 @@ Resources:
             - mv /tmp/eksctl /usr/local/bin
             - /usr/local/bin/eksctl completion bash > /etc/bash_completion.d/eksctl
             - echo '=== INSTALL Flux CLI ==='
-            - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v0.41.2/flux_0.41.2_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v2.2.3/flux_2.2.3_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
             - mv /tmp/flux /usr/local/bin
             - /usr/local/bin/flux completion bash > /etc/bash_completion.d/flux
             - echo '=== INSTALL YQ ==='
@@ -420,11 +420,27 @@ Resources:
             - echo 'aws cloud9 update-environment  --environment-id $C9_PID --managed-credentials-action DISABLE 2> /dev/null' >> /home/ec2-user/.bashrc
             - echo '====== Provision Terraform ======'
             - git clone https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops
-            - cp /home/ec2-user/environment/eks-saas-gitops/install.sh /home/ec2-user/environment/install.sh && chmod +x /home/ec2-user/environment/install.sh
-            - cp /home/ec2-user/environment/eks-saas-gitops/cleanup.sh /home/ec2-user/environment/cleanup.sh && chmod +x /home/ec2-user/environment/cleanup.sh
-            - /home/ec2-user/environment/install.sh
-            - echo "Bootstrap completed with return code $?"
-            - shutdown -r +1
+            - chmod +x /home/ec2-user/environment/eks-saas-gitops/scripts/*.sh
+            - chown -R ec2-user:ec2-user /home/ec2-user/environment/eks-saas-gitops            
+            - /home/ec2-user/environment/eks-saas-gitops/scripts/resize-cloud9-ebs-vol.sh
+            - ssh-keygen -t rsa -b 4096 -f /home/ec2-user/environment/flux -N ""
+            - cp /home/ec2-user/environment/flux /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
+            - cp /home/ec2-user/environment/flux.pub /root/.ssh/id_rsa.pub && chmod 600 /root/.ssh/id_rsa.pub
+            - cp /home/ec2-user/environment/flux /home/ec2-user/.ssh/id_rsa && chmod 600 /home/ec2-user/.ssh/id_rsa && chown ec2-user:ec2-user /home/ec2-user/.ssh/id_rsa
+            - cp /home/ec2-user/environment/flux.pub /home/ec2-user/.ssh/id_rsa.pub && chmod 600 /home/ec2-user/.ssh/id_rsa.pub && chown ec2-user:ec2-user /home/ec2-user/.ssh/id_rsa.pub
+            - mkdir /home/ec2-user/environment/workshop
+            - ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" > /home/ec2-user/.ssh/known_hosts && chmod 600 /home/ec2-user/.ssh/known_hosts && chown ec2-user:ec2-user /home/ec2-user/.ssh/known_hosts
+            - ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" > /root/.ssh/known_hosts && chmod 600 /root/.ssh/known_hosts 
+            - /home/ec2-user/environment/eks-saas-gitops/terraform/install.sh /home/ec2-user/.ssh/id_rsa.pub /home/ec2-user/.ssh/id_rsa /home/ec2-user/environment/workshop /home/ec2-user/.ssh/known_hosts
+            - aws eks --region "$AWS_REGION" update-kubeconfig --name eks-saas-gitops
+            - mkdir /home/ec2-user/.kube && cp /root/.kube/config /home/ec2-user/.kube/ && chown -R ec2-user:ec2-user /home/ec2-user/.kube/config
+            - chown -R ec2-user:ec2-user /home/ec2-user/environment/
+            - cp -a /home/ec2-user/environment/eks-saas-gitops/scripts/. /home/ec2-user/environment/scripts
+            - sleep 120 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
+            - kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config
+            - /home/ec2-user/environment/eks-saas-gitops/terraform/finish_cf_stack.sh
+            - rm -rf /home/ec2-user/environment/eks-saas-gitops/
+            - echo "Bootstrap completed with return code $?"            
 
   C9BootstrapAssociation: 
     Type: AWS::SSM::Association

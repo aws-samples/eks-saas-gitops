@@ -1,0 +1,24 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: {TENANT_ID}-basic
+  namespace: flux-system
+spec:
+  releaseName: {TENANT_ID}-basic
+  targetNamespace: pool-1  # Deploying into the tenant-specific namespace
+  storageNamespace: pool-1
+  interval: 1m0s
+  chart:
+    spec:
+      chart: helm-tenant-chart
+      version: "{RELEASE_VERSION}.x"
+      sourceRef:
+        kind: HelmRepository
+        name: helm-tenant-chart
+  values:
+    tenantId: {TENANT_ID}
+    apps:
+      producer:
+        enabled: false  # Pool deployment -- basic tier shares resources with other tenants
+      consumer:
+        enabled: false  # Pool deployment -- basic tier shares resources with other tenants

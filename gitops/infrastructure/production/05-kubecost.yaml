@@ -12,11 +12,11 @@ spec:
   releaseName: kubecost
   targetNamespace: kubecost
   storageNamespace: kubecost
-  interval: 10m0s
+  interval: 1m0s
   chart:
     spec:
       chart: cost-analyzer
-      version: 1.108.1
+      version: 2.1.0
       sourceRef:
         kind: HelmRepository
         name: kubecost
@@ -129,7 +129,8 @@ spec:
       targetPort: 9090
       # nodePort:
       labels: {}
-      annotations: {}
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
 
     prometheus:
       server:

@@ -4,6 +4,7 @@ resources:
   - 01-metric-server.yaml
   - 02-karpenter.yaml
   - 03-argo-workflows.yaml
-  - 04-lb-controller.yaml  
-  - 06-argo-events.yaml
+  - 04-lb-controller.yaml
   - 05-kubecost.yaml
+  - 06-argo-events.yaml
+  - 07-tf-controller.yaml

@@ -24,13 +24,13 @@ ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" >> ~/.ssh/known_hosts
 ```
 
 ### Step 2: Run the Installation Script
-Our `install.sh` script streamlines the provisioning process. Specify paths to your public and private SSH keys, the clone directory, and `known_hosts`.
+Our `install.sh` script streamlines the provisioning process. Specify paths in the following order: public SSH key, private SSH key, the clone directory, and `known_hosts`.
 
 ```bash
 ./install.sh ~/.ssh/id_rsa.pub ~/.ssh/id_rsa path/to/my-directory ~/.ssh/known_hosts
 ```
 
-> **Important**: Replace placeholder values with your actual file paths. The `clone_directory` is the destination for generated files.
+> **Important**: Replace placeholder values with your actual file paths. The `clone_directory` is a destination that you want to store the sample applications source code in your local machine. The code created in this directory will be used to create the git repositories on AWS CodeCommit.
 
 ### Step 3: Accessing the Environment
 

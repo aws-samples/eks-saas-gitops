@@ -53,7 +53,7 @@ kubectl create secret generic github-ssh-key --from-file=ssh-privatekey= ~/.ssh/
 To guarantee a smooth installation:
 
 - Confirm the installation and configuration of all prerequisites.
-- Verify the AWS region in `export AWS_REGION` matches your intended provision region.
+- Verify the AWS region in `echo $AWS_REGION` matches your intended provision region.
 - Ensure AWS credentials are correctly set to prevent any access or permission issues.
 
 ## Troubleshooting with quick_fix_flux.sh

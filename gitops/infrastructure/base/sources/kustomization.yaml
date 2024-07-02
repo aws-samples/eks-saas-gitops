@@ -10,3 +10,4 @@ resources:
   - karpenter-helm.yaml
   - tf-controller-helm.yaml
   - terraform-git-v1.yaml
+  - capacitor-web-ui.yaml

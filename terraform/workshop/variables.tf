@@ -19,7 +19,7 @@ variable "vpc_cidr" {
 variable "cluster_version" {
   description = "Amazon EKS Cluster version"
   type        = string
-  default     = "1.27"
+  default     = "1.30"
 }
 
 variable "public_key_file_path" {

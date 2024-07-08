@@ -106,7 +106,7 @@ spec:
       size: 32Gi
       dbSize: 32.0Gi
       enabled: true # Note that setting this to false means configurations will be wiped out on pod restart.
-      # storageClass: "-" #
+      storageClass: "gp2" #
       # existingClaim: kubecost-cost-analyzer # a claim in the same namespace as kubecost
 
     ingress:
@@ -158,6 +158,7 @@ spec:
         persistentVolume:
           size: 32Gi
           enabled: true
+          storageClass: "gp2"
         extraArgs:
           query.max-concurrency: 1
           query.max-samples: 100000000

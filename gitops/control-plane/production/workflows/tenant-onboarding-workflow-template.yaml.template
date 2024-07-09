@@ -49,6 +49,7 @@ spec:
   - metadata:
       name: workdir
     spec:
+      storageClassName: gp2
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:

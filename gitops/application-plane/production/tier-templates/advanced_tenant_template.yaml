@@ -23,6 +23,11 @@ spec:
     tenantId: {TENANT_ID}
     apps:
       producer:
+        envId: pool-1
         enabled: false # Pool deployment -- advanced tier shares resources with other tenants
+        ingress:
+          enabled: true
       consumer:
         enabled: true  # Silo deployment -- advanced tier has a dedicated deployment for each tenant
+        ingress:
+          enabled: true

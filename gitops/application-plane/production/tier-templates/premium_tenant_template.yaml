@@ -25,5 +25,9 @@ spec:
     apps:
       producer:
         enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
+        ingress:
+          enabled: true
       consumer:
         enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
+        ingress:
+          enabled: true

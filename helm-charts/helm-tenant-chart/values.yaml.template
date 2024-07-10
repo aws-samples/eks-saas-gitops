@@ -46,6 +46,7 @@ apps:
       maxReplicas: 100
       targetCPUUtilizationPercentage: 80
     affinity: {}
+    envId: pool-1
     ingress:
       enabled: true
       className: "alb"
@@ -81,6 +82,7 @@ apps:
       maxReplicas: 100
       targetCPUUtilizationPercentage: 80
     affinity: {}
+    envId: pool-1
     ingress:
       enabled: true
       className: "alb"

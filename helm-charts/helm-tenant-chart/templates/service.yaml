@@ -1,10 +1,11 @@
 {{- range $appName, $appConfig := .Values.apps }}
+{{- if $appConfig.ingress.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: "{{ $.Values.tenantId }}-{{ $appName }}"
-  namespace: {{ if and (not $appConfig.enabled) $appConfig.ingress.enabled }}pool-1{{ else }}{{ $.Values.tenantId }}{{ end }}
+  namespace: {{ if and (not $appConfig.enabled) $appConfig.ingress.enabled }}{{ $appConfig.envId }}{{ else }}{{ $.Values.tenantId }}{{ end }}
   labels:
     app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
     app.kubernetes.io/instance: "{{ $.Release.Name }}"
@@ -21,6 +22,7 @@ spec:
     {{- if and $appConfig.enabled (or $appConfig.ingress.enabled) }}
     app: "{{ $.Values.tenantId }}-{{ $appName }}"
     {{- else }}
-    app: "pool-1-{{ $appName }}"
+    app: "{{ $appConfig.envId }}-{{ $appName }}"
     {{- end }}
+{{- end }}
 {{- end }}

@@ -25,5 +25,9 @@ spec:
     apps:
       producer:
         enabled: true
+        ingress:
+          enabled: false
       consumer:
         enabled: true
+        ingress:
+          enabled: false

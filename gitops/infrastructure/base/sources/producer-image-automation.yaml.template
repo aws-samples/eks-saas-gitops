@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   imageRepositoryRef:
-    name: {ecr_repository_urls_producer}
+    name: producer-image-repository
   policy:
     numerical:
       order: asc
@@ -19,6 +19,8 @@ metadata:
 spec:
   image: {ecr_repository_urls_producer}
   interval: 1m0s
+  secretRef:
+    name: ecr-credentials
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
@@ -29,7 +31,7 @@ spec:
   interval: 5m0s
   sourceRef:
     kind: GitRepository
-    name: podinfo
+    name: flux-system
   git:
     commit:
       author:
@@ -38,4 +40,4 @@ spec:
     push:
       branch: main
   update:
-    path: ./gitops
+    path: ./gitops/clusters/production

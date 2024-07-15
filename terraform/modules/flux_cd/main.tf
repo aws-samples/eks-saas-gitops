@@ -71,7 +71,7 @@ resource "helm_release" "flux2" {
   }
 
   set {
-    name  = "imageAutomationController.serviceAccount.annotations"
+    name  = "imageAutomationController.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = var.image_automation_controller_sa_annotations
   }
 
@@ -81,7 +81,7 @@ resource "helm_release" "flux2" {
   }
 
   set {
-    name  = "imageReflectionController.serviceAccount.annotations"
+    name  = "imageReflectionController.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = var.image_reflection_controller_sa_annotations
   }
 

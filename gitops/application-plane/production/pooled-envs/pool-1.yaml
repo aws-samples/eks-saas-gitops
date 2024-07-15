@@ -21,10 +21,6 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: pool-1    
-    # infra:
-    #   vars:
-    #     enable_producer: true
-    #     enable_consumer: true
     apps:
       producer:
         enabled: true

@@ -27,8 +27,6 @@ spec:
         enabled: false # Pool deployment -- advanced tier shares resources with other tenants
         ingress:
           enabled: true
-        image:
-          tag: "0.1" # {"$imagepolicy": "flux-system:producer-image-policy:tag"}
       consumer:
         enabled: true  # Silo deployment -- advanced tier has a dedicated deployment for each tenant
         ingress:

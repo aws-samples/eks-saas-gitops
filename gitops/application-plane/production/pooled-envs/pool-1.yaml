@@ -28,9 +28,13 @@ spec:
     apps:
       producer:
         enabled: true
-      image:
+        ingress:
+          enabled: false
+        image:
           tag: "0.1" # {"$imagepolicy": "flux-system:producer-image-policy:tag"}
       consumer:
         enabled: true
+        ingress:
+          enabled: false
         image:
           tag: "0.1" # {"$imagepolicy": "flux-system:consumer-image-policy:tag"}

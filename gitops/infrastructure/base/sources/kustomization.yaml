@@ -13,3 +13,4 @@ resources:
   - capacitor-web-ui.yaml
   - cronjob-ecr-updater.yaml
   # - producer-image-automation.yaml
+  # - consumer-image-automation.yaml

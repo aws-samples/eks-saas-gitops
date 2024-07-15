@@ -28,7 +28,7 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
-  name: producer-update-automation
+  name: producer-update-automation-tenants
   namespace: flux-system
 spec:
   interval: 5m0s
@@ -44,3 +44,23 @@ spec:
       branch: main
   update:
     path: ./gitops/application-plane/production/tenants/
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata:
+  name: producer-update-automation-pooled-envs
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+    push:
+      branch: main
+  update:
+    path: ./gitops/application-plane/production/pooled-envs/

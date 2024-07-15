@@ -1,0 +1,66 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: payments-image-policy
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: payments-image-repository
+  filterTags:
+    pattern: '^prd\-(?P<timestamp>.*)$'
+    extract: '$timestamp'
+  policy:
+    alphabetical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: payments-image-repository
+  namespace: flux-system
+spec:
+  image: {ecr_repository_urls_payments}
+  interval: 1m0s
+  secretRef:
+    name: ecr-credentials
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata:
+  name: payments-update-automation-tenants
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+    push:
+      branch: main
+  update:
+    path: ./gitops/application-plane/production/tenants/
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageUpdateAutomation
+metadata:
+  name: payments-update-automation-pooled-envs
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+    push:
+      branch: main
+  update:
+    path: ./gitops/application-plane/production/pooled-envs/

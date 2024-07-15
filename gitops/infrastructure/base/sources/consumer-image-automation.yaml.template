@@ -43,4 +43,4 @@ spec:
     push:
       branch: main
   update:
-    path: ./gitops/clusters/production
+    path: ./gitops/application-plane/production/tenants/

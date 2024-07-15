@@ -23,12 +23,8 @@ spec:
         enabled: false  # Pool deployment -- basic tier shares resources with other tenants
         ingress:
           enabled: true
-        image:
-          tag: "0.1" # {"$imagepolicy": "flux-system:producer-image-policy:tag"}
       consumer:
         envId: pool-1
         enabled: false  # Pool deployment -- basic tier shares resources with other tenants
         ingress:
           enabled: true
-        image:
-          tag: "0.1" # {"$imagepolicy": "flux-system:consumer-image-policy:tag"}

@@ -1,5 +1,5 @@
-kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
   name: ecr-credentials-sync
   namespace: flux-system
@@ -12,18 +12,19 @@ rules:
   - create
   - patch
 ---
-kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
 metadata:
   name: ecr-credentials-sync
   namespace: flux-system
 subjects:
 - kind: ServiceAccount
   name: ecr-credentials-sync
+  namespace: flux-system
 roleRef:
   kind: Role
   name: ecr-credentials-sync
-  apiGroup: ""
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -41,7 +42,7 @@ metadata:
   namespace: flux-system
 spec:
   suspend: false
-  schedule: */5 * * * *
+  schedule: "*/5 * * * *" # Runs every 5 minutes
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 1
   jobTemplate:
@@ -94,4 +95,4 @@ spec:
                 --docker-server="$ECR_REGISTRY" \
                 --docker-username=AWS \
                 --docker-password="$(cat /token/ecr-token)" \
-                -o yaml | kubectl apply -f -   
+                -o yaml | kubectl apply -f -

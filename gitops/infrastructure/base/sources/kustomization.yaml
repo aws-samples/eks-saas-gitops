@@ -11,3 +11,4 @@ resources:
   - tf-controller-helm.yaml
   - terraform-git-v1.yaml
   - capacitor-web-ui.yaml
+  # - producer-image-automation.yaml

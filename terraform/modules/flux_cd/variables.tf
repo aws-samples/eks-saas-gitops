@@ -39,7 +39,7 @@ variable "activate_helm_controller" {
 variable "activate_image_automation_controller" {
   description = "Defines if image automation controller should be activated"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "image_automation_controller_sa_annotations" {
@@ -51,7 +51,7 @@ variable "image_automation_controller_sa_annotations" {
 variable "activate_image_reflection_controller" {
   description = "Defines if image automation controller should be activated"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "image_reflection_controller_sa_annotations" {

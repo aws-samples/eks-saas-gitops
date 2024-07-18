@@ -46,6 +46,22 @@ output "ecr_argoworkflow_container" {
   description = "URL for Amazon ECR stored Argo Workflows container"
   value       = aws_ecr_repository.argoworkflow_container.repository_url
 }
+
+output "argoworkflows_onboarding_queue_url" {
+  description = "URL for the ArgoWokflows Onboarding SQS Queue"
+  value       = aws_sqs_queue.argoworkflows_onboarding_queue.url
+}
+
+output "argoworkflows_offboarding_queue_url" {
+  description = "URL for the ArgoWokflows Onboarding SQS Queue"
+  value       = aws_sqs_queue.argoworkflows_offboarding_queue.url
+}
+
+output "argoworkflows_deployment_queue_url" {
+  description = "URL for the ArgoWokflows Onboarding SQS Queue"
+  value       = aws_sqs_queue.argoworkflows_deployment_queue.url
+}
+
 ##################
 # Flux Repo
 ##################

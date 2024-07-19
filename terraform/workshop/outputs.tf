@@ -62,6 +62,21 @@ output "ecr_argoworkflow_container" {
   value       = module.gitops_saas_infra.ecr_argoworkflow_container
 }
 
+output "argoworkflows_onboarding_queue_url" {
+  description = "URL for the ArgoWokflows Onboarding SQS Queue"
+  value       = module.gitops_saas_infra.argoworkflows_onboarding_queue_url
+}
+
+output "argoworkflows_offboarding_queue_url" {
+  description = "URL for the ArgoWokflows Onboarding SQS Queue"
+  value       = module.gitops_saas_infra.argoworkflows_offboarding_queue_url
+}
+
+output "argoworkflows_deployment_queue_url" {
+  description = "URL for the ArgoWokflows Onboarding SQS Queue"
+  value       = module.gitops_saas_infra.argoworkflows_deployment_queue_url
+}
+
 output "ecr_helm_chart_url_base" {
   value = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url)) - 1))
 }

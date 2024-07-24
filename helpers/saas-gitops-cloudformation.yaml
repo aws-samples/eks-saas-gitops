@@ -439,6 +439,7 @@ Resources:
             - sleep 120 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
             - kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig /root/.kube/config
             - /home/ec2-user/environment/eks-saas-gitops/terraform/finish_cf_stack.sh
+            - sleep 120 && /home/ec2-user/environment/eks-saas-gitops/terraform/quick_fix_flux.sh
             - rm -rf /home/ec2-user/environment/eks-saas-gitops/
             - echo "Bootstrap completed with return code $?"            
 

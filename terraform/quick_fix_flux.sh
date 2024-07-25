@@ -23,6 +23,3 @@ else
 
     echo "Operation completed."
 fi
-
-# It will fail if secret is already there
-kubectl create secret generic github-ssh-key --from-file=ssh-privatekey=/home/ec2-user/environment/flux --from-literal=ssh-privatekey.mode=0600 -nargo-workflows

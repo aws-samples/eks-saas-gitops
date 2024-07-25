@@ -31,4 +31,6 @@ module "flux_v2" {
   git_url                  = module.gitops_saas_infra.aws_codecommit_flux_clone_url_ssh
   kustomization_path       = var.kustomization_path
   flux2_sync_secret_values = var.flux2_sync_secret_values
+  image_automation_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
+  image_reflection_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
 }

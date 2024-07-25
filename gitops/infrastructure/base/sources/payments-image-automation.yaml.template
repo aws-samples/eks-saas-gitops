@@ -2,11 +2,11 @@
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
 metadata:
-  name: producer-image-policy
+  name: payments-image-policy
   namespace: flux-system
 spec:
   imageRepositoryRef:
-    name: producer-image-repository
+    name: payments-image-repository
   filterTags:
     pattern: '^prd\-(?P<timestamp>.*)$'
     extract: '$timestamp'
@@ -17,10 +17,10 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageRepository
 metadata:
-  name: producer-image-repository
+  name: payments-image-repository
   namespace: flux-system
 spec:
-  image: {ecr_repository_urls_producer}
+  image: {ecr_repository_urls_payments}
   interval: 1m0s
   secretRef:
     name: ecr-credentials
@@ -28,7 +28,7 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
-  name: producer-update-automation-tenants
+  name: payments-update-automation-tenants
   namespace: flux-system
 spec:
   interval: 5m0s
@@ -48,7 +48,7 @@ spec:
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImageUpdateAutomation
 metadata:
-  name: producer-update-automation-pooled-envs
+  name: payments-update-automation-pooled-envs
   namespace: flux-system
 spec:
   interval: 5m0s

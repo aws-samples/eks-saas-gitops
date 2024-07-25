@@ -27,7 +27,11 @@ spec:
         enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
         ingress:
           enabled: true
+        image:
+          tag: "0.1" # {"$imagepolicy": "flux-system:producer-image-policy:tag"}
       consumer:
         enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
         ingress:
           enabled: true
+        image:
+          tag: "0.1" # {"$imagepolicy": "flux-system:consumer-image-policy:tag"}

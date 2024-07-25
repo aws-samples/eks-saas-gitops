@@ -9,10 +9,11 @@ phases:
       - echo Build started on `date`
       - echo Building the Docker image...
       - docker build -t $REPOSITORY_URI:latest .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+      - TAG="prd-$TIMESTAMP"
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker push $REPOSITORY_URI:$TAG

@@ -107,7 +107,7 @@ variable "flux2_sync_version" {
 variable "flux2_version" {
   description = "Flux2 helm chart version"
   type        = string
-  default     = "2.12.3"
+  default     = "2.13.0"
 }
 
 variable "flux2_sync_secret_values" {

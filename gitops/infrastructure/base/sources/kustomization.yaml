@@ -11,4 +11,7 @@ resources:
   - tf-controller-helm.yaml
   - terraform-git-v1.yaml
   - capacitor-web-ui.yaml
-  # - producer-image-automation.yaml
+  - cronjob-ecr-updater.yaml
+  - producer-image-automation.yaml
+  - consumer-image-automation.yaml
+  - payments-image-automation.yaml

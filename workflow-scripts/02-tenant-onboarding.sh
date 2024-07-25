@@ -78,6 +78,7 @@ commit_files() {
     local tenant_tier="$3"
     cd ${repo_root_path} || exit 1
     git status
+    git pull
     git add .
     git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}"
     git push origin "${repository_branch}"

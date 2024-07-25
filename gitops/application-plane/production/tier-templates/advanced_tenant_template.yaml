@@ -31,3 +31,5 @@ spec:
         enabled: true  # Silo deployment -- advanced tier has a dedicated deployment for each tenant
         ingress:
           enabled: true
+        image:
+          tag: "0.1" # {"$imagepolicy": "flux-system:consumer-image-policy:tag"}

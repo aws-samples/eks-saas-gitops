@@ -19,25 +19,37 @@ Before initiating the setup process, please ensure the following tools are insta
 To securely clone repositories, you must add AWS CodeCommit to your `known_hosts`. Replace `AWS_REGION` with your target AWS region:
 
 ```bash
-export AWS_REGION="us-west-2"
+export AWS_REGION=""
 ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" >> ~/.ssh/known_hosts
 ```
 
 ### Step 2: Run the Installation Script
-Our `install.sh` script streamlines the provisioning process. Specify paths in the following order: public SSH key, private SSH key, the clone directory, and `known_hosts`.
+
+Replace the following variables with your own values.
+
+- `REPO_PATH`: Where to clone the created CodeCommit repositories. eg. `/tmp/workshop`
+- `PUBLIC_KEY`: Path to the public key generated previously
+- `PRIVATE_KEY`: Path to the private key generated previously
+- `KNOWN_HOSTS`: Path to known hosts file.
 
 ```bash
-./install.sh ~/.ssh/id_rsa.pub ~/.ssh/id_rsa path/to/my-directory ~/.ssh/known_hosts
+export REPO_PATH=""
+export PUBLIC_KEY=""
+export PRIVATE_KEY=""
+export KNOWN_HOSTS=""
 ```
+The `install.sh` script streamlines the provisioning process. 
 
-> **Important**: Replace placeholder values with your actual file paths. The `clone_directory` is a destination that you want to store the sample applications source code in your local machine. The code created in this directory will be used to create the git repositories on AWS CodeCommit.
+```bash
+./install.sh $PUBLIC_KEY $PRIVATE_KEY $REPO_PATH $KNOWN_HOSTS
+```
 
 ### Step 3: Accessing the Environment
 
 Post-installation, use the `configure_kubectl` Terraform output to connect to your Kubernetes cluster:
 
 ```bash
-aws eks --region us-west-2 update-kubeconfig --name eks-saas-gitops
+aws eks --region $AWS_REGION update-kubeconfig --name eks-saas-gitops
 ```
 
 ### Step 4: Create git ssh keys in EKS for Argo Workflows
@@ -71,16 +83,8 @@ Should these or similar errors arise, run the `quick_fix_flux.sh` script to reso
 
 This script dynamically identifies and deletes failed Helm releases, then reconciles your `flux-system` source to reattempt their installation. Running `quick_fix_flux.sh` ensures your environment stabilizes by rectifying transient errors that commonly occur due to race conditions during initial setup.
 
-To link your GitHub Gists directly in your README file for easy access and reference, you can incorporate them as follows. I'll guide you on how to add a link to your Gist under the appropriate section of your README. Here's how you might format it:
-
 ### How to Test the Architecture
 
-For a detailed guide on deploying and testing the architecture, including the deployment of tenants, setting up SQS queues, and managing Kubernetes deployments, please refer to the following Gist:
+For a detailed guide on deploying and testing the architecture, including the deployment of tenants, setting up SQS queues, and managing Kubernetes deployments, please refer to the following Workshop:
 
-[Testing Guide](https://gist.github.com/lusoal/4de3dea19ded8f71f12dfcd82111ee57)
-
-This Gist includes step-by-step instructions and the necessary scripts to perform initial setup, deployments, and demonstrations of the system's capabilities.
-
-## Conclusion
-
-Following this guide will help you establish a robust environment tailored to your requirements. Should you encounter any issues, refer to the troubleshooting section for solutions or consider revisiting the prerequisites to ensure all components are correctly installed and configured.
+[Building SaaS applications on Amazon EKS using GitOps](https://catalog.workshops.aws/eks-saas-gitops).

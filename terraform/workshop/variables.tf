@@ -50,3 +50,23 @@ variable "kustomization_path" {
   type        = string
   default     = "gitops/clusters/production"
 }
+
+variable "gitea_port" {
+  description = "Port for Gitea HTTP service"
+  default     = "3000"
+}
+
+variable "gitea_ssh_port" {
+  description = "Port for Gitea SSH service"
+  default     = "222"
+}
+
+variable "gitea_admin_user" {
+  description = "Gitea admin username"
+  default     = "gitadmin"
+}
+
+variable "gitea_admin_password" {
+  description = "Gitea admin password"
+  sensitive   = true
+}

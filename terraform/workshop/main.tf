@@ -29,6 +29,12 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+data "aws_security_group" "vscode" {
+  tags = {
+    Name = "eks-saas-gitops-vscode-sg" # matches the tag from CloudFormation
+  }
+}
+
 # Providers
 provider "aws" {}
 
@@ -177,4 +183,42 @@ module "eks" {
   tags = merge(local.tags, {
     "karpenter.sh/discovery" = local.name
   })
+}
+
+################################################################################
+# Gitea
+################################################################################
+resource "random_password" "gitea_admin" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+}
+
+module "gitea" {
+  source = "./modules/gitea"
+
+  name                     = "${local.name}-gitea"
+  vpc_id                   = module.vpc.vpc_id
+  vpc_cidr                 = local.vpc_cidr
+  subnet_id                = module.vpc.public_subnets
+  vscode_security_group_id = data.aws_security_group.vscode.id
+
+  gitea_port           = var.gitea_port
+  gitea_ssh_port       = var.gitea_ssh_port
+  gitea_admin_user     = var.gitea_admin_user
+  gitea_admin_password = random_password.gitea_admin.result
+
+  eks_security_group_id = module.eks.cluster_security_group_id
+}
+
+# Store the password in SSM Parameter Store for future reference
+resource "aws_ssm_parameter" "gitea_password" {
+  name        = "/${local.name}/gitea-admin-password"
+  description = "Gitea admin password"
+  type        = "SecureString"
+  value       = random_password.gitea_admin.result
+}
+
+output "gitea_password_command" {
+  value = "aws ssm get-parameter --name '/${local.name}/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text"
 }

@@ -1,6 +1,18 @@
 #!/bin/bash
 
-set -e
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+# Update and install dependencies
+yum update -y -q
+yum install -y -q libxcrypt-compat
+yum install -y -q docker
+systemctl start docker
+systemctl enable docker
+sudo usermod -aG docker ec2-user
+
+# Install Docker Compose
+curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
 
 # Basic configuration
 GITEA_PORT="${GITEA_PORT}"

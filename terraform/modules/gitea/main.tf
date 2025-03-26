@@ -6,8 +6,8 @@ resource "aws_instance" "gitea" {
 
   vpc_security_group_ids = [aws_security_group.gitea.id]
 
-  user_data = file("${path.module}/userdata.sh")
-
+  user_data                   = base64encode(file("${path.module}/userdata.sh"))
+  user_data_replace_on_change = true
   tags = {
     Name = var.name
   }

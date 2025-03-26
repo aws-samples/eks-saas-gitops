@@ -43,6 +43,10 @@ data "aws_security_group" "vscode" {
   }
 }
 
+data "aws_route_tables" "vscode" {
+  vpc_id = data.aws_vpc.vscode.id
+}
+
 # Providers
 provider "aws" {}
 
@@ -232,7 +236,7 @@ output "gitea_password_command" {
 }
 
 resource "aws_vpc_peering_connection" "vscode_to_gitea" {
-  peer_vpc_id = data.aws_security_group.vscode.vpc_id
+  peer_vpc_id = data.aws_vpc.vscode.id
   vpc_id      = module.vpc.vpc_id
   auto_accept = true
 
@@ -243,13 +247,17 @@ resource "aws_vpc_peering_connection" "vscode_to_gitea" {
 
 # Add routes for the peering connection
 resource "aws_route" "vscode_to_gitea" {
-  route_table_id            = data.aws_vpc.vscode.main_route_table_id
+  count                     = length(data.aws_route_tables.vscode.ids)
+  route_table_id            = data.aws_route_tables.vscode.ids[count.index]
   destination_cidr_block    = module.vpc.vpc_cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
 }
 
+
 resource "aws_route" "gitea_to_vscode" {
-  route_table_id            = module.vpc.public_route_table_ids[0]
+  count                     = length(module.vpc.private_route_table_ids) + length(module.vpc.public_route_table_ids)
+  route_table_id            = element(concat(module.vpc.private_route_table_ids, module.vpc.public_route_table_ids), count.index)
   destination_cidr_block    = data.aws_vpc.vscode.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
 }
+

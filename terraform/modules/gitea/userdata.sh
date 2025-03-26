@@ -39,14 +39,15 @@ services:
       - GITEA__server__ROOT_URL=http://localhost:${GITEA_PORT}/
       - GITEA__database__DB_TYPE=sqlite3
       - GITEA__service__DISABLE_REGISTRATION=true
-      - GITEA__service__REQUIRE_SIGNIN_VIEW=true
+      - GITEA__service__REQUIRE_SIGNIN_VIEW=false
     volumes:
       - ./gitea:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "0.0.0.0:${GITEA_PORT}:3000"
-      - "0.0.0.0:${GITEA_SSH_PORT}:22"
+      - "3000:3000"
+      - "222:22"
+    network_mode: "bridge"
     restart: always
 EOF
 

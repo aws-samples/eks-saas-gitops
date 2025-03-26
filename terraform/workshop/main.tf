@@ -29,9 +29,11 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-# Get VS Code VPC information
 data "aws_vpc" "vscode" {
-  id = data.aws_security_group.vscode.vpc_id
+  filter {
+    name   = "tag:Name"
+    values = ["eks-saas-gitops-vscode-vpc"]
+  }
 }
 
 # Matches VS Code SG

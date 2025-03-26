@@ -1,5 +1,5 @@
 resource "aws_instance" "gitea" {
-  ami           = "ami-0735c191cf914754d" # Amazon Linux 2, update as needed
+  ami           = "ami-05c13eab67c5d8861" # Amazon Linux 2
   instance_type = "t2.micro"
   subnet_id     = var.subnet_ids[0]
 
@@ -14,13 +14,19 @@ resource "aws_instance" "gitea" {
     encrypted = true
   }
   monitoring = true
+
+  depends_on = [
+    aws_security_group.gitea
+  ]
 }
 
+# Security Group
 resource "aws_security_group" "gitea" {
   name        = "${var.name}-sg"
   description = "Security group for Gitea server"
   vpc_id      = var.vpc_id
 
+  # Allow access from VS Code VPC (via VPC peering)
   ingress {
     from_port   = var.gitea_port
     to_port     = var.gitea_port
@@ -35,20 +41,18 @@ resource "aws_security_group" "gitea" {
     cidr_blocks = [var.vscode_vpc_cidr]
   }
 
-  # Allow all outbound
+  # Allow access from EKS cluster (same VPC)
+  ingress {
+    from_port       = var.gitea_port
+    to_port         = var.gitea_port
+    protocol        = "tcp"
+    security_groups = [var.eks_security_group_id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-# Allow EKS nodes to access Gitea
-resource "aws_security_group_rule" "eks_to_gitea" {
-  type              = "ingress"
-  from_port         = var.gitea_port
-  to_port           = var.gitea_port
-  protocol          = "tcp"
-  security_group_id = aws_security_group.gitea.id
 }

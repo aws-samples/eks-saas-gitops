@@ -34,6 +34,13 @@ data "aws_vpc" "vscode" {
   id = data.aws_security_group.vscode.vpc_id
 }
 
+# Matches VS Code SG
+data "aws_security_group" "vscode" {
+  tags = {
+    Name = "eks-saas-gitops-vscode-sg"
+  }
+}
+
 # Providers
 provider "aws" {}
 

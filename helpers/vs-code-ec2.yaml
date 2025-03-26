@@ -71,7 +71,7 @@ Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: "10.0.0.0/16" # Adjust CIDR as needed
+      CidrBlock: "10.0.0.0/16"
       EnableDnsHostnames: true
       EnableDnsSupport: true
       Tags:
@@ -80,12 +80,11 @@ Resources:
         - Key: Environment
           Value: !Sub ${EnvironmentName}
 
-  # You'll also need a subnet in this VPC
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: "10.0.1.0/24" # Adjust CIDR as needed
+      CidrBlock: "10.0.1.0/24"
       AvailabilityZone: !Select [0, !GetAZs ""]
       MapPublicIpOnLaunch: true
       Tags:

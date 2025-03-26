@@ -132,5 +132,5 @@ output "configure_kubectl" {
 
 output "gitea_url" {
   description = "URL to access Gitea"
-  value       = "http://${module.gitea.public_ip}:3000"
+  value       = "http://${module.gitea.private_ip}:3000"
 }

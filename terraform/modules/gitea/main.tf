@@ -1,7 +1,8 @@
 resource "aws_instance" "gitea" {
-  ami           = "ami-05c13eab67c5d8861" # Amazon Linux 2
-  instance_type = "t2.micro"
-  subnet_id     = var.subnet_ids[0]
+  ami                         = "ami-05c13eab67c5d8861" # Amazon Linux 2
+  instance_type               = "t2.micro"
+  subnet_id                   = var.subnet_ids[0]
+  associate_public_ip_address = true
 
   vpc_security_group_ids = [aws_security_group.gitea.id]
 
@@ -26,7 +27,7 @@ resource "aws_security_group" "gitea" {
   description = "Security group for Gitea server"
   vpc_id      = var.vpc_id
 
-  # Allow access from VS Code VPC (via VPC peering)
+  # Allow access from VS Code VPC for Gitea HTTP
   ingress {
     from_port   = var.gitea_port
     to_port     = var.gitea_port
@@ -34,6 +35,7 @@ resource "aws_security_group" "gitea" {
     cidr_blocks = [var.vscode_vpc_cidr]
   }
 
+  # Allow access from VS Code VPC for Gitea SSH
   ingress {
     from_port   = var.gitea_ssh_port
     to_port     = var.gitea_ssh_port

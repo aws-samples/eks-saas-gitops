@@ -63,10 +63,5 @@ variable "gitea_ssh_port" {
 
 variable "gitea_admin_user" {
   description = "Gitea admin username"
-  default     = "gitadmin"
-}
-
-variable "gitea_admin_password" {
-  description = "Gitea admin password"
-  sensitive   = true
+  default     = "admin"
 }

@@ -33,8 +33,8 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - "${GITEA_PORT}:3000"
-      - "${GITEA_SSH_PORT}:22"
+      - "0.0.0.0:${GITEA_PORT}:3000"
+      - "0.0.0.0:${GITEA_SSH_PORT}:22"
     restart: always
 EOF
 

@@ -45,7 +45,8 @@ variable "eks_security_group_id" {
   type        = string
 }
 
-variable "vscode_security_group_id" {
-  description = "Security group ID of the VS Code instance"
+variable "vscode_vpc_cidr" {
+  description = "CIDR block of the VSCode VPC"
   type        = string
+  default     = "10.0.0.0/16"
 }

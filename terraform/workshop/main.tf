@@ -29,10 +29,9 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-data "aws_security_group" "vscode" {
-  tags = {
-    Name = "eks-saas-gitops-vscode-sg" # matches the tag from CloudFormation
-  }
+# Get VS Code VPC information
+data "aws_vpc" "vscode" {
+  id = data.aws_security_group.vscode.vpc_id
 }
 
 # Providers
@@ -159,14 +158,14 @@ module "eks" {
 
   manage_aws_auth_configmap = true
   aws_auth_roles = [
-    {
-      rolearn  = module.gitops_saas_infra.karpenter_node_role_arn
-      username = "system:node:{{EC2PrivateDNSName}}"
-      groups = [
-        "system:bootstrappers",
-        "system:nodes",
-      ]
-    }
+    # {
+    #   rolearn  = module.gitops_saas_infra.karpenter_node_role_arn
+    #   username = "system:node:{{EC2PrivateDNSName}}"
+    #   groups = [
+    #     "system:bootstrappers",
+    #     "system:nodes",
+    #   ]
+    # }
   ]
   eks_managed_node_groups = {
     baseline-infra = {
@@ -195,23 +194,6 @@ resource "random_password" "gitea_admin" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-module "gitea" {
-  source = "./modules/gitea"
-
-  name                     = "${local.name}-gitea"
-  vpc_id                   = module.vpc.vpc_id
-  vpc_cidr                 = local.vpc_cidr
-  subnet_id                = module.vpc.public_subnets
-  vscode_security_group_id = data.aws_security_group.vscode.id
-
-  gitea_port           = var.gitea_port
-  gitea_ssh_port       = var.gitea_ssh_port
-  gitea_admin_user     = var.gitea_admin_user
-  gitea_admin_password = random_password.gitea_admin.result
-
-  eks_security_group_id = module.eks.cluster_security_group_id
-}
-
 # Store the password in SSM Parameter Store for future reference
 resource "aws_ssm_parameter" "gitea_password" {
   name        = "/${local.name}/gitea-admin-password"
@@ -220,6 +202,45 @@ resource "aws_ssm_parameter" "gitea_password" {
   value       = random_password.gitea_admin.result
 }
 
+module "gitea" {
+  source = "../modules/gitea"
+
+  name            = "${local.name}-gitea"
+  vpc_id          = module.vpc.vpc_id
+  vpc_cidr        = local.vpc_cidr
+  subnet_ids      = module.vpc.public_subnets
+  vscode_vpc_cidr = data.aws_vpc.vscode.cidr_block
+
+  gitea_port            = var.gitea_port
+  gitea_ssh_port        = var.gitea_ssh_port
+  gitea_admin_user      = var.gitea_admin_user
+  gitea_admin_password  = random_password.gitea_admin.result
+  eks_security_group_id = module.eks.cluster_security_group_id
+}
+
 output "gitea_password_command" {
   value = "aws ssm get-parameter --name '/${local.name}/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text"
+}
+
+resource "aws_vpc_peering_connection" "vscode_to_gitea" {
+  peer_vpc_id = data.aws_security_group.vscode.vpc_id
+  vpc_id      = module.vpc.vpc_id
+  auto_accept = true
+
+  tags = {
+    Name = "vscode-to-gitea-peering"
+  }
+}
+
+# Add routes for the peering connection
+resource "aws_route" "vscode_to_gitea" {
+  route_table_id            = data.aws_vpc.vscode.main_route_table_id
+  destination_cidr_block    = module.vpc.vpc_cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
+}
+
+resource "aws_route" "gitea_to_vscode" {
+  route_table_id            = module.vpc.public_route_table_ids[0]
+  destination_cidr_block    = data.aws_vpc.vscode.cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
 }

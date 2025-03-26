@@ -1,16 +1,11 @@
 resource "aws_instance" "gitea" {
   ami           = "ami-0735c191cf914754d" # Amazon Linux 2, update as needed
   instance_type = "t2.micro"
-  subnet_id     = var.public_subnets[0]
+  subnet_id     = var.subnet_ids[0]
 
   vpc_security_group_ids = [aws_security_group.gitea.id]
 
-  user_data = templatefile("${path.module}/userdata.sh", {
-    GITEA_PORT           = var.gitea_port
-    GITEA_SSH_PORT       = var.gitea_ssh_port
-    GITEA_ADMIN_USER     = var.gitea_admin_user
-    GITEA_ADMIN_PASSWORD = var.gitea_admin_password
-  })
+  user_data = file("${path.module}/userdata.sh")
 
   tags = {
     Name = var.name
@@ -27,17 +22,17 @@ resource "aws_security_group" "gitea" {
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port       = var.gitea_port
-    to_port         = var.gitea_port
-    protocol        = "tcp"
-    security_groups = [var.vscode_security_group_id]
+    from_port   = var.gitea_port
+    to_port     = var.gitea_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vscode_vpc_cidr]
   }
 
   ingress {
-    from_port       = var.gitea_ssh_port
-    to_port         = var.gitea_ssh_port
-    protocol        = "tcp"
-    security_groups = [var.vscode_security_group_id]
+    from_port   = var.gitea_ssh_port
+    to_port     = var.gitea_ssh_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vscode_vpc_cidr]
   }
 
   # Allow all outbound
@@ -51,10 +46,9 @@ resource "aws_security_group" "gitea" {
 
 # Allow EKS nodes to access Gitea
 resource "aws_security_group_rule" "eks_to_gitea" {
-  type                     = "ingress"
-  from_port                = var.gitea_port
-  to_port                  = var.gitea_port
-  protocol                 = "tcp"
-  source_security_group_id = var.eks_security_group_id
-  security_group_id        = aws_security_group.gitea.id
+  type              = "ingress"
+  from_port         = var.gitea_port
+  to_port           = var.gitea_port
+  protocol          = "tcp"
+  security_group_id = aws_security_group.gitea.id
 }

@@ -61,7 +61,12 @@ until curl -s http://localhost:${GITEA_PORT}/api/v1/version > /dev/null; do
 done
 
 echo "Creating admin user..."
-docker exec -u 1000 gitea gitea admin user create --username ${GITEA_ADMIN_USER} --password ${GITEA_ADMIN_PASSWORD} --email admin@example.com --admin
+docker exec -u git gitea gitea admin user create \
+    --username ${GITEA_ADMIN_USER} \
+    --password ${GITEA_ADMIN_PASSWORD} \
+    --email admin@example.com \
+    --admin \
+    --must-change-password=false
 
 # Create working directory
 WORK_DIR="/tmp/gitea-work"

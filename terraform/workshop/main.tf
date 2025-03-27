@@ -216,8 +216,7 @@ resource "aws_ssm_parameter" "gitea_password" {
 }
 
 module "gitea" {
-  source = "../modules/gitea"
-
+  source          = "../modules/gitea"
   name            = "${local.name}-gitea"
   vpc_id          = module.vpc.vpc_id
   vpc_cidr        = local.vpc_cidr

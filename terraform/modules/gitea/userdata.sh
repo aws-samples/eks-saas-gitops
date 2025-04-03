@@ -40,7 +40,7 @@ services:
       - USER_UID=1000
       - USER_GID=1000
       - GITEA__security__INSTALL_LOCK=true
-      - GITEA__server__ROOT_URL=http://localhost:${GITEA_PORT}/
+      - GITEA__server__ROOT_URL=http://0.0.0.0:${GITEA_PORT}/
       - GITEA__database__DB_TYPE=sqlite3
       - GITEA__service__DISABLE_REGISTRATION=true
       - GITEA__service__REQUIRE_SIGNIN_VIEW=false

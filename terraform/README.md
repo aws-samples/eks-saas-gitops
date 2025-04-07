@@ -11,7 +11,6 @@ Before initiating the setup process, please ensure the following tools are insta
 - **Flux CLI**: Manage GitOps for your cluster. [Installation Guide](https://fluxcd.io/flux/installation/)
 - **AWS CLI**: Control AWS services directly from your terminal. [Installation Guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - **AWS Credentials**: Essential for authenticating AWS CLI and Terraform commands. [Configuration Guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
-- **Key Pairs (Private and Public)**: Secure your connections with SSH keys. [SSH Key Generation Guide](https://en.wikibooks.org/wiki/Cryptography/Generate_a_keypair_using_OpenSSL)
 
 ## Installation Steps
 
@@ -23,41 +22,19 @@ export AWS_REGION=""
 ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" >> ~/.ssh/known_hosts
 ```
 
-### Step 2: Run the Installation Script
-
-Replace the following variables with your own values.
-
-- `REPO_PATH`: Where to clone the created CodeCommit repositories. eg. `/tmp/workshop`
-- `PUBLIC_KEY`: Path to the public key generated previously
-- `PRIVATE_KEY`: Path to the private key generated previously
-- `KNOWN_HOSTS`: Path to known hosts file.
+### Step 1: Run the Installation Script
+The `install.sh` script will deploy the AWS and Gitea infrastructure.
 
 ```bash
-export REPO_PATH=""
-export PUBLIC_KEY=""
-export PRIVATE_KEY=""
-export KNOWN_HOSTS=""
-```
-The `install.sh` script streamlines the provisioning process. 
-
-```bash
-./install.sh $PUBLIC_KEY $PRIVATE_KEY $REPO_PATH $KNOWN_HOSTS
+cd terraform &&  sh install.sh
 ```
 
-### Step 3: Accessing the Environment
+### Step 2: Accessing the Environment
 
 Post-installation, use the `configure_kubectl` Terraform output to connect to your Kubernetes cluster:
 
 ```bash
 aws eks --region $AWS_REGION update-kubeconfig --name eks-saas-gitops
-```
-
-### Step 4: Create git ssh keys in EKS for Argo Workflows
-
-Argo Workflows needs access to the git repository. Create a secret to store the private keys that Argo will use to clone and push changes to git during workflows.
-
-```bash
-kubectl create secret generic github-ssh-key --from-file=ssh-privatekey= ~/.ssh/id_rsa --from-literal=ssh-privatekey.mode=0600 -nargo-workflows --kubeconfig ~/.kube/config
 ```
 
 ## Ensuring Smooth Installation

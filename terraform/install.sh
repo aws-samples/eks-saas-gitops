@@ -40,14 +40,12 @@ deploy_terraform() {
     echo "Applying Terraform configuration..."
     terraform apply --auto-approve
 
-    echo "Getting Gitea admin password from SSM..."
     GITEA_PASSWORD=$(aws ssm get-parameter \
         --name '/eks-saas-gitops/gitea-admin-password' \
         --with-decryption \
         --query 'Parameter.Value' \
         --output text)
 
-    echo "Getting Gitea IP..."
     GITEA_IP=$(aws ec2 describe-instances \
         --filters "Name=tag:Name,Values=*gitea*" \
         --query 'Reservations[0].Instances[0].PublicIpAddress' \
@@ -63,9 +61,6 @@ print_setup_info() {
     echo "Gitea Admin Username: gitadmin"
     echo "Gitea Admin Password: ${GITEA_PASSWORD}"
     echo ""
-    echo "To clone repositories:"
-    echo "HTTP: git clone http://gitadmin:${GITEA_PASSWORD}@${GITEA_IP}:3000/gitadmin/<repo>.git"
-    echo "SSH:  git clone ssh://git@${GITEA_IP}:222/gitadmin/<repo>.git"
     echo "=============================="
 }
 

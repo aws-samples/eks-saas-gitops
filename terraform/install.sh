@@ -9,15 +9,23 @@ echo "Starting installation..."
 check_prerequisites() {
     echo "Checking prerequisites..."
     
-    if ! command -v terraform &> /dev/null; then
+    if ! command -v terraform &> /dev/null
+    then
         echo "Terraform is not installed. Please install Terraform first."
         exit 1
-    }
+    fi
 
-    if ! command -v aws &> /dev/null; then
+    if ! command -v aws &> /dev/null
+    then
         echo "AWS CLI is not installed. Please install AWS CLI first."
         exit 1
-    }
+    fi
+
+    if [ ! -d "$TERRAFORM_DIR" ]
+    then
+        echo "Terraform directory '$TERRAFORM_DIR' not found!"
+        exit 1
+    fi
 }
 
 # Initialize and apply terraform
@@ -30,11 +38,7 @@ deploy_terraform() {
     terraform plan
 
     echo "Applying Terraform configuration..."
-    terraform apply -target=module.vpc \
-                   -target=module.gitea \
-                   -target="random_password.gitea_admin" \
-                   -target="aws_ssm_parameter.gitea_password" \
-                   -auto-approve
+    terraform apply --auto-approve
 
     echo "Getting Gitea admin password from SSM..."
     GITEA_PASSWORD=$(aws ssm get-parameter \

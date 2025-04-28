@@ -175,7 +175,7 @@ Resources:
                 - "yum -y install terraform"
                 - export TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds:60")
                 - export AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/') && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
-                - "git clone https://github.com/ande28em/eks-saas-gitops.git /home/ec2-user/environment/your-repo"
+                - "git clone https://github.com/ande28em/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops"
                 - "chown -R ec2-user:ec2-user /home/ec2-user/environment"
                 - "sudo -u ec2-user nohup /usr/bin/code-server --port 8080 --host 0.0.0.0 > /dev/null 2>&1 &"
                 - "export WAIT_HANDLE_URL=$(aws ssm get-parameter --name '/eks-saas-gitops/waitcondition-url' --query 'Parameter.Value' --output text --region $AWS_REGION)"

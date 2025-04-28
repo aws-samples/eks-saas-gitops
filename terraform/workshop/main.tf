@@ -260,3 +260,8 @@ resource "aws_route" "gitea_to_vscode" {
   vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
 }
 
+# TODO 1. add gitops saas module
+
+# TODO 2. Configmap
+
+# TODO 3. add flux to reconcile

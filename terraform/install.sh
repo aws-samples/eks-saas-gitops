@@ -58,7 +58,7 @@ print_setup_info() {
     echo "Installation Complete!"
     echo "=============================="
     echo "Gitea URL: http://${GITEA_IP}:3000"
-    echo "Gitea Admin Username: gitadmin"
+    echo "Gitea Admin Username: admin"
     echo "Gitea Admin Password: ${GITEA_PASSWORD}"
     echo ""
     echo "=============================="

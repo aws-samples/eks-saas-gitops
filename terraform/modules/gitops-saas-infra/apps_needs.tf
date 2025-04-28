@@ -38,16 +38,6 @@ resource "aws_s3_bucket" "codeartifacts" {
   force_destroy = true
 }
 
-module "codecommit" {
-  source          = "lgallard/codecommit/aws"
-  version         = "0.2.1"
-  for_each        = var.microservices
-
-  repository_name = each.key
-  description     = each.value.description
-  default_branch  = each.value.default_branch
-}
-
 
 resource "aws_ecr_repository" "microservice_container" {
   for_each = var.microservices
@@ -66,8 +56,8 @@ resource "aws_ecr_repository" "microservice_container" {
 }
 
 module "codebuild_project" {
-  source                 = "../codebuild"
-  for_each               = var.microservices
+  source   = "../codebuild"
+  for_each = var.microservices
 
   vpc_id                 = var.vpc_id
   codebuild_project_name = each.value.codebuild_project_name
@@ -76,9 +66,10 @@ module "codebuild_project" {
   repo_uri               = aws_ecr_repository.microservice_container[each.key].repository_url
 }
 
+# TODO: Make sure this triggers off of gitea now, update repo names (for loop through microservices names)
 module "codepipeline" {
-  source            = "../codepipeline"
-  for_each          = var.microservices
+  source   = "../codepipeline"
+  for_each = var.microservices
 
   pipeline_name     = each.value.pipeline_name
   codebuild_project = module.codebuild_project[each.key].name

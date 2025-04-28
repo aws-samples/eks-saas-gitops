@@ -38,7 +38,7 @@ resource "aws_codepipeline" "pipeline" {
     location = var.bucket_id
     type     = "S3"
   }
-
+  # TODO - change provider to gitea
   stage {
     name = "Source"
 

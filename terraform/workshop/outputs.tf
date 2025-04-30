@@ -131,6 +131,6 @@ output "configure_kubectl" {
 }
 
 output "gitea_url" {
-  description = "URL of the Gitea ALB"
-  value       = "http://${module.gitea.public_ip}"
+  description = "URL of the Gitea Instance"
+  value       = "http://${module.gitea.public_ip}:3000"
 }

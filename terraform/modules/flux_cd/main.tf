@@ -1,17 +1,3 @@
-provider "kubernetes" {
-  host                   = var.cluster_endpoint
-  cluster_ca_certificate = base64decode(var.ca)
-  token                  = var.token
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = var.cluster_endpoint
-    cluster_ca_certificate = base64decode(var.ca)
-    token                  = var.token
-  }
-}
-
 resource "kubernetes_namespace" "flux_system" {
   metadata {
     name = "flux-system"
@@ -26,7 +12,7 @@ resource "helm_release" "flux2-sync" {
   version    = var.flux2_sync_version
 
   values = [
-    file(var.flux2_sync_secret_values)
+    var.flux2_sync_secret_values
   ]
 
   set {

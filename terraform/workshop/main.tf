@@ -259,8 +259,104 @@ resource "aws_route" "gitea_to_vscode" {
   vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
 }
 
+################################################################################
+# Flux
+################################################################################
+# Generate SSH key for Flux
+resource "tls_private_key" "flux" {
+  algorithm = "ED25519"
+}
+
+# Store the SSH key in SSM Parameter Store for future reference
+resource "aws_ssm_parameter" "flux_private_key" {
+  name        = "/eks-saas-gitops/flux-ssh-private-key"
+  description = "SSH private key for Flux"
+  type        = "SecureString"
+  value       = tls_private_key.flux.private_key_openssh
+}
+
+resource "aws_ssm_parameter" "flux_public_key" {
+  name        = "/eks-saas-gitops/flux-ssh-public-key"
+  description = "SSH public key for Flux"
+  type        = "String"
+  value       = tls_private_key.flux.public_key_openssh
+}
+
+# Create a known_hosts entry for Gitea
+resource "null_resource" "gitea_known_hosts" {
+  depends_on = [module.gitea]
+
+  provisioner "local-exec" {
+    command = "ssh-keyscan -p 222 ${module.gitea.public_ip} > ${path.module}/known_hosts"
+  }
+}
+
+data "local_file" "known_hosts" {
+  depends_on = [null_resource.gitea_known_hosts]
+  filename   = "${path.module}/known_hosts"
+}
+
+# Add SSH key to Gitea repository
+resource "null_resource" "add_ssh_key_to_gitea" {
+  depends_on = [module.gitea]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      GITEA_PASSWORD=$(aws ssm get-parameter --name '/eks-saas-gitops/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text)
+      curl -X POST "http://${module.gitea.public_ip}:3000/api/v1/repos/admin/eks-saas-gitops/keys" \
+        -H "Content-Type: application/json" \
+        -u "admin:$GITEA_PASSWORD" \
+        -d '{"title":"flux-deploy-key","key":"${tls_private_key.flux.public_key_openssh}","read_only":false}'
+    EOT
+  }
+}
+
+# Create flux-secrets.yaml file
+resource "local_file" "flux_secrets" {
+  content  = <<-EOT
+secret:
+  create: true
+  data:
+    identity: |
+      ${indent(6, tls_private_key.flux.private_key_openssh)}
+    identity.pub: |
+      ${indent(6, tls_private_key.flux.public_key_openssh)}
+    known_hosts: |
+      ${indent(6, data.local_file.known_hosts.content)}
+EOT
+  filename = "${path.module}/flux-secrets.yaml"
+}
+
+
+
 # TODO 1. add gitops saas module
 
 # TODO 2. Configmap
 
-# TODO 3. add flux to reconcile
+# Flux module to reconcile with Gitea
+module "flux_v2" {
+  source = "../modules/flux_cd"
+
+  cluster_endpoint = module.eks.cluster_endpoint
+  ca               = module.eks.cluster_certificate_authority_data
+  token            = data.aws_eks_cluster_auth.this.token
+
+  # Use SSH URL with the custom SSH port (222)
+  git_url    = "ssh://git@${module.gitea.public_ip}:222/admin/eks-saas-gitops.git"
+  git_branch = "main"
+
+  # Path to the flux-secrets.yaml file
+  flux2_sync_secret_values = file(local_file.flux_secrets.filename)
+
+  # Path for kustomization
+  kustomization_path = "./gitops/clusters/eks-saas-gitops"
+
+  # Service account annotations for controllers
+  image_automation_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
+  image_reflection_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
+
+  depends_on = [
+    null_resource.add_ssh_key_to_gitea,
+    local_file.flux_secrets
+  ]
+}

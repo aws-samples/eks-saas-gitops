@@ -1,73 +1,6 @@
-# Versions
-terraform {
-  required_version = ">= 1.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.20"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 2.0"
-    }
-  }
-}
-
-# DataSources
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
-
-data "aws_availability_zones" "available" {}
-
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_vpc" "vscode" {
-  filter {
-    name   = "tag:Name"
-    values = ["eks-saas-gitops-vscode-vpc"]
-  }
-}
-
-# Matches VS Code SG
-data "aws_security_group" "vscode" {
-  tags = {
-    Name = "eks-saas-gitops-vscode-sg"
-  }
-}
-
-data "aws_route_tables" "vscode" {
-  vpc_id = data.aws_vpc.vscode.id
-}
-
-# Providers
-provider "aws" {}
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
-  }
-}
-
-################################################################################
-# Supporting Resources
-################################################################################
 locals {
   name   = var.name
-  region = coalesce(var.aws_region, data.aws_region.current.name)
+  region = var.aws_region
 
   vpc_cidr = var.vpc_cidr
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -77,9 +10,12 @@ locals {
   }
 }
 
+################################################################################
+# VPC and Roles
+################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 4.0"
+  version = "4.0.2"
 
   name = local.name
   cidr = local.vpc_cidr
@@ -137,14 +73,17 @@ module "image_automation_irsa_role" {
     }
   }
 }
-
+################################################################################
+# EKS Cluster
+################################################################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.12"
+  version = "19.12"
 
   cluster_name                   = local.name
   cluster_version                = var.cluster_version
   cluster_endpoint_public_access = true
+
 
   node_security_group_tags = {
     "kubernetes.io/cluster/${local.name}" = null
@@ -171,14 +110,14 @@ module "eks" {
 
   manage_aws_auth_configmap = true
   aws_auth_roles = [
-    # {
-    #   rolearn  = module.gitops_saas_infra.karpenter_node_role_arn
-    #   username = "system:node:{{EC2PrivateDNSName}}"
-    #   groups = [
-    #     "system:bootstrappers",
-    #     "system:nodes",
-    #   ]
-    # }
+    {
+      rolearn  = module.gitops_saas_infra.karpenter_node_role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups = [
+        "system:bootstrappers",
+        "system:nodes",
+      ]
+    }
   ]
   eks_managed_node_groups = {
     baseline-infra = {
@@ -197,7 +136,6 @@ module "eks" {
   })
 }
 
-
 ################################################################################
 # Gitea
 ################################################################################
@@ -209,6 +147,7 @@ resource "random_password" "gitea_admin" {
 
 # Store the password in SSM Parameter Store for future reference
 resource "aws_ssm_parameter" "gitea_password" {
+  # checkov:skip=CKV_AWS_337: Skiping this for now, move to Secrets Manager.
   name        = "/${local.name}/gitea-admin-password"
   description = "Gitea admin password"
   type        = "SecureString"
@@ -222,18 +161,20 @@ module "gitea" {
   vpc_cidr        = local.vpc_cidr
   subnet_ids      = module.vpc.public_subnets
   vscode_vpc_cidr = data.aws_vpc.vscode.cidr_block
+  allowed_ip      = var.allowed_ip
 
   gitea_port            = var.gitea_port
   gitea_ssh_port        = var.gitea_ssh_port
   gitea_admin_user      = var.gitea_admin_user
   gitea_admin_password  = random_password.gitea_admin.result
-  eks_security_group_id = module.eks.cluster_security_group_id
+  eks_security_group_id = module.eks.node_security_group_id
 }
 
 output "gitea_password_command" {
   value = "aws ssm get-parameter --name '/${local.name}/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text"
 }
 
+# TODO: Create a count to disable this peering config if want to deploy from local terminal
 resource "aws_vpc_peering_connection" "vscode_to_gitea" {
   peer_vpc_id = data.aws_vpc.vscode.id
   vpc_id      = module.vpc.vpc_id
@@ -261,103 +202,40 @@ resource "aws_route" "gitea_to_vscode" {
 }
 
 ################################################################################
-# Flux
+# Kubernetes Resources
 ################################################################################
-# Generate SSH key for Flux
-resource "tls_private_key" "flux" {
-  algorithm = "ED25519"
-}
 
-# Store the SSH key in SSM Parameter Store for future reference
-resource "aws_ssm_parameter" "flux_private_key" {
-  name        = "/eks-saas-gitops/flux-ssh-private-key"
-  description = "SSH private key for Flux"
-  type        = "SecureString"
-  value       = tls_private_key.flux.private_key_openssh
-}
-
-resource "aws_ssm_parameter" "flux_public_key" {
-  name        = "/eks-saas-gitops/flux-ssh-public-key"
-  description = "SSH public key for Flux"
-  type        = "String"
-  value       = tls_private_key.flux.public_key_openssh
-}
-
-# Create a known_hosts entry for Gitea
-resource "null_resource" "gitea_known_hosts" {
-  depends_on = [module.gitea]
-
-  provisioner "local-exec" {
-    command = "ssh-keyscan -p 222 ${module.gitea.public_ip} > ${path.module}/known_hosts"
+# Create the flux-system namespace, needed for GitOps SaaS Infra ConfigMap
+resource "kubernetes_namespace" "flux_system" {
+  metadata {
+    name = "flux-system"
   }
+
+  depends_on = [module.eks]
 }
 
-data "local_file" "known_hosts" {
-  depends_on = [null_resource.gitea_known_hosts]
-  filename   = "${path.module}/known_hosts"
-}
+################################################################################
+# Gitea Repositories
+################################################################################
 
-# Add SSH key to Gitea repository
-resource "null_resource" "add_ssh_key_to_gitea" {
+# Get the Gitea token from SSM Parameter Store
+data "aws_ssm_parameter" "gitea_token" {
+  name            = "/eks-saas-gitops/gitea-flux-token"
+  with_decryption = true
+
+  # Add a depends_on to ensure the Gitea instance has had time to create the token
   depends_on = [module.gitea]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      GITEA_PASSWORD=$(aws ssm get-parameter --name '/eks-saas-gitops/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text)
-      curl -X POST "http://${module.gitea.public_ip}:3000/api/v1/repos/admin/eks-saas-gitops/keys" \
-        -H "Content-Type: application/json" \
-        -u "admin:$GITEA_PASSWORD" \
-        -d '{"title":"flux-deploy-key","key":"${tls_private_key.flux.public_key_openssh}","read_only":false}'
-    EOT
-  }
 }
 
-# Create flux-secrets.yaml file
-resource "local_file" "flux_secrets" {
-  content  = <<-EOT
-secret:
-  create: true
-  data:
-    identity: |
-      ${indent(6, tls_private_key.flux.private_key_openssh)}
-    identity.pub: |
-      ${indent(6, tls_private_key.flux.public_key_openssh)}
-    known_hosts: |
-      ${indent(6, data.local_file.known_hosts.content)}
-EOT
-  filename = "${path.module}/flux-secrets.yaml"
-}
+# Clone main repo
+resource "gitea_repository" "eks-saas-gitops" {
+  username                 = var.gitea_admin_user
+  name                     = "eks-saas-gitops"
+  description              = "GitOps SaaS Repository"
+  private                  = false
+  mirror                   = false
+  migration_clone_addresse = "https://github.com/${var.github_username}/gitops-manifests-template.git"
+  migration_service        = "git"
 
-
-
-# TODO 1. add gitops saas module
-
-# TODO 2. Configmap
-
-# Flux module to reconcile with Gitea
-module "flux_v2" {
-  source = "../modules/flux_cd"
-
-  cluster_endpoint = module.eks.cluster_endpoint
-  ca               = module.eks.cluster_certificate_authority_data
-  token            = data.aws_eks_cluster_auth.this.token
-
-  # Use SSH URL with the custom SSH port (222)
-  git_url    = "ssh://git@${module.gitea.public_ip}:222/admin/eks-saas-gitops.git"
-  git_branch = "main"
-
-  # Path to the flux-secrets.yaml file
-  flux2_sync_secret_values = file(local_file.flux_secrets.filename)
-
-  # Path for kustomization
-  kustomization_path = "./gitops/clusters/eks-saas-gitops"
-
-  # Service account annotations for controllers
-  image_automation_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
-  image_reflection_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
-
-  depends_on = [
-    null_resource.add_ssh_key_to_gitea,
-    local_file.flux_secrets
-  ]
+  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }

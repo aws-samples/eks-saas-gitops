@@ -28,6 +28,15 @@ resource "aws_security_group" "gitea" {
   description = "Security group for Gitea server"
   vpc_id      = var.vpc_id
 
+  # Allow SSH access from specific VPC CIDR
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.vscode_vpc_cidr]
+    description = "Allow SSH access from VPC"
+  }
+
   # Allow access from VS Code VPC for Gitea HTTP
   ingress {
     from_port   = var.gitea_port

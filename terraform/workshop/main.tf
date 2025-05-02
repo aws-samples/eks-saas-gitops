@@ -293,7 +293,7 @@ resource "null_resource" "add_ssh_key_to_gitea_via_ssh" {
       echo "Waiting for SSH to be available on ${module.gitea.public_ip}..."
       max_retries=30
       count=0
-      while ! nc -z -w5 ${module.gitea.public_ip} 22; do
+      while ! timeout 5 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@${module.gitea.public_ip} echo 2>&1; do
         sleep 10
         count=$((count+1))
         if [ $count -ge $max_retries ]; then
@@ -327,7 +327,7 @@ while ! curl -s --connect-timeout 5 http://localhost:3000/api/v1/version > /dev/
 done
 
 echo "Gitea is ready! Checking if repository exists..."
-REPO_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -u "admin:$GITEA_PASSWORD" http://localhost:3000/api/v1/repos/admin/eks-saas-gitops)
+REPO_CHECK=$(curl -s -o /dev/null -w "%%{http_code}" -u "admin:$GITEA_PASSWORD" http://localhost:3000/api/v1/repos/admin/eks-saas-gitops)
 if [ "$REPO_CHECK" != "200" ]; then
   echo "Repository not found (HTTP $REPO_CHECK). Creating repository..."
   curl -v -X POST "http://localhost:3000/api/v1/user/repos" \

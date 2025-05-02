@@ -1,22 +1,4 @@
-# Versions
-terraform {
-  required_version = ">= 1.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 4.47"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = ">= 2.20"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 2.0"
-    }
-  }
-}
+# DataSources
 
 # DataSources
 data "aws_eks_cluster_auth" "this" {
@@ -284,10 +266,10 @@ resource "aws_ssm_parameter" "flux_public_key" {
 
 # Create a known_hosts entry for Gitea
 resource "null_resource" "gitea_known_hosts" {
-  depends_on = [module.gitea]
+  depends_on = [module.gitea, null_resource.add_ssh_key_to_gitea_via_ssh]
 
   provisioner "local-exec" {
-    command = "ssh-keyscan -p 222 ${module.gitea.public_ip} > ${path.module}/known_hosts"
+    command = "cat ./known_hosts"
   }
 }
 
@@ -296,35 +278,96 @@ data "local_file" "known_hosts" {
   filename   = "${path.module}/known_hosts"
 }
 
-# Add SSH key to Gitea repository
-resource "null_resource" "add_ssh_key_to_gitea" {
+# Add SSH key to Gitea repository using direct SSH
+resource "null_resource" "add_ssh_key_to_gitea_via_ssh" {
   depends_on = [module.gitea]
+
+  # Add a trigger to ensure this runs only when Gitea is ready
+  triggers = {
+    gitea_ip = module.gitea.public_ip
+  }
 
   provisioner "local-exec" {
     command = <<-EOT
-      GITEA_PASSWORD=$(aws ssm get-parameter --name '/eks-saas-gitops/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text)
-      curl -X POST "http://${module.gitea.public_ip}:3000/api/v1/repos/admin/eks-saas-gitops/keys" \
-        -H "Content-Type: application/json" \
-        -u "admin:$GITEA_PASSWORD" \
-        -d '{"title":"flux-deploy-key","key":"${tls_private_key.flux.public_key_openssh}","read_only":false}'
+      # Wait for SSH to be available
+      echo "Waiting for SSH to be available on ${module.gitea.public_ip}..."
+      max_retries=30
+      count=0
+      while ! nc -z -w5 ${module.gitea.public_ip} 22; do
+        sleep 10
+        count=$((count+1))
+        if [ $count -ge $max_retries ]; then
+          echo "Timed out waiting for SSH to be available"
+          exit 1
+        fi
+        echo "Attempt $count/$max_retries: SSH not ready yet, retrying..."
+      done
+      
+      # Get the Gitea admin password
+      GITEA_PASSWORD=$(aws ssm get-parameter --name '/${local.name}/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text)
+      
+      # Create a temporary script file
+      cat > /tmp/add_ssh_key.sh << 'EOF'
+#!/bin/bash
+GITEA_PASSWORD=$1
+SSH_KEY=$2
+
+# Wait for Gitea to be ready (checking locally)
+echo "Waiting for Gitea to be ready locally..."
+max_retries=30
+count=0
+while ! curl -s --connect-timeout 5 http://localhost:3000/api/v1/version > /dev/null; do
+  sleep 10
+  count=$((count+1))
+  if [ $count -ge $max_retries ]; then
+    echo "Timed out waiting for Gitea to be ready"
+    exit 1
+  fi
+  echo "Attempt $count/$max_retries: Gitea not ready yet, retrying..."
+done
+
+echo "Gitea is ready! Checking if repository exists..."
+REPO_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -u "admin:$GITEA_PASSWORD" http://localhost:3000/api/v1/repos/admin/eks-saas-gitops)
+if [ "$REPO_CHECK" != "200" ]; then
+  echo "Repository not found (HTTP $REPO_CHECK). Creating repository..."
+  curl -v -X POST "http://localhost:3000/api/v1/user/repos" \
+    -H "Content-Type: application/json" \
+    -u "admin:$GITEA_PASSWORD" \
+    -d '{"name":"eks-saas-gitops","description":"EKS SaaS GitOps repository"}'
+  sleep 5
+fi
+
+# Add the SSH key
+echo "Adding SSH deploy key to repository..."
+curl -v -X POST "http://localhost:3000/api/v1/repos/admin/eks-saas-gitops/keys" \
+  -H "Content-Type: application/json" \
+  -u "admin:$GITEA_PASSWORD" \
+  -d "{\"title\":\"flux-deploy-key\",\"key\":\"$SSH_KEY\",\"read_only\":false}"
+
+# Generate known_hosts file
+ssh-keyscan -p 222 localhost > /tmp/known_hosts
+cat /tmp/known_hosts
+EOF
+      
+      # Make the script executable
+      chmod +x /tmp/add_ssh_key.sh
+      
+      # Copy the script to the Gitea instance
+      scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /tmp/add_ssh_key.sh ec2-user@${module.gitea.public_ip}:/tmp/
+      
+      # Run the script on the Gitea instance
+      ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@${module.gitea.public_ip} "sudo bash /tmp/add_ssh_key.sh '$GITEA_PASSWORD' '${tls_private_key.flux.public_key_openssh}'" > /tmp/ssh_output.txt
+      
+      # Get the known_hosts content
+      KNOWN_HOSTS=$(tail -n 1 /tmp/ssh_output.txt)
+      
+      # Save the known_hosts file locally
+      echo "$KNOWN_HOSTS" > ./known_hosts
+      
+      # Replace localhost with the actual IP in known_hosts
+      sed -i "s/localhost/${module.gitea.public_ip}/g" ./known_hosts
     EOT
   }
-}
-
-# Create flux-secrets.yaml file
-resource "local_file" "flux_secrets" {
-  content  = <<-EOT
-secret:
-  create: true
-  data:
-    identity: |
-      ${indent(6, tls_private_key.flux.private_key_openssh)}
-    identity.pub: |
-      ${indent(6, tls_private_key.flux.public_key_openssh)}
-    known_hosts: |
-      ${indent(6, data.local_file.known_hosts.content)}
-EOT
-  filename = "${path.module}/flux-secrets.yaml"
 }
 
 
@@ -345,8 +388,18 @@ module "flux_v2" {
   git_url    = "ssh://git@${module.gitea.public_ip}:222/admin/eks-saas-gitops.git"
   git_branch = "main"
 
-  # Path to the flux-secrets.yaml file
-  flux2_sync_secret_values = file(local_file.flux_secrets.filename)
+  # Use the content directly instead of reading from file
+  flux2_sync_secret_values = <<-EOT
+secret:
+  create: true
+  data:
+    identity: |
+      ${indent(6, tls_private_key.flux.private_key_openssh)}
+    identity.pub: |
+      ${indent(6, tls_private_key.flux.public_key_openssh)}
+    known_hosts: |
+      ${indent(6, data.local_file.known_hosts.content)}
+EOT
 
   # Path for kustomization
   kustomization_path = "./gitops/clusters/eks-saas-gitops"
@@ -356,7 +409,7 @@ module "flux_v2" {
   image_reflection_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
 
   depends_on = [
-    null_resource.add_ssh_key_to_gitea,
-    local_file.flux_secrets
+    null_resource.add_ssh_key_to_gitea_via_ssh,
+    data.local_file.known_hosts
   ]
 }

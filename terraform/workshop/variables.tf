@@ -7,7 +7,7 @@ variable "name" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = ""
+  default     = "us-east-1"  # Setting a default region
 }
 
 variable "vpc_cidr" {
@@ -19,7 +19,7 @@ variable "vpc_cidr" {
 variable "cluster_version" {
   description = "Amazon EKS Cluster version"
   type        = string
-  default     = "1.30"
+  default     = "1.32"
 }
 
 variable "public_key_file_path" {
@@ -49,4 +49,19 @@ variable "kustomization_path" {
   description = "Path for Kustomization tool"
   type        = string
   default     = "gitops/clusters/production"
+}
+
+variable "gitea_port" {
+  description = "Port for Gitea HTTP service"
+  default     = "3000"
+}
+
+variable "gitea_ssh_port" {
+  description = "Port for Gitea SSH service"
+  default     = "222"
+}
+
+variable "gitea_admin_user" {
+  description = "Gitea admin username"
+  default     = "admin"
 }

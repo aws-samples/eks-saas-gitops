@@ -1,5 +1,5 @@
 locals {
-  name   = var.name
+  name                 = var.name
   code_commit_username = "codecommit-user"
 }
 
@@ -576,37 +576,6 @@ module "lb_controller_irsa" {
 }
 
 ################################################################################
-# CODE COMMIT needs for flux
-################################################################################
-module "codecommit_flux" {
-  source          = "lgallard/codecommit/aws"
-  version         = "0.2.1"
-  default_branch  = "main"
-  description     = "Flux GitOps repository"
-  repository_name = var.name
-}
-
-resource "aws_iam_user" "codecommit_user" {
-  name = local.code_commit_username # Key will be uploaded to this user in order to be able to clone the repo
-}
-
-resource "aws_iam_user_policy_attachment" "codecommit_user_attach" {
-  user       = local.code_commit_username
-  policy_arn = "arn:aws:iam::aws:policy/AWSCodeCommitPowerUser"
-}
-
-resource "aws_iam_user_ssh_key" "codecommit_user" {
-  username   = local.code_commit_username
-  encoding   = "SSH" # Use "SSH" for SSH public keys
-  public_key = file("${var.public_key_file_path}") # Adjust the path as necessary
-   lifecycle {
-    ignore_changes = [
-      public_key,
-    ]
-  }
-}
-
-################################################################################
 # TF Controller Service Account
 ################################################################################
 module "tf_controller_irsa_role" {
@@ -614,11 +583,11 @@ module "tf_controller_irsa_role" {
   version = "5.30.0"
 
   role_name = "tf-controller-${var.name}"
-  
+
   role_policy_arns = {
     policy = "arn:aws:iam::aws:policy/AdministratorAccess"
   }
-  
+
 
   oidc_providers = {
     main = {

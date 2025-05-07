@@ -170,6 +170,7 @@ process_and_replace_templates "$repo_dir"
 
 original_dir="$PWD"
 
+# TODO need new way to get helm charts pushed
 # Package and push Helm Charts to ECR
 package_and_push_helm_chart "$repo_dir/helm-charts" "helm-tenant-chart" "$ecr_helm_chart_url_base"
 package_and_push_helm_chart "$repo_dir/helm-charts" "application-chart" "$ecr_helm_chart_url_base"

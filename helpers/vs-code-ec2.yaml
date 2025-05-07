@@ -1,0 +1,267 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: This stack creates an EC2 instance with VS Code server environment.
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: "eks-saas-gitops"
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t3.large
+    AllowedValues:
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+  AllowedIP:
+    Description: Allowed IP address for connecting to the VSCode server (CIDR)
+    AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+    Type: String
+    Default: 0.0.0.0/0
+  LatestAmiId:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+
+Resources:
+  ################## PERMISSIONS AND ROLES #################
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: eks-saas-gitops-admin
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - ssm.amazonaws.com
+                - eks.amazonaws.com
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: "/"
+
+  ################## ARTIFACTS BUCKET ###############
+  OutputBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  ################## VPC etc ######################
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vscode-vpc # This is the tag Terraform will look for
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.1.0/24"
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vscode-subnet
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vscode-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Route Table
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vscode-rt
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  ################## SSM Bootstrap for VS Code ##################
+  SSMDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Tags:
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+      DocumentType: Command
+      Content:
+        schemaVersion: "2.2"
+        description: Bootstrap VS Code Instance
+        mainSteps:
+          - action: aws:runShellScript
+            name: VSCodebootstrap
+            inputs:
+              runCommand:
+                - "#!/bin/bash"
+                - "mkdir -p /home/ec2-user/environment"
+                - "chown -R ec2-user:ec2-user /home/ec2-user/environment"
+                - "curl -fsSL https://code-server.dev/install.sh | sudo -u ec2-user sh"
+                - "export CODER_PASSWORD=$(openssl rand -base64 12)"
+                - "mkdir -p /home/ec2-user/.config/code-server/"
+                - "echo 'bind-addr: 0.0.0.0:8080' > /home/ec2-user/.config/code-server/config.yaml"
+                - "echo 'auth: password' >> /home/ec2-user/.config/code-server/config.yaml"
+                - "echo password: $CODER_PASSWORD >> /home/ec2-user/.config/code-server/config.yaml"
+                - "chown -R ec2-user:ec2-user /home/ec2-user/.config/"
+                - 'aws ssm put-parameter --name ''coder-password'' --type ''String'' --value "$CODER_PASSWORD" --overwrite'
+                - "yum update -y"
+                - "yum install -y docker && systemctl start docker && systemctl enable docker"
+                - "yum install -y vim git jq bash-completion moreutils gettext yum-utils perl-Digest-SHA"
+                - "yum install -y git-lfs"
+                - "yum install -y tree"
+                - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                - "chmod +x kubectl && mv kubectl /usr/local/bin/"
+                - "/usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl"
+                - "curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash"
+                - "/usr/local/bin/helm completion bash > /etc/bash_completion.d/helm"
+                - curl --silent --location "https://github.com/fluxcd/flux2/releases/download/v2.2.3/flux_2.2.3_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                - "mv /tmp/flux /usr/local/bin"
+                - "/usr/local/bin/flux completion bash > /etc/bash_completion.d/flux"
+                - "wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq"
+                - "yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo"
+                - "yum -y install terraform"
+                - export TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds:60")
+                - export AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/') && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
+                - "git clone https://github.com/ande28em/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops"
+                - "chown -R ec2-user:ec2-user /home/ec2-user/environment"
+                - "sudo -u ec2-user nohup /usr/bin/code-server --port 8080 --host 0.0.0.0 > /dev/null 2>&1 &"
+                - "export WAIT_HANDLE_URL=$(aws ssm get-parameter --name '/eks-saas-gitops/waitcondition-url' --query 'Parameter.Value' --output text --region $AWS_REGION)"
+                - 'curl -X PUT -H ''Content-Type: application/json'' --data-binary ''{"Status" : "SUCCESS", "Reason" : "Environment Completed", "UniqueId" : "123456", "Data" : "Complete"}'' "$WAIT_HANDLE_URL"'
+
+  SSMBootstrapAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      Name: !Ref SSMDocument
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref OutputBucket
+          OutputS3KeyPrefix: bootstrapoutput
+      Targets:
+        - Key: tag:SSMBootstrapSaaSGitOps
+          Values:
+            - Active
+
+  ################## WAIT CONDITION ##################
+  WaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    DependsOn: SSMBootstrapAssociation
+    Properties:
+      Handle: !Ref WaitHandle
+      Timeout: "2000"
+
+  WaitConditionUrlParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: !Sub /${EnvironmentName}/waitcondition-url
+      Type: "String"
+      Value: !Ref WaitHandle
+
+  ################## Instance Profile ##################
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - Ref: EC2Role
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PublicSubnet
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Instance
+        - Key: SSMBootstrapSaaSGitOps
+          Value: Active
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: EC2SecurityGroup
+      GroupDescription: Allow SSH and Code-Server access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref AllowedIP
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AllowedIP
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vscode-sg
+        - Key: Environment
+          Value: !Sub ${EnvironmentName}
+
+Outputs:
+  VsCodeIdeUrl:
+    Description: The URL to access VS Code IDE
+    Value: !Sub "http://${EC2Instance.PublicDnsName}:8080/?folder=/home/ec2-user/environment"
+  VsCodePassword:
+    Description: The VS Code IDE password
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/systems-manager/parameters/coder-password"

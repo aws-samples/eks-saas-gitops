@@ -14,14 +14,6 @@ Before initiating the setup process, please ensure the following tools are insta
 
 ## Installation Steps
 
-### Step 1: Configure SSH Known Hosts
-To securely clone repositories, you must add AWS CodeCommit to your `known_hosts`. Replace `AWS_REGION` with your target AWS region:
-
-```bash
-export AWS_REGION=""
-ssh-keyscan "git-codecommit.$AWS_REGION.amazonaws.com" >> ~/.ssh/known_hosts
-```
-
 ### Step 1: Run the Installation Script
 The `install.sh` script will deploy the AWS and Gitea infrastructure.
 

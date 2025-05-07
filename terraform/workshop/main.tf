@@ -130,10 +130,6 @@ module "eks" {
   cluster_version                = var.cluster_version
   cluster_endpoint_public_access = true
 
-  # Enable cluster encryption
-  cluster_encryption_config = {
-    resources = ["secrets"]
-  }
 
   node_security_group_tags = {
     "kubernetes.io/cluster/${local.name}" = null

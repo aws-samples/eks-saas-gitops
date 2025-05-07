@@ -130,16 +130,6 @@ module "eks" {
   cluster_version                = var.cluster_version
   cluster_endpoint_public_access = true
 
-  # KMS key configuration for cluster encryption
-  create_kms_key                  = true
-  kms_key_deletion_window_in_days = 7
-  kms_key_enable_default_policy   = true
-  kms_key_administrators          = ["arn:aws:sts::245889638371:assumed-role/Admin/ericmand-Isengard"]
-
-  # Enable cluster encryption
-  cluster_encryption_config = {
-    resources = ["secrets"]
-  }
 
   node_security_group_tags = {
     "kubernetes.io/cluster/${local.name}" = null

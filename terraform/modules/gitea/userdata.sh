@@ -186,3 +186,6 @@ curl -s -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
     "http://localhost:${GITEA_PORT}/api/v1/user/repos" | grep -o '"name":"[^"]*"' | cut -d'"' -f4
 
 echo "Gitea setup complete"
+
+# TODO Generate token for Flux and store in SSM
+

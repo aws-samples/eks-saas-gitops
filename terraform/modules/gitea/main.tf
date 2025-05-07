@@ -104,6 +104,7 @@ resource "aws_iam_role_policy" "ssm_access" {
   })
 }
 
+# TODO add managed policy for SSM instance connect
 resource "aws_iam_instance_profile" "gitea" {
   name = "${var.name}-profile"
   role = aws_iam_role.gitea.name

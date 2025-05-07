@@ -96,7 +96,8 @@ resource "aws_iam_role_policy" "ssm_access" {
       {
         Effect = "Allow"
         Action = [
-          "ssm:GetParameter"
+          "ssm:GetParameter",
+          "ssm:PutParameter"
         ]
         Resource = ["arn:aws:ssm:*:*:parameter/eks-saas-gitops/*"]
       }
@@ -104,7 +105,11 @@ resource "aws_iam_role_policy" "ssm_access" {
   })
 }
 
-# TODO add managed policy for SSM instance connect
+resource "aws_iam_role_policy_attachment" "ssm_instance_connect" {
+  role       = aws_iam_role.gitea.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "gitea" {
   name = "${var.name}-profile"
   role = aws_iam_role.gitea.name

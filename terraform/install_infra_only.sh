@@ -80,7 +80,7 @@ deploy_terraform_infra() {
     echo "Gitea server public IP: ${GITEA_PUBLIC_IP}"
     echo "Gitea server private IP: ${GITEA_PRIVATE_IP}"
     
-    # Ensure we have a valid private IP before proceeding
+    # Ensure we have a valid IP before proceeding
     if [ -z "$GITEA_PRIVATE_IP" ] || [ "$GITEA_PRIVATE_IP" == "None" ] || [ "$GITEA_PRIVATE_IP" == "null" ]; then
         echo "ERROR: Could not determine Gitea private IP address. Please check if the Gitea instance is running."
         exit 1
@@ -120,12 +120,6 @@ deploy_terraform_infra() {
     # Create flux-secrets.yaml file using existing keys from CloudFormation
     echo "Creating flux-secrets.yaml file..."
     
-    # Check if SSH keys exist
-    if [ ! -f ~/.ssh/id_rsa ] || [ ! -f ~/.ssh/id_rsa.pub ]; then
-        echo "ERROR: SSH keys not found at ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub"
-        exit 1
-    fi
-    
     # Use existing keys from CloudFormation
     cat > "flux-secrets.yaml" << EOF
 secret:
@@ -139,19 +133,13 @@ $(sed 's/^/      /' ~/.ssh/id_rsa.pub)
 $(sed 's/^/      /' "${KNOWN_HOSTS_FILE}")
 EOF
 
-    # Verify the file was created and has content
-    if [ ! -s "flux-secrets.yaml" ]; then
-        echo "ERROR: flux-secrets.yaml is empty or was not created properly."
-        exit 1
-    else
-        echo "Created flux-secrets.yaml at $(pwd)/flux-secrets.yaml"
-        echo "File size: $(wc -l < flux-secrets.yaml) lines"
-    fi
+    echo "Created flux-secrets.yaml at $(pwd)/flux-secrets.yaml"
+    echo "File size: $(wc -l < flux-secrets.yaml) lines"
         
     # Get the AWS region from Terraform or environment variable
     AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo ${AWS_REGION:-$(aws configure get region)})
     
-    # Configure kubectl to connect to the new cluster
+    # Configure kubectl to connect to the new cluster with explicit region
     if [ -n "$AWS_REGION" ]; then
         echo "Configuring kubectl for region: $AWS_REGION"
         aws eks update-kubeconfig --name eks-saas-gitops --region "$AWS_REGION"
@@ -161,27 +149,16 @@ EOF
     fi
 }
 
+# Setup SSH key for Gitea using basic authentication
 setup_gitea_ssh() {
-        echo "Setting up SSH key for Gitea..."
+    echo "Setting up SSH key for Gitea..."
     
     # Get Gitea information - reusing variables from earlier in the script
     GITEA_URL="http://${GITEA_PRIVATE_IP}:3000"
     GITEA_USER="admin"
     
-    # Get existing token from SSM
-    GITEA_TOKEN=$(aws ssm get-parameter \
-        --name "/eks-saas-gitops/gitea-flux-token" \
-        --with-decryption \
-        --query 'Parameter.Value' \
-        --output text)
+    echo "Using basic authentication to add SSH key..."
     
-    if [ -z "$GITEA_TOKEN" ] || [ "$GITEA_TOKEN" == "None" ]; then
-        echo "ERROR: Could not retrieve Gitea token from SSM"
-        exit 1
-    fi
-    
-    echo "Successfully retrieved Gitea token from SSM"
-
     # Use the specific SSH public key from the environment directory
     SSH_PUBLIC_KEY_PATH="$HOME/environment/flux.pub"
     if [ ! -f "$SSH_PUBLIC_KEY_PATH" ]; then
@@ -189,23 +166,36 @@ setup_gitea_ssh() {
         exit 1
     fi
 
-    # Add SSH public key to the admin user
-    echo "Adding SSH public key to Gitea admin user..."
+    # Add SSH public key to the admin user using basic authentication
     PUBLIC_KEY=$(cat "$SSH_PUBLIC_KEY_PATH")
     KEY_RESPONSE=$(curl -s -X POST \
       "${GITEA_URL}/api/v1/user/keys" \
       -H "Content-Type: application/json" \
-      -H "Authorization: token ${GITEA_TOKEN}" \
+      -u "${GITEA_USER}:${GITEA_PASSWORD}" \
       -d "{\"title\":\"flux-key\", \"key\":\"${PUBLIC_KEY}\"}")
 
     if [[ "$KEY_RESPONSE" == *"id"* ]]; then
         echo "Successfully added SSH key to Gitea admin user"
     else
-        echo "Failed to add SSH key. Response: $KEY_RESPONSE"
+        echo "Failed to add SSH key with basic auth. Response: $KEY_RESPONSE"
         exit 1
     fi
 
     echo "Gitea SSH setup completed successfully!"
+}
+
+# Apply Flux and GitOps infrastructure
+apply_flux() {
+    # Verify flux-secrets.yaml exists before proceeding
+    if [ ! -f "flux-secrets.yaml" ]; then
+        echo "ERROR: flux-secrets.yaml not found. Cannot proceed with Flux setup."
+        exit 1
+    fi
+    
+    echo "Applying GitOps infrastructure and Flux..."
+    terraform apply -target=module.gitops_saas_infra -target=module.flux_v2 --auto-approve
+    
+    echo "Flux and GitOps infrastructure applied successfully."
 }
 
 # Print the setup information
@@ -226,8 +216,18 @@ print_setup_info() {
 main() {
     check_prerequisites
     deploy_terraform_infra
-    setup_gitea_ssh
+    setup_gitea_ssh  # Add SSH key to Gitea
     print_setup_info
+    
+    # No interactive prompt - proceed with Flux setup automatically
+    echo "Proceeding with Flux setup..."
+    apply_flux
+    echo "=============================="
+    echo "Flux Setup Complete!"
+    echo "=============================="
+    echo "You can now check the status of Flux with:"
+    echo "kubectl get pods -n flux-system"
+    echo "=============================="
 }
 
 # Run the script

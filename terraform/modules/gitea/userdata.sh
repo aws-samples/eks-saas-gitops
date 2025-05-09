@@ -86,7 +86,7 @@ FLUX_TOKEN_RESPONSE=$(curl -s -X POST \
   "http://localhost:${GITEA_PORT}/api/v1/users/${GITEA_ADMIN_USER}/tokens" \
   -H "Content-Type: application/json" \
   -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
-  -d "{\"name\":\"${FLUX_TOKEN_NAME}\", \"scopes\": [\"write:admin\"]}")
+  -d "{\"name\":\"${FLUX_TOKEN_NAME}\", \"scopes\": [\"write:repository\", \"write:user\"]}")
 
 # Extract the token from the response
 FLUX_TOKEN=$(echo $FLUX_TOKEN_RESPONSE | grep -o '"sha1":"[^"]*' | cut -d'"' -f4)
@@ -114,7 +114,7 @@ if [ -z "$FLUX_TOKEN" ]; then
           "http://localhost:${GITEA_PORT}/api/v1/users/${GITEA_ADMIN_USER}/tokens" \
           -H "Content-Type: application/json" \
           -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
-          -d "{\"name\":\"${NEW_TOKEN_NAME}\", \"scopes\": [\"write:admin\"]}")
+          -d "{\"name\":\"${NEW_TOKEN_NAME}\", \"scopes\": [\"write:repository\", \"write:user\"]}")
         
         FLUX_TOKEN=$(echo $FLUX_TOKEN_RESPONSE | grep -o '"sha1":"[^"]*' | cut -d'"' -f4)
     fi

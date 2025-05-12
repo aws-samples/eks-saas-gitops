@@ -2,7 +2,7 @@
 provider "gitea" {
   base_url = "http://${module.gitea.private_ip}:${var.gitea_port}"
   token    = data.aws_ssm_parameter.gitea_token.value
-  insecure = true # Since you're likely using self-signed certificates
+  insecure = true
 }
 
 data "aws_eks_cluster_auth" "this" {
@@ -258,17 +258,21 @@ data "aws_ssm_parameter" "gitea_token" {
   with_decryption = true
 }
 
-resource "gitea_repository" "flux_system" {
-  username    = var.gitea_admin_user
-  name        = "flux-system"
-  description = "Flux system repository for GitOps"
-  private     = false
-  auto_init   = true
+# Clone main repo
+resource "gitea_repository" "eks-saas-gitops" {
+  username       = var.gitea_admin_user
+  name           = "eks-saas-gitops"
+  description    = "GitOps SaaS Repository"
+  private        = false
+  auto_init      = false
+  clone_addr     = "https://github.com/ande28em/eks-saas-gitops.git"
+  mirror         = false
+  default_branch = "feat/gitea"
 
   depends_on = [module.gitea]
 }
 
-# Create repositories for each microservice
+# Create repositories for each microservice (not cloned currently)
 resource "gitea_repository" "microservices" {
   for_each = var.microservices
 
@@ -280,11 +284,3 @@ resource "gitea_repository" "microservices" {
 
   depends_on = [module.gitea]
 }
-
-
-# Need gitea token in SSM to grab here for flux setup
-
-# TODO 1. add gitops saas module
-
-# TODO 2. Configmap
-

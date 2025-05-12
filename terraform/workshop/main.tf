@@ -1,6 +1,6 @@
 # DataSources
 provider "gitea" {
-  base_url = "http://${module.gitea.private_ip}:${var.gitea_port}/api/v1"
+  base_url = "http://${module.gitea.private_ip}:${var.gitea_port}"
   token    = data.aws_ssm_parameter.gitea_token.value
   insecure = true # Since you're likely using self-signed certificates
 }

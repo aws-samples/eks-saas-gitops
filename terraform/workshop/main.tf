@@ -218,22 +218,49 @@ resource "gitea_repository" "eks-saas-gitops" {
   description    = "GitOps SaaS Repository"
   private        = false
   auto_init      = false
-  clone_addr     = "https://github.com/ande28em/eks-saas-gitops.git"
+  clone_addr     = "https://github.com/lusoal/gitops-manifests-template"
   mirror         = false
-  default_branch = "feat/gitea"
+  default_branch = "main"
 
   depends_on = [module.gitea]
 }
 
-# Create repositories for each microservice (not cloned currently)
-resource "gitea_repository" "microservices" {
-  for_each = var.microservices
+# Create repositories for each microservice with cloning
+resource "gitea_repository" "producer" {
+  username       = var.gitea_admin_user
+  name           = "producer"
+  description    = "Producer microservice repository"
+  private        = false
+  auto_init      = false
+  clone_addr     = "https://github.com/lusoal/producer-template"
+  mirror         = false
+  default_branch = "main"
 
-  username    = var.gitea_admin_user
-  name        = each.key
-  description = each.value.description
-  private     = false
-  auto_init   = true
+  depends_on = [module.gitea]
+}
+
+resource "gitea_repository" "consumer" {
+  username       = var.gitea_admin_user
+  name           = "consumer"
+  description    = "Consumer microservice repository"
+  private        = false
+  auto_init      = false
+  clone_addr     = "https://github.com/lusoal/consumer-template"
+  mirror         = false
+  default_branch = "main"
+
+  depends_on = [module.gitea]
+}
+
+resource "gitea_repository" "payments" {
+  username       = var.gitea_admin_user
+  name           = "payments"
+  description    = "Payments microservice repository"
+  private        = false
+  auto_init      = false
+  clone_addr     = "https://github.com/lusoal/payments-template"
+  mirror         = false
+  default_branch = "main"
 
   depends_on = [module.gitea]
 }

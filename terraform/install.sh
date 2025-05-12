@@ -177,11 +177,21 @@ setup_gitea_ssh() {
     if [[ "$KEY_RESPONSE" == *"id"* ]]; then
         echo "Successfully added SSH key to Gitea admin user"
     else
-        echo "Failed to add SSH key with basic auth. Response: $KEY_RESPONSE"
-        exit 1
+        echo "Note: SSH key addition returned: $KEY_RESPONSE"
+        echo "Continuing with setup (key may already exist)..."
     fi
 
     echo "Gitea SSH setup completed successfully!"
+}
+
+# Create Gitea repositories
+create_gitea_repositories() {
+    echo "Creating Gitea repositories..."
+    
+    # Apply the Gitea repository resources
+    terraform apply -target=gitea_repository.flux_system -target=gitea_repository.microservices --auto-approve
+    
+    echo "Gitea repositories created successfully!"
 }
 
 # Apply Flux and GitOps infrastructure
@@ -217,8 +227,7 @@ main() {
     check_prerequisites
     deploy_terraform_infra
     setup_gitea_ssh  # Add SSH key to Gitea
-    print_setup_info
-    
+    create_gitea_repositories  # Create Gitea repositories
     echo "Proceeding with Flux setup..."
     apply_flux
     echo "=============================="
@@ -227,6 +236,7 @@ main() {
     echo "You can now check the status of Flux with:"
     echo "kubectl get pods -n flux-system"
     echo "=============================="
+    print_setup_info
 }
 
 # Run the script

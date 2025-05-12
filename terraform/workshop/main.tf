@@ -205,6 +205,36 @@ resource "aws_route" "gitea_to_vscode" {
 # Kubernetes Resources
 ################################################################################
 
+# Get the Gitea token from SSM Parameter Store
+data "aws_ssm_parameter" "gitea_token" {
+  name            = "/eks-saas-gitops/gitea-flux-token"
+  with_decryption = true
+}
+
+resource "gitea_repository" "flux_system" {
+  username    = var.gitea_admin_user
+  name        = "flux-system"
+  description = "Flux system repository for GitOps"
+  private     = false
+  auto_init   = true
+
+  depends_on = [module.gitea]
+}
+
+# Create repositories for each microservice
+resource "gitea_repository" "microservices" {
+  for_each = var.microservices
+
+  username    = var.gitea_admin_user
+  name        = each.key
+  description = each.value.description
+  private     = false
+  auto_init   = true
+
+  depends_on = [module.gitea]
+}
+
+
 # Create the flux-system namespace, needed for GitOps SaaS Infra ConfigMap
 resource "kubernetes_namespace" "flux_system" {
   metadata {

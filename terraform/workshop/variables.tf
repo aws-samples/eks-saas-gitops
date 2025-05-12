@@ -7,7 +7,7 @@ variable "name" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-1"  # Setting a default region
+  default     = "us-east-1" # Setting a default region
 }
 
 variable "vpc_cidr" {
@@ -64,4 +64,40 @@ variable "gitea_ssh_port" {
 variable "gitea_admin_user" {
   description = "Gitea admin username"
   default     = "admin"
+}
+
+variable "microservices" {
+  description = "Configuration for each microservice"
+  type = map(object({
+    description : string
+    default_branch : string
+    codebuild_project_name : string
+    pipeline_name : string
+  }))
+  default = {
+    "producer" = {
+      description            = "Producer microservice repository",
+      default_branch         = "main",
+      codebuild_project_name = "producer-codebuild",
+      pipeline_name          = "producer-pipeline",
+    },
+    "consumer" = {
+      description            = "Consumer microservice repository",
+      default_branch         = "main",
+      codebuild_project_name = "consumer-codebuild",
+      pipeline_name          = "consumer-pipeline",
+    },
+    "payments" = {
+      description            = "Payments microservice repository",
+      default_branch         = "main",
+      codebuild_project_name = "payments-codebuild",
+      pipeline_name          = "payments-pipeline",
+    },
+    "onboarding_service" = {
+      description            = "Onboarding microservice repository",
+      default_branch         = "main",
+      codebuild_project_name = "onboarding-codebuild",
+      pipeline_name          = "onboarding-pipeline",
+    }
+  }
 }

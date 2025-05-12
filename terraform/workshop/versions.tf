@@ -22,5 +22,9 @@ terraform {
       source  = "hashicorp/local"
       version = ">= 2.4.0"
     }
+    gitea = {
+      source  = "go-gitea/gitea"
+      version = "~> 0.6.0"
+    }
   }
 }

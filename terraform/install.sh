@@ -189,7 +189,7 @@ create_gitea_repositories() {
     echo "Creating Gitea repositories..."
     
     # Apply the Gitea repository resources
-    terraform apply -target=gitea_repository.flux_system -target=gitea_repository.microservices --auto-approve
+    terraform apply -target=gitea_repository.eks-saas-gitops -target=gitea_repository.producer -target=gitea_repository.consumer -target=gitea_repository.payments --auto-approve
     
     echo "Gitea repositories created successfully!"
 }

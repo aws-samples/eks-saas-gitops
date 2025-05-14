@@ -3,7 +3,6 @@ provider "gitea" {
   base_url = "http://${module.gitea.private_ip}:${var.gitea_port}"
   token    = data.aws_ssm_parameter.gitea_token.value
   insecure = true
-  timeout  = 120
 }
 
 data "aws_eks_cluster_auth" "this" {
@@ -257,57 +256,57 @@ resource "aws_route" "gitea_to_vscode" {
 data "aws_ssm_parameter" "gitea_token" {
   name            = "/eks-saas-gitops/gitea-flux-token"
   with_decryption = true
-  
+
   # Add a depends_on to ensure the Gitea instance has had time to create the token
   depends_on = [module.gitea]
 }
 
 # Clone main repo
 resource "gitea_repository" "eks-saas-gitops" {
-  username                     = var.gitea_admin_user
-  name                         = "eks-saas-gitops"
-  description                  = "GitOps SaaS Repository"
-  private                      = false
-  mirror                       = true
-  migration_clone_addresse     = "https://github.com/lusoal/gitops-manifests-template.git"
-  migration_service            = "github"
+  username                 = var.gitea_admin_user
+  name                     = "eks-saas-gitops"
+  description              = "GitOps SaaS Repository"
+  private                  = false
+  mirror                   = true
+  migration_clone_addresse = "https://github.com/lusoal/gitops-manifests-template.git"
+  migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 # Create repositories for each microservice with mirroring
 resource "gitea_repository" "producer" {
-  username                     = var.gitea_admin_user
-  name                         = "producer"
-  description                  = "Producer microservice repository"
-  private                      = false
-  mirror                       = true
-  migration_clone_addresse     = "https://github.com/lusoal/producer-template.git"
-  migration_service            = "github"
+  username                 = var.gitea_admin_user
+  name                     = "producer"
+  description              = "Producer microservice repository"
+  private                  = false
+  mirror                   = true
+  migration_clone_addresse = "https://github.com/lusoal/producer-template.git"
+  migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 resource "gitea_repository" "consumer" {
-  username                     = var.gitea_admin_user
-  name                         = "consumer"
-  description                  = "Consumer microservice repository"
-  private                      = false
-  mirror                       = true
-  migration_clone_addresse     = "https://github.com/lusoal/consumer-template.git"
-  migration_service            = "github"
+  username                 = var.gitea_admin_user
+  name                     = "consumer"
+  description              = "Consumer microservice repository"
+  private                  = false
+  mirror                   = true
+  migration_clone_addresse = "https://github.com/lusoal/consumer-template.git"
+  migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 resource "gitea_repository" "payments" {
-  username                     = var.gitea_admin_user
-  name                         = "payments"
-  description                  = "Payments microservice repository"
-  private                      = false
-  mirror                       = true
-  migration_clone_addresse     = "https://github.com/lusoal/payments-template.git"
-  migration_service            = "github"
+  username                 = var.gitea_admin_user
+  name                     = "payments"
+  description              = "Payments microservice repository"
+  private                  = false
+  mirror                   = true
+  migration_clone_addresse = "https://github.com/lusoal/payments-template.git"
+  migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }

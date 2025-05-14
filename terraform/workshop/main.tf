@@ -267,7 +267,7 @@ resource "gitea_repository" "eks-saas-gitops" {
   name                     = "eks-saas-gitops"
   description              = "GitOps SaaS Repository"
   private                  = false
-  mirror                   = true
+  mirror                   = false
   migration_clone_addresse = "https://github.com/lusoal/gitops-manifests-template.git"
   migration_service        = "git"
 
@@ -280,7 +280,7 @@ resource "gitea_repository" "producer" {
   name                     = "producer"
   description              = "Producer microservice repository"
   private                  = false
-  mirror                   = true
+  mirror                   = false
   migration_clone_addresse = "https://github.com/lusoal/producer-template.git"
   migration_service        = "git"
 
@@ -292,7 +292,7 @@ resource "gitea_repository" "consumer" {
   name                     = "consumer"
   description              = "Consumer microservice repository"
   private                  = false
-  mirror                   = true
+  mirror                   = false
   migration_clone_addresse = "https://github.com/lusoal/consumer-template.git"
   migration_service        = "git"
 
@@ -304,7 +304,7 @@ resource "gitea_repository" "payments" {
   name                     = "payments"
   description              = "Payments microservice repository"
   private                  = false
-  mirror                   = true
+  mirror                   = false
   migration_clone_addresse = "https://github.com/lusoal/payments-template.git"
   migration_service        = "git"
 

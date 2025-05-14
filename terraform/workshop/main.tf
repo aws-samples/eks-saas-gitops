@@ -209,6 +209,9 @@ resource "aws_route" "gitea_to_vscode" {
 data "aws_ssm_parameter" "gitea_token" {
   name            = "/eks-saas-gitops/gitea-flux-token"
   with_decryption = true
+  
+  # Add a depends_on to ensure the Gitea instance has had time to create the token
+  depends_on = [module.gitea]
 }
 
 # Clone main repo
@@ -221,7 +224,7 @@ resource "gitea_repository" "eks-saas-gitops" {
   migration_clone_addresse     = "https://github.com/lusoal/gitops-manifests-template.git"
   migration_service            = "github"
 
-  depends_on = [module.gitea]
+  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 # Create repositories for each microservice with mirroring
@@ -234,7 +237,7 @@ resource "gitea_repository" "producer" {
   migration_clone_addresse     = "https://github.com/lusoal/producer-template.git"
   migration_service            = "github"
 
-  depends_on = [module.gitea]
+  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 resource "gitea_repository" "consumer" {
@@ -246,7 +249,7 @@ resource "gitea_repository" "consumer" {
   migration_clone_addresse     = "https://github.com/lusoal/consumer-template.git"
   migration_service            = "github"
 
-  depends_on = [module.gitea]
+  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 resource "gitea_repository" "payments" {
@@ -258,7 +261,7 @@ resource "gitea_repository" "payments" {
   migration_clone_addresse     = "https://github.com/lusoal/payments-template.git"
   migration_service            = "github"
 
-  depends_on = [module.gitea]
+  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
 
 

@@ -76,116 +76,64 @@ docker exec -u git gitea gitea admin user create \
     --admin \
     --must-change-password=false
 
-# Create working directory
-WORK_DIR="/tmp/gitea-work"
-rm -rf "${WORK_DIR}"
-mkdir -p "${WORK_DIR}"
+# Generate token for Flux and store in SSM
+echo "Generating Flux API token..."
+sleep 5  # Give some time for the admin user to be fully created
 
-# Clone source repository from your GitHub
-echo "Cloning source repository from GitHub..."
-git clone https://github.com/ande28em/eks-saas-gitops.git "${WORK_DIR}/source"
+# Create a token for Flux
+FLUX_TOKEN_NAME="flux-token"
+FLUX_TOKEN_RESPONSE=$(curl -s -X POST \
+  "http://localhost:${GITEA_PORT}/api/v1/users/${GITEA_ADMIN_USER}/tokens" \
+  -H "Content-Type: application/json" \
+  -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
+  -d "{\"name\":\"${FLUX_TOKEN_NAME}\", \"scopes\": [\"write:repository\", \"write:user\", \"write:organization\"]}")
 
-# First, create a repository for the entire project to verify cloning works
-echo "Creating repository: eks-saas-gitops"
-curl -X POST "http://localhost:${GITEA_PORT}/api/v1/user/repos" \
-    -H "Content-Type: application/json" \
-    -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
-    -d "{\"name\":\"eks-saas-gitops\",\"description\":\"Complete GitHub source repository\"}" > /dev/null
+# Extract the token from the response
+FLUX_TOKEN=$(echo $FLUX_TOKEN_RESPONSE | grep -o '"sha1":"[^"]*' | cut -d'"' -f4)
 
-sleep 5
-
-# Push the entire cloned repository to Gitea
-cd "${WORK_DIR}/source"
-git remote add gitea "http://${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}@localhost:${GITEA_PORT}/${GITEA_ADMIN_USER}/eks-saas-gitops.git"
-git push -u gitea main
-
-# Check if tenant-microservices directory exists
-echo "Checking tenant-microservices directory..."
-if [ ! -d "${WORK_DIR}/source/tenant-microservices" ]; then
-    echo "Error: tenant-microservices directory not found in the cloned repository!"
-    ls -la "${WORK_DIR}/source"
-else
-    echo "Found tenant-microservices directory. Contents:"
-    ls -la "${WORK_DIR}/source/tenant-microservices"
+if [ -z "$FLUX_TOKEN" ]; then
+    echo "Failed to generate Flux token"
+    # Try to extract error message
+    ERROR_MSG=$(echo $FLUX_TOKEN_RESPONSE | grep -o '"message":"[^"]*' | cut -d'"' -f4)
+    echo "Error: $ERROR_MSG"
     
-    # Create and push individual repositories
-    for repo in "consumer" "producer" "payments"; do
-        echo "Creating repository: $repo"
+    # If token already exists, try to get it
+    if [[ "$ERROR_MSG" == *"already exists"* ]]; then
+        echo "Token already exists, trying to get existing tokens..."
+        TOKENS_RESPONSE=$(curl -s -X GET \
+          "http://localhost:${GITEA_PORT}/api/v1/users/${GITEA_ADMIN_USER}/tokens" \
+          -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}")
         
-        # Create repository
-        curl -X POST "http://localhost:${GITEA_PORT}/api/v1/user/repos" \
-            -H "Content-Type: application/json" \
-            -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
-            -d "{\"name\":\"${repo}\",\"description\":\"${repo} repository\"}" > /dev/null
+        echo "Available tokens: $TOKENS_RESPONSE"
+        # Note: We can't retrieve the actual token value of existing tokens via API
+        # Will need to create a new token with a different name
+        NEW_TOKEN_NAME="${FLUX_TOKEN_NAME}-$(date +%s)"
+        echo "Creating new token with name: $NEW_TOKEN_NAME"
         
-        sleep 5
+        FLUX_TOKEN_RESPONSE=$(curl -s -X POST \
+          "http://localhost:${GITEA_PORT}/api/v1/users/${GITEA_ADMIN_USER}/tokens" \
+          -H "Content-Type: application/json" \
+          -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
+          -d "{\"name\":\"${NEW_TOKEN_NAME}\", \"scopes\": [\"write:repository\", \"write:user\", \"write:organization\"]}")
         
-        # Check if the microservice directory exists
-        if [ -d "${WORK_DIR}/source/tenant-microservices/${repo}" ]; then
-            echo "Found ${repo} directory. Contents:"
-            ls -la "${WORK_DIR}/source/tenant-microservices/${repo}"
-            
-            # Create temp directory for this repo
-            mkdir -p "${WORK_DIR}/${repo}"
-            cp -r "${WORK_DIR}/source/tenant-microservices/${repo}/"* "${WORK_DIR}/${repo}/" || echo "Warning: Copy failed for ${repo}"
-            
-            # Initialize and push
-            cd "${WORK_DIR}/${repo}"
-            git init
-            git add .
-            git config user.email "admin@example.com"
-            git config user.name "${GITEA_ADMIN_USER}"
-            git commit -m "Initial commit"
-            git remote add origin "http://${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}@localhost:${GITEA_PORT}/${GITEA_ADMIN_USER}/${repo}.git"
-            git push -u origin main
-        else
-            echo "Warning: ${repo} directory not found in tenant-microservices!"
-        fi
-        
-        cd "${INSTALL_DIR}"
-    done
+        FLUX_TOKEN=$(echo $FLUX_TOKEN_RESPONSE | grep -o '"sha1":"[^"]*' | cut -d'"' -f4)
+    fi
 fi
 
-# Also create a repository for the main project
-echo "Creating repository: eks-saas-gitops"
-curl -X POST "http://localhost:${GITEA_PORT}/api/v1/user/repos" \
-    -H "Content-Type: application/json" \
-    -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
-    -d "{\"name\":\"eks-saas-gitops\",\"description\":\"Main EKS SaaS GitOps repository\"}" > /dev/null
-
-sleep 5
-
-# Copy the main repository content
-mkdir -p "${WORK_DIR}/eks-saas-gitops"
-cp -r "${WORK_DIR}/source"/* "${WORK_DIR}/eks-saas-gitops/"
-cp -r "${WORK_DIR}/source/.gitignore" "${WORK_DIR}/eks-saas-gitops/" 2>/dev/null || true
-
-# Remove unnecessary folders before pushing
-rm -rf "${WORK_DIR}/eks-saas-gitops/helpers" 2>/dev/null || true
-rm -rf "${WORK_DIR}/eks-saas-gitops/tenant-microservices" 2>/dev/null || true
-
-# Initialize and push the main repository
-cd "${WORK_DIR}/eks-saas-gitops"
-git init
-git add .
-git config user.email "admin@example.com"
-git config user.name "${GITEA_ADMIN_USER}"
-git commit -m "Initial commit"
-git remote add origin "http://${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}@localhost:${GITEA_PORT}/${GITEA_ADMIN_USER}/eks-saas-gitops.git"
-git push -u origin main
-git tag v0.0.1 HEAD
-git push origin v0.0.1
-cd "${INSTALL_DIR}"
-
-# Cleanup
-rm -rf "${WORK_DIR}"
-
-# List repositories
-echo "Listing created repositories:"
-curl -s -u "${GITEA_ADMIN_USER}:${GITEA_ADMIN_PASSWORD}" \
-    "http://localhost:${GITEA_PORT}/api/v1/user/repos" | grep -o '"name":"[^"]*"' | cut -d'"' -f4
+if [ -n "$FLUX_TOKEN" ]; then
+    echo "Flux token generated successfully"
+    # Store the token in SSM Parameter Store
+    aws ssm put-parameter \
+        --name "/eks-saas-gitops/gitea-flux-token" \
+        --type "SecureString" \
+        --value "$FLUX_TOKEN" \
+        --overwrite
+    
+    echo "Flux token stored in SSM Parameter Store at /eks-saas-gitops/gitea-flux-token"
+else
+    echo "Failed to generate Flux token after retry"
+fi
 
 echo "Gitea setup complete"
 
-# TODO Generate token for Flux and store in SSM
 

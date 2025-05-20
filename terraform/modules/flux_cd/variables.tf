@@ -28,7 +28,6 @@ variable "git_url" {
 variable "gitea_repo_url" {
   description = "Gitea repository URL for Flux"
   type        = string
-  default     = "http://10.35.48.146:3000/admin/eks-saas-gitops.git"
 }
 
 variable "gitea_username" {

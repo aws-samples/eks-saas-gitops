@@ -22,6 +22,25 @@ variable "git_branch" {
 variable "git_url" {
   description = "Git URL to be used by Flux"
   type        = string
+  default = ""
+}
+
+variable "gitea_repo_url" {
+  description = "Gitea repository URL for Flux"
+  type        = string
+  default     = "http://10.35.48.146:3000/admin/eks-saas-gitops.git"
+}
+
+variable "gitea_username" {
+  description = "Username for Gitea authentication"
+  type        = string
+  default     = "admin"
+}
+
+variable "gitea_token" {
+  description = "Token for Gitea authentication"
+  type        = string
+  sensitive   = true
 }
 
 variable "namespace" {

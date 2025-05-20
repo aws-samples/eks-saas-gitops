@@ -55,24 +55,24 @@ resource "aws_ecr_repository" "microservice_container" {
   }
 }
 
-module "codebuild_project" {
-  source   = "../codebuild"
-  for_each = var.microservices
+# module "codebuild_project" {
+#   source   = "../codebuild"
+#   for_each = var.microservices
 
-  vpc_id                 = var.vpc_id
-  codebuild_project_name = each.value.codebuild_project_name
-  private_subnet_list    = var.private_subnets
-  bucket_id              = aws_s3_bucket.codeartifacts.id
-  repo_uri               = aws_ecr_repository.microservice_container[each.key].repository_url
-}
+#   vpc_id                 = var.vpc_id
+#   codebuild_project_name = each.value.codebuild_project_name
+#   private_subnet_list    = var.private_subnets
+#   bucket_id              = aws_s3_bucket.codeartifacts.id
+#   repo_uri               = aws_ecr_repository.microservice_container[each.key].repository_url
+# }
 
 # TODO: Make sure this triggers off of gitea now, update repo names (for loop through microservices names)
-module "codepipeline" {
-  source   = "../codepipeline"
-  for_each = var.microservices
+# module "codepipeline" {
+#   source   = "../codepipeline"
+#   for_each = var.microservices
 
-  pipeline_name     = each.value.pipeline_name
-  codebuild_project = module.codebuild_project[each.key].name
-  repo_name         = module.codecommit[each.key].name
-  bucket_id         = aws_s3_bucket.codeartifacts.id
-}
+#   pipeline_name     = each.value.pipeline_name
+#   codebuild_project = module.codebuild_project[each.key].name
+#   repo_name         = module.codecommit[each.key].name
+#   bucket_id         = aws_s3_bucket.codeartifacts.id
+# }

@@ -76,8 +76,8 @@ variable "microservices" {
   }
 }
 
-variable "public_key_file_path" {
-  description = "Path to public key file"
-  default     = "~/.ssh/id_rsa.pub"
-}
+# variable "public_key_file_path" {
+#   description = "Path to public key file"
+#   default     = "~/.ssh/id_rsa.pub"
+# }
 

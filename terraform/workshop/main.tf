@@ -215,7 +215,7 @@ module "gitea" {
   gitea_ssh_port        = var.gitea_ssh_port
   gitea_admin_user      = var.gitea_admin_user
   gitea_admin_password  = random_password.gitea_admin.result
-  eks_security_group_id = module.eks.node_security_group_id 
+  eks_security_group_id = module.eks.node_security_group_id
 }
 
 output "gitea_password_command" {

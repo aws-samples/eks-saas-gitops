@@ -100,6 +100,36 @@ resource "kubernetes_manifest" "flux_instance" {
                 value = "--requeue-dependency=5s"
               }
             ])
+          },
+          {
+            target = {
+              kind = "ServiceAccount"
+              name = "image-automation-controller"
+            }
+            patch = yamlencode([
+              {
+                op    = "add"
+                path  = "/metadata/annotations"
+                value = {
+                  "eks.amazonaws.com/role-arn" = var.image_automation_controller_sa_annotations
+                }
+              }
+            ])
+          },
+          {
+            target = {
+              kind = "ServiceAccount"
+              name = "image-reflector-controller"
+            }
+            patch = yamlencode([
+              {
+                op    = "add"
+                path  = "/metadata/annotations"
+                value = {
+                  "eks.amazonaws.com/role-arn" = var.image_reflection_controller_sa_annotations
+                }
+              }
+            ])
           }
         ]
       }

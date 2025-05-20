@@ -11,6 +11,12 @@ MICROSERVICES_DIR="${REPO_ROOT}/tenant-microservices"
 AWS_ACCOUNT_ID=$(terraform output -raw account_id)
 AWS_REGION=$(terraform output -raw aws_region)
 
+# Get Gitea information
+GITEA_PRIVATE_IP=$(terraform output -raw gitea_private_ip)
+GITEA_PORT="3000"
+GITEA_ADMIN_USER="admin"
+GITEA_TOKEN=$(aws ssm get-parameter --name "/eks-saas-gitops/gitea-flux-token" --with-decryption --query 'Parameter.Value' --output text)
+
 # Get ECR repository URLs from terraform outputs
 PRODUCER_ECR_URL=$(terraform output -json ecr_repositories | jq -r '.producer')
 CONSUMER_ECR_URL=$(terraform output -json ecr_repositories | jq -r '.consumer')
@@ -70,4 +76,21 @@ cd "${MICROSERVICES_DIR}/payments"
 sudo docker build -t ${PAYMENTS_ECR_URL}:0.1 .
 sudo docker push ${PAYMENTS_ECR_URL}:0.1
 
-echo "Templating and image pushing completed successfully!"
+# Create tag v0.0.1 for the eks-saas-gitops repository
+echo "Creating tag v0.0.1 for the eks-saas-gitops repository..."
+TEMP_DIR=$(mktemp -d)
+cd "${TEMP_DIR}"
+
+# Clone the repository
+git clone "http://${GITEA_ADMIN_USER}:${GITEA_TOKEN}@${GITEA_PRIVATE_IP}:${GITEA_PORT}/${GITEA_ADMIN_USER}/eks-saas-gitops.git"
+cd eks-saas-gitops
+
+# Create and push the tag
+git tag -a v0.0.1 -m "Initial version"
+git push origin v0.0.1
+
+# Clean up
+cd "${REPO_ROOT}"
+rm -rf "${TEMP_DIR}"
+
+echo "Templating, image pushing, and tag creation completed successfully!"

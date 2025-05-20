@@ -203,8 +203,9 @@ apply_flux() {
     fi
     
     echo "Applying GitOps infrastructure and Flux..."
-    terraform apply -target=module.gitops_saas_infra -target=module.flux_v2 --auto-approve
-    
+    terraform apply -target=module.gitops_saas_infra -target=kubernetes_config_map.saas_infra_outputs --auto-approve
+    terraform apply -target=module.flux_v2 --auto-approve
+
     echo "Flux and GitOps infrastructure applied successfully."
 }
 

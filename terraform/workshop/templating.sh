@@ -34,11 +34,20 @@ aws ecr get-login-password --region ${AWS_REGION} | sudo docker login --username
 echo "Packaging and pushing Helm charts to ECR..."
 cd "${HELM_CHARTS_DIR}"
 
-# Package tenant chart
+# Login to Helm registry
 aws ecr get-login-password --region ${AWS_REGION} | helm registry login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+# Package and push tenant chart
+echo "Packaging and pushing tenant chart..."
 helm package helm-tenant-chart
 TENANT_CHART_PACKAGE=$(ls helm-tenant-chart-*.tgz)
 helm push ${TENANT_CHART_PACKAGE} oci://${ECR_HELM_CHART_URL}
+
+# Package and push application chart
+echo "Packaging and pushing application chart..."
+helm package application-chart
+APPLICATION_CHART_PACKAGE=$(ls application-chart-*.tgz)
+helm push ${APPLICATION_CHART_PACKAGE} oci://${ECR_HELM_CHART_URL}
 
 # Build and push Docker images with tag 0.1
 echo "Building and pushing Docker images to ECR..."

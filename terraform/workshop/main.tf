@@ -1,10 +1,4 @@
 # DataSources
-provider "gitea" {
-  base_url = "http://${module.gitea.private_ip}:${var.gitea_port}"
-  token    = data.aws_ssm_parameter.gitea_token.value
-  insecure = true
-}
-
 data "aws_eks_cluster_auth" "this" {
   name = module.eks.cluster_name
 }
@@ -34,6 +28,12 @@ data "aws_route_tables" "vscode" {
 }
 
 # Providers
+provider "gitea" {
+  base_url = "http://${module.gitea.private_ip}:${var.gitea_port}"
+  token    = data.aws_ssm_parameter.gitea_token.value
+  insecure = true
+}
+
 provider "aws" {
   region = var.aws_region
 }
@@ -160,14 +160,14 @@ module "eks" {
 
   manage_aws_auth_configmap = true
   aws_auth_roles = [
-    # {
-    #   rolearn  = module.gitops_saas_infra.karpenter_node_role_arn
-    #   username = "system:node:{{EC2PrivateDNSName}}"
-    #   groups = [
-    #     "system:bootstrappers",
-    #     "system:nodes",
-    #   ]
-    # }
+    {
+      rolearn  = module.gitops_saas_infra.karpenter_node_role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups = [
+        "system:bootstrappers",
+        "system:nodes",
+      ]
+    }
   ]
   eks_managed_node_groups = {
     baseline-infra = {
@@ -215,7 +215,7 @@ module "gitea" {
   gitea_ssh_port        = var.gitea_ssh_port
   gitea_admin_user      = var.gitea_admin_user
   gitea_admin_password  = random_password.gitea_admin.result
-  eks_security_group_id = module.eks.cluster_security_group_id
+  eks_security_group_id = module.eks.node_security_group_id 
 }
 
 output "gitea_password_command" {

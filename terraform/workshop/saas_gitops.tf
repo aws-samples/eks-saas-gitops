@@ -28,6 +28,8 @@ resource "kubernetes_config_map" "saas_infra_outputs" {
     # Cluster information
     cluster_endpoint             = module.eks.cluster_endpoint
     cluster_name                 = module.eks.cluster_name
+    aws_region                   = var.aws_region
+    account_id                   = data.aws_caller_identity.current.account_id
     
     # IAM roles
     karpenter_node_role_arn      = module.gitops_saas_infra.karpenter_node_role_arn
@@ -44,6 +46,7 @@ resource "kubernetes_config_map" "saas_infra_outputs" {
     ecr_helm_chart_url           = module.gitops_saas_infra.ecr_helm_chart_url
     ecr_helm_chart_url_application = module.gitops_saas_infra.ecr_helm_chart_url_application
     ecr_argoworkflow_container   = module.gitops_saas_infra.ecr_argoworkflow_container
+    ecr_helm_chart_url_base      = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url)) - 1))
     
     # SQS queues
     argoworkflows_onboarding_queue_url  = module.gitops_saas_infra.argoworkflows_onboarding_queue_url

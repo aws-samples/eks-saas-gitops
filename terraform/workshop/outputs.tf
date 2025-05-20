@@ -75,6 +75,11 @@ output "ecr_helm_chart_url_application" {
   value       = module.gitops_saas_infra.ecr_helm_chart_url_application
 }
 
+output "ecr_helm_chart_url_base" {
+  description = "Base URL for Amazon ECR (without repository name)"
+  value       = join("/", slice(split("/", module.gitops_saas_infra.ecr_helm_chart_url), 0, length(split("/", module.gitops_saas_infra.ecr_helm_chart_url)) - 1))
+}
+
 output "ecr_argoworkflow_container" {
   description = "URL for Amazon ECR stored Argo Workflows container"
   value       = module.gitops_saas_infra.ecr_argoworkflow_container

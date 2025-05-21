@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # map templates and helm release folders -- this is mounted on 01-tenant-clone-repo.sh
-manifests_path="/mnt/vol/eks-saas-gitops/application-plane/production/tenants"
+repo_root_path="/mnt/vol/eks-saas-gitops"
+manifests_path="${repo_root_path}/application-plane/production/tenants"
 
 main() {
     local tenant_id="$1"
@@ -15,7 +16,12 @@ main() {
     remove_tenant_helm_release "${tenant_id}" "${tenant_tier}"
 
     # configure git user
-    configure_git "${git_user_email}" "${git_user_name}" "${git_token}"
+    # configure_git "${git_user_email}" "${git_user_name}" "${git_token}"
+
+    # Configure git user
+    git config --global user.email "${git_user_email}"
+    git config --global user.name "${git_user_name}"
+    echo "DEBUG: Git user configured"
 
     # push updated helm releases
     commit_files "${repository_branch}" "${tenant_tier}" "${tenant_id}" "${git_user_name}" "${git_token}"
@@ -45,10 +51,16 @@ configure_git() {
     git config --global user.email "${git_user_email}"
     git config --global user.name "${git_user_name}"
     
-    # Store credentials for HTTPS
-    git config --global credential.helper store
-    echo "https://${git_user_name}:${git_token}@$(echo $REPO_URL | sed 's|https://||')" > ~/.git-credentials
-    chmod 600 ~/.git-credentials
+    # Configure Git to use the provided credentials directly
+    git config --global credential.helper 'store --file=/tmp/git-credentials'
+    
+    # Get the original URL and extract host with port
+    REPO_URL=$(git -C ${repo_root_path} remote get-url origin)
+    HOST_WITH_PORT=$(echo "$REPO_URL" | sed -E 's|^http://||' | cut -d'/' -f1)
+    
+    # Store credentials with correct format
+    echo "http://${git_user_name}:${git_token}@${HOST_WITH_PORT}" > /tmp/git-credentials
+    chmod 600 /tmp/git-credentials
 }
 
 commit_files() {
@@ -58,20 +70,30 @@ commit_files() {
     local git_user_name="$4"
     local git_token="$5"
     
-    cd /mnt/vol/eks-saas-gitops/ || exit 1
+    cd ${repo_root_path} || exit 1
     git status
     git add .
     git commit -am "Removing tenant ${tenant_id} in tier ${tenant_tier}"
     
-    # Extract protocol and domain from remote URL
-    REPO_URL=$(git remote get-url origin)
-    PROTOCOL_AND_DOMAIN=$(echo $REPO_URL | grep -o "^[^/]*//[^/]*")
+    # Get the original URL
+    REPO_URL=$(git -C ${repo_root_path} remote get-url origin)
     
-    # Create URL with authentication
-    AUTH_URL="${PROTOCOL_AND_DOMAIN/\/\//\/\/$git_user_name:$git_token@}$(echo $REPO_URL | sed "s|^[^/]*//[^/]*||")"
+    # Check if URL already has credentials
+    if [[ "$REPO_URL" == *"@"* ]]; then
+        # URL already has credentials, use it directly
+        AUTH_URL="$REPO_URL"
+    else
+        # Extract protocol and domain from URL
+        PROTOCOL_AND_DOMAIN=$(echo $REPO_URL | grep -o "^[^/]*//[^/]*")
+        
+        # Create URL with authentication
+        AUTH_URL="${PROTOCOL_AND_DOMAIN/\/\//\/\/$git_user_name:$git_token@}$(echo $REPO_URL | sed "s|^[^/]*//[^/]*||")"
+        
+        # Set the authenticated URL as the origin
+        git remote set-url origin "$AUTH_URL"
+    fi
     
-    # Set the authenticated remote URL and push
-    git remote set-url origin "$AUTH_URL"
+    # Push changes
     git push origin "${repository_branch}"
 }
 

@@ -22,6 +22,7 @@ PRODUCER_ECR_URL=$(terraform output -json ecr_repositories | jq -r '.producer')
 CONSUMER_ECR_URL=$(terraform output -json ecr_repositories | jq -r '.consumer')
 PAYMENTS_ECR_URL=$(terraform output -json ecr_repositories | jq -r '.payments')
 ECR_HELM_CHART_URL=$(terraform output -raw ecr_helm_chart_url_base)
+ECR_ARGOWORKFLOW_CONTAINER=$(terraform output -raw ecr_argoworkflow_container)
 
 echo "Creating values.yaml from template..."
 
@@ -75,6 +76,17 @@ echo "Building payments image..."
 cd "${MICROSERVICES_DIR}/payments"
 sudo docker build -t ${PAYMENTS_ECR_URL}:0.1 .
 sudo docker push ${PAYMENTS_ECR_URL}:0.1
+
+# Build and push workflow container image
+echo "Building and pushing workflow container image..."
+WORKFLOW_SCRIPTS_DIR="${REPO_ROOT}/workflow-scripts"
+
+echo "Current directory before cd: $(pwd)"
+cd "${WORKFLOW_SCRIPTS_DIR}"
+
+# Build and push argo_workflows image
+sudo docker build -t ${ECR_ARGOWORKFLOW_CONTAINER}:0.1 .
+sudo docker push ${ECR_ARGOWORKFLOW_CONTAINER}:0.1
 
 # Create tag v0.0.1 for the eks-saas-gitops repository
 echo "Creating tag v0.0.1 for the eks-saas-gitops repository..."

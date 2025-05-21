@@ -7,5 +7,13 @@ fi
 
 REPOSITORY_URL="$1"
 REPOSITORY_BRANCH="$2"
+GIT_USERNAME="$3"
+GIT_TOKEN="$4"
 
-git clone -b $REPOSITORY_BRANCH "$REPOSITORY_URL"
+# Extract protocol and domain from URL
+PROTOCOL_AND_DOMAIN=$(echo $REPOSITORY_URL | grep -o "^[^/]*//[^/]*")
+
+# Create URL with authentication
+AUTH_URL="${PROTOCOL_AND_DOMAIN/\/\//\/\/$GIT_USERNAME:$GIT_TOKEN@}$(echo $REPOSITORY_URL | sed "s|^[^/]*//[^/]*||")"
+
+git clone -b $REPOSITORY_BRANCH "$AUTH_URL"

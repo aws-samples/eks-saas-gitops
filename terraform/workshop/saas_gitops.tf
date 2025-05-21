@@ -61,6 +61,7 @@ resource "kubernetes_config_map" "saas_infra_outputs" {
 
     # Gitea information
     gitea_url = "http://${module.gitea.private_ip}:3000"
+    gitea_token = data.aws_ssm_parameter.gitea_flux_token.value
   }
 
   depends_on = [module.gitops_saas_infra, kubernetes_namespace.flux_system]

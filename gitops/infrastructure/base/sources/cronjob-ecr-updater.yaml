@@ -66,14 +66,14 @@ spec:
             #     name: aws-credentials
             env:
             - name: REGION
-              value: {aws_region} # change this if ECR repo is in a different region
+              value: ${aws_region} # change this if ECR repo is in a different region
             volumeMounts:
             - mountPath: /token
               name: token
             command:
             - /bin/sh
             - -ce
-            - aws ecr get-login-password --region ${REGION} > /token/ecr-token
+            - aws ecr get-login-password --region $REGION > /token/ecr-token
           containers:
           - image: ghcr.io/fluxcd/flux-cli:v0.25.2
             name: create-secret
@@ -82,7 +82,7 @@ spec:
             - name: SECRET_NAME
               value: ecr-credentials
             - name: ECR_REGISTRY
-              value: {account_id}.dkr.ecr.{aws_region}.amazonaws.com # fill in the account id and region
+              value: ${account_id}.dkr.ecr.${aws_region}.amazonaws.com # fill in the account id and region
             volumeMounts:
             - mountPath: /token
               name: token

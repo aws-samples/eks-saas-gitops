@@ -1,4 +1,4 @@
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: dataplane-pooled-envs
@@ -8,6 +8,12 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  path: ./gitops/application-plane/production/pooled-envs
+  path: application-plane/production/pooled-envs
   prune: true
-  validation: client
+  # validation: client
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: saas-infra-outputs
+        # Use this ConfigMap if it exists, but proceed if it doesn't.
+        optional: false

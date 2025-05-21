@@ -2,11 +2,11 @@
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
-  name: helm-tenant-chart
+  name: helm-application-chart
   namespace: flux-system
 spec:
   type: "oci"
   interval: 1m0s
   provider: aws
-  url: oci://{ecr_helm_chart_url_base}/
+  url: oci://${ecr_helm_chart_url_base}/
   

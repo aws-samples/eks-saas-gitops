@@ -4,7 +4,7 @@ resources:
   - event-bus.yaml
   - tenant-onboarding-workflow-template.yaml
   - tenant-onboarding-sensor.yaml
-  - tenant-deployment-sensor.yaml
-  - tenant-deployment-workflow-template.yaml
-  - tenant-offboarding-workflow-template.yaml
-  - tenant-offboarding-sensor.yaml
+  # - tenant-deployment-sensor.yaml
+  # - tenant-deployment-workflow-template.yaml
+  # - tenant-offboarding-workflow-template.yaml
+  # - tenant-offboarding-sensor.yaml

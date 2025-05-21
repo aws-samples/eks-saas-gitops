@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: tenant-offboarding-template
+  namespace: argo-workflows
+spec:
+  serviceAccountName: argoworkflows-sa # SA with IRSA permissions
+  templates:
+    - name: validate-if-tenant-exists
+      container:
+        image: "${ecr_argoworkflow_container}:0.1"
+        command: ["/bin/sh","-c"]
+        args: ['./00-validate-tenant.sh {{workflow.parameters.TENANT_ID}}']
+        volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+        env:
+          - name: GIT_USERNAME
+            value: "{{workflow.parameters.GIT_USERNAME}}"
+          - name: GIT_TOKEN
+            value: "{{workflow.parameters.GIT_TOKEN}}"
+    - name: clone-repository
+      container:
+        image: "${ecr_argoworkflow_container}:0.1"
+        command: ["/bin/sh","-c"]
+        args: ['./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_TOKEN}} && cp -r eks-saas-gitops /mnt/vol/eks-saas-gitops']
+        volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+        env:
+          - name: GIT_USERNAME
+            value: "{{workflow.parameters.GIT_USERNAME}}"
+          - name: GIT_TOKEN
+            value: "{{workflow.parameters.GIT_TOKEN}}"
+    - name: remove-tenant-helm-release
+      container:
+        image: "${ecr_argoworkflow_container}:0.1"
+        command: ["/bin/sh","-c"]
+        args: ['./04-tenant-offboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}} {{workflow.parameters.GIT_TOKEN}}']
+        volumeMounts:
+        - name: workdir
+          mountPath: /mnt/vol
+        env:
+          - name: GIT_USERNAME
+            value: "{{workflow.parameters.GIT_USERNAME}}"
+          - name: GIT_TOKEN
+            value: "{{workflow.parameters.GIT_TOKEN}}"
+  volumeClaimTemplates:
+  - metadata:
+      name: workdir
+    spec:
+      storageClassName: gp2
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

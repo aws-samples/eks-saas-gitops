@@ -1,0 +1,91 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: aws-sqs-deployment
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: argo-events-sa
+  sqs:
+    tenant-deployment:
+      jsonBody: true
+      region: "${aws_region}"
+      queue: "argoworkflows-deployment-queue" # Static value defined in TF module
+      waitTimeSeconds: 20
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: aws-sqs-deployment
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: argo-events-sa
+  dependencies:
+    - name: tenant-deployment-dep
+      eventSourceName: aws-sqs-deployment
+      eventName: tenant-deployment
+  triggers:
+    - template:
+        name: tenant-deployment-template
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: tenant-deployment-
+                namespace: argo-workflows
+              spec:
+                serviceAccountName: argoworkflows-sa
+                entrypoint: tenant-deployment
+                synchronization:
+                  mutex:
+                    name: workflow
+                arguments:
+                  parameters:
+                    - name: TENANT_TIER
+                      value: "" # Valid values are: silo, pool, hybrid
+                    - name: RELEASE_VERSION
+                      value: "" # Valid values are: silo, pool, hybrid
+                    - name: REPO_URL
+                      value: "${gitea_url}/admin/eks-saas-gitops.git"
+                    - name: GIT_USER_EMAIL
+                      value: "admin@example.com"
+                    - name: GIT_USERNAME
+                      value: "admin"
+                    - name: GIT_TOKEN
+                      value: "${gitea_token}"
+                    - name: GIT_BRANCH
+                      value: "main" # Can change based on your configs
+                templates:
+                  - name: tenant-deployment
+                    steps:
+                      - - name: clone-repository
+                          templateRef:
+                            name: tenant-deployment-template
+                            template: clone-repository
+                      - - name: update-tenant-helm-release
+                          templateRef:
+                            name: tenant-deployment-template
+                            template: update-tenant-helm-release
+                volumeClaimTemplates:
+                  - metadata:
+                      name: workdir
+                    spec:
+                      storageClassName: gp2
+                      accessModes: [ "ReadWriteOnce" ]
+                      resources:
+                        requests:
+                          storage: 1Gi
+          parameters:
+            - src:
+                dependencyName: tenant-deployment-dep
+                dataKey: body.tenant_tier
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: tenant-deployment-dep
+                dataKey: body.release_version
+              dest: spec.arguments.parameters.1.value

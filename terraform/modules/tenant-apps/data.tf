@@ -16,5 +16,5 @@ data "aws_ssm_parameter" "pool_1_consumer_ddb" {
 
 # data "aws_ssm_parameter" "pool_1_payments_bucket" {
 #   count  = var.enable_payments == false ? 1 : 0
-#   name = "/pooled-1/payments_bucket"
+#   name = "/pool-1/payments_bucket"
 # }

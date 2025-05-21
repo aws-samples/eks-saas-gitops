@@ -30,6 +30,11 @@ main() {
 
     # configure git user
     # configure_git "${git_user_email}" "${git_user_name}" "${git_token}"
+    
+    # Configure git user
+    git config --global user.email "${git_user_email}"
+    git config --global user.name "${git_user_name}"
+    echo "DEBUG: Git user configured"
 
     # push updated helm releases
     commit_files "${repository_branch}" "${tenant_tier}" "${git_user_name}" "${git_token}"

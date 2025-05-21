@@ -1,27 +1,9 @@
-provider "kubernetes" {
-  host                   = var.cluster_endpoint
-  cluster_ca_certificate = base64decode(var.ca)
-  token                  = var.token
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = var.cluster_endpoint
-    cluster_ca_certificate = base64decode(var.ca)
-    token                  = var.token
-  }
-}
-
-resource "kubernetes_namespace" "flux_system" {
-  metadata {
-    name = "flux-system"
-  }
-}
+# Namespace is expected to be created outside this module
 
 resource "kubernetes_secret" "flux_system" {
   metadata {
     name      = "flux-system"
-    namespace = kubernetes_namespace.flux_system.metadata[0].name
+    namespace = "flux-system"
   }
 
   data = {
@@ -37,12 +19,10 @@ resource "helm_release" "flux2-operator" {
   namespace  = var.namespace
   repository = "oci://ghcr.io/controlplaneio-fluxcd/charts"
   chart      = "flux-operator"
-
-  depends_on = [kubernetes_namespace.flux_system]
 }
 
-resource "kubernetes_manifest" "flux_instance" {
-  manifest = {
+resource "local_file" "flux_instance_manifest" {
+  content = yamlencode({
     apiVersion = "fluxcd.controlplane.io/v1"
     kind       = "FluxInstance"
     metadata = {
@@ -134,9 +114,34 @@ resource "kubernetes_manifest" "flux_instance" {
         ]
       }
     }
-  }
+  })
+  filename = "${path.module}/flux-instance.yaml"
 
   depends_on = [helm_release.flux2-operator]
+}
+
+resource "null_resource" "apply_flux_instance" {
+  triggers = {
+    manifest_content = local_file.flux_instance_manifest.content
+    helm_release     = helm_release.flux2-operator.id
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # Wait for CRDs to be ready
+      echo "Waiting for Flux CRDs to be available..."
+      kubectl wait --for=condition=established --timeout=60s crd/fluxinstances.fluxcd.controlplane.io || true
+      
+      # Apply the FluxInstance manifest
+      echo "Applying FluxInstance manifest..."
+      kubectl apply -f ${local_file.flux_instance_manifest.filename}
+    EOT
+  }
+
+  depends_on = [
+    helm_release.flux2-operator,
+    local_file.flux_instance_manifest
+  ]
 }
 
 # TODO: Implement IRSA and change the Service Account name, for Image Controller

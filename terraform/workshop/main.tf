@@ -1,58 +1,3 @@
-# DataSources
-data "aws_eks_cluster_auth" "this" {
-  name = module.eks.cluster_name
-}
-
-data "aws_availability_zones" "available" {}
-
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_vpc" "vscode" {
-  filter {
-    name   = "tag:Name"
-    values = ["eks-saas-gitops-vscode-vpc"]
-  }
-}
-
-# Matches VS Code SG
-data "aws_security_group" "vscode" {
-  tags = {
-    Name = "eks-saas-gitops-vscode-sg"
-  }
-}
-
-data "aws_route_tables" "vscode" {
-  vpc_id = data.aws_vpc.vscode.id
-}
-
-# Providers
-provider "gitea" {
-  base_url = "http://${module.gitea.private_ip}:${var.gitea_port}"
-  token    = data.aws_ssm_parameter.gitea_token.value
-  insecure = true
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name, "--region", local.region]
-  }
-}
-
-################################################################################
-# Supporting Resources
-################################################################################
 locals {
   name   = var.name
   region = var.aws_region
@@ -65,6 +10,9 @@ locals {
   }
 }
 
+################################################################################
+# VPC and Roles
+################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 4.0"
@@ -125,7 +73,9 @@ module "image_automation_irsa_role" {
     }
   }
 }
-
+################################################################################
+# EKS Cluster
+################################################################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 19.12"
@@ -222,6 +172,7 @@ output "gitea_password_command" {
   value = "aws ssm get-parameter --name '/${local.name}/gitea-admin-password' --with-decryption --query 'Parameter.Value' --output text"
 }
 
+# TODO: Create a count to disable this peering config if want to deploy from local terminal
 resource "aws_vpc_peering_connection" "vscode_to_gitea" {
   peer_vpc_id = data.aws_vpc.vscode.id
   vpc_id      = module.vpc.vpc_id
@@ -246,6 +197,19 @@ resource "aws_route" "gitea_to_vscode" {
   route_table_id            = element(concat(module.vpc.private_route_table_ids, module.vpc.public_route_table_ids), count.index)
   destination_cidr_block    = data.aws_vpc.vscode.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.vscode_to_gitea.id
+}
+
+################################################################################
+# Kubernetes Resources
+################################################################################
+
+# Create the flux-system namespace, needed for GitOps SaaS Infra ConfigMap
+resource "kubernetes_namespace" "flux_system" {
+  metadata {
+    name = "flux-system"
+  }
+
+  depends_on = [module.eks]
 }
 
 ################################################################################

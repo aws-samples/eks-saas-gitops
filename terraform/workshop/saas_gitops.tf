@@ -9,13 +9,13 @@ module "gitops_saas_infra" {
   depends_on = [data.aws_availability_zones.available, data.aws_caller_identity.current, data.aws_region.current]
 }
 
-# resource "null_resource" "execute_templating_script" {
-#   provisioner "local-exec" {
-#     command = "bash ${path.module}/templating.sh ${var.clone_directory} "
-#   }
+resource "null_resource" "execute_templating_script" {
+  provisioner "local-exec" {
+    command = "bash ${path.module}/templating.sh"
+  }
 
-#   depends_on = [module.gitops_saas_infra]
-# }
+  depends_on = [module.gitops_saas_infra]
+}
 
 # Create ConfigMap with important outputs from gitops_saas_infra module
 resource "kubernetes_config_map" "saas_infra_outputs" {
@@ -63,7 +63,7 @@ resource "kubernetes_config_map" "saas_infra_outputs" {
     gitea_url = "http://${module.gitea.private_ip}:3000"
   }
 
-  depends_on = [module.gitops_saas_infra]
+  depends_on = [module.gitops_saas_infra, kubernetes_namespace.flux_system]
 }
 
 
@@ -84,7 +84,6 @@ module "flux_v2" {
   token                                      = data.aws_eks_cluster_auth.this.token
   git_branch                                 = var.git_branch
   kustomization_path                         = var.kustomization_path
-  flux2_sync_secret_values                   = var.flux2_sync_secret_values
   image_automation_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
   image_reflection_controller_sa_annotations = module.image_automation_irsa_role.iam_role_arn
 
@@ -92,6 +91,4 @@ module "flux_v2" {
   gitea_repo_url = "http://${module.gitea.private_ip}:3000/admin/eks-saas-gitops.git"
   gitea_username = "admin"
   gitea_token    = data.aws_ssm_parameter.gitea_flux_token.value
-
-  depends_on = [module.gitops_saas_infra, kubernetes_config_map.saas_infra_outputs]
 }

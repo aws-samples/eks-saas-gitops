@@ -113,9 +113,3 @@ variable "flux2_version" {
   default     = "2.13.0"
 }
 
-variable "flux2_sync_secret_values" {
-  description = "Content of the flux-secrets.yaml file"
-  type        = string
-  default     = ""
-}
-

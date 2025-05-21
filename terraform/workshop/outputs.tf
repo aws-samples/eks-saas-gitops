@@ -117,5 +117,5 @@ output "gitea_public_ip" {
 
 output "flux_namespace" {
   description = "Namespace where Flux is installed"
-  value       = module.flux_v2.flux_namespace
+  value       = kubernetes_namespace.flux_system.id
 }

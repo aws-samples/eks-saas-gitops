@@ -34,11 +34,6 @@ variable "clone_directory" {
   default     = "/tmp"
 }
 
-variable "flux2_sync_secret_values" {
-  description = "This is created by install.sh script during execution"
-  default     = "./flux-secrets.yaml"
-}
-
 variable "git_branch" {
   description = "Branch of the Git repository"
   type        = string

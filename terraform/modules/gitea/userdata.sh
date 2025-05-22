@@ -19,10 +19,12 @@ curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compo
 chmod +x /usr/local/bin/docker-compose
 
 # Basic configuration
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/placement/region)
 GITEA_PORT=3000
 GITEA_SSH_PORT=222
 GITEA_ADMIN_USER="admin"
-GITEA_ADMIN_PASSWORD=$(aws ssm get-parameter --name "/eks-saas-gitops/gitea-admin-password" --with-decryption --query 'Parameter.Value' --output text)
+GITEA_ADMIN_PASSWORD=$(aws ssm get-parameter --name "/eks-saas-gitops/gitea-admin-password" --with-decryption --query 'Parameter.Value' --output text --region $AWS_REGION)
 if [ -z "$GITEA_ADMIN_PASSWORD" ]; then
     echo "Failed to retrieve admin password from SSM"
     exit 1
@@ -127,6 +129,7 @@ if [ -n "$FLUX_TOKEN" ]; then
         --name "/eks-saas-gitops/gitea-flux-token" \
         --type "SecureString" \
         --value "$FLUX_TOKEN" \
+        --region "$AWS_REGION" \
         --overwrite
     
     echo "Flux token stored in SSM Parameter Store at /eks-saas-gitops/gitea-flux-token"
@@ -135,5 +138,3 @@ else
 fi
 
 echo "Gitea setup complete"
-
-

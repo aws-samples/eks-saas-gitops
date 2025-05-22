@@ -1,5 +1,5 @@
 # NodePool Configuration
-apiVersion: karpenter.sh/v1beta1
+apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
   name: default
@@ -20,27 +20,30 @@ spec:
           operator: In
           values: ["on-demand", "spot"]
       nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
         name: default
   limits:
     cpu: 1000
     memory: 2000Gi
   disruption:
-    consolidationPolicy: WhenUnderutilized
-    expireAfter: 720h # 30 * 24h = 720h
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m
 ---
 # EC2NodeClass Configuration
-apiVersion: karpenter.k8s.aws/v1beta1
+apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  amiFamily: AL2 # Amazon Linux 2
-  role: "KarpenterNodeRole-{cluster_name}" # Replace with your cluster name
+  amiSelectorTerms:
+    - alias: al2023@latest
+  role: "KarpenterNodeRole-${cluster_name}" # Replace with your cluster name
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "{cluster_name}" # Replace with your cluster name
+        karpenter.sh/discovery: "${cluster_name}" # Replace with your cluster name
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "{cluster_name}" # Replace with your cluster name
+        karpenter.sh/discovery: "${cluster_name}" # Replace with your cluster name
   tags:
     Name: "karpenter-node"

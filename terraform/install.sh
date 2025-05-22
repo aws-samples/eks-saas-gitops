@@ -26,6 +26,10 @@ check_prerequisites() {
         echo "Terraform directory '$TERRAFORM_DIR' not found!"
         exit 1
     fi
+    
+    # Define the repository root directory
+    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    echo "Repository root: ${REPO_ROOT}"
 }
 
 # Initialize and apply terraform for infrastructure components only
@@ -57,6 +61,7 @@ deploy_terraform_infra() {
                    -target=aws_vpc_peering_connection.vscode_to_gitea \
                    -target=aws_route.vscode_to_gitea \
                    -target=aws_route.gitea_to_vscode \
+                   -target=kubernetes_namespace.flux_system \
                    --auto-approve
 
     # Retrieve Gitea information after successful deployment
@@ -89,8 +94,9 @@ deploy_terraform_infra() {
     # Setup known_hosts file for Gitea
     echo "Setting up known_hosts for Gitea server at ${GITEA_PRIVATE_IP} (private IP)..."
     
-    # Create a temporary known_hosts file
+    # Create a known_hosts file
     KNOWN_HOSTS_FILE="$(pwd)/known_hosts"
+    WORKFLOW_KNOWN_HOSTS_FILE="${REPO_ROOT}/workflow-scripts/known_hosts"
     
     # Make sure the file exists and is empty
     > "${KNOWN_HOSTS_FILE}"
@@ -110,31 +116,17 @@ deploy_terraform_infra() {
     if [ -s "${KNOWN_HOSTS_FILE}" ]; then
         echo "Successfully added Gitea server to known_hosts:"
         cat "${KNOWN_HOSTS_FILE}"
+        
+        # Copy the known_hosts file to the workflow-scripts directory
+        echo "Copying known_hosts to workflow-scripts directory..."
+        cp "${KNOWN_HOSTS_FILE}" "${WORKFLOW_KNOWN_HOSTS_FILE}"
+        echo "known_hosts file copied to ${WORKFLOW_KNOWN_HOSTS_FILE}"
     else
         echo "ERROR: Could not add Gitea server to known_hosts. File is empty."
         echo "Manual intervention required. Please run:"
         echo "ssh-keyscan -p 222 -H ${GITEA_PRIVATE_IP} > ${KNOWN_HOSTS_FILE}"
         exit 1
     fi
-    
-    # Create flux-secrets.yaml file using existing keys from CloudFormation
-    echo "Creating flux-secrets.yaml file..."
-    
-    # Use existing keys from CloudFormation
-    cat > "flux-secrets.yaml" << EOF
-secret:
-  create: true
-  data:
-    identity: |-
-$(sed 's/^/      /' ~/.ssh/id_rsa)
-    identity.pub: |-
-$(sed 's/^/      /' ~/.ssh/id_rsa.pub)
-    known_hosts: |-
-$(sed 's/^/      /' "${KNOWN_HOSTS_FILE}")
-EOF
-
-    echo "Created flux-secrets.yaml at $(pwd)/flux-secrets.yaml"
-    echo "File size: $(wc -l < flux-secrets.yaml) lines"
         
     # Get the AWS region from Terraform or environment variable
     AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo ${AWS_REGION:-$(aws configure get region)})
@@ -196,15 +188,11 @@ create_gitea_repositories() {
 
 # Apply Flux and GitOps infrastructure
 apply_flux() {
-    # Verify flux-secrets.yaml exists before proceeding
-    if [ ! -f "flux-secrets.yaml" ]; then
-        echo "ERROR: flux-secrets.yaml not found. Cannot proceed with Flux setup."
-        exit 1
-    fi
-    
     echo "Applying GitOps infrastructure and Flux..."
-    terraform apply -target=module.gitops_saas_infra -target=module.flux_v2 --auto-approve
-    
+    terraform apply -target=module.gitops_saas_infra -target=kubernetes_config_map.saas_infra_outputs --auto-approve
+    terraform apply -target=null_resource.execute_templating_script --auto-approve
+    terraform apply -target=module.flux_v2 --auto-approve
+
     echo "Flux and GitOps infrastructure applied successfully."
 }
 

@@ -6,7 +6,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 300s
-  url: "{aws_codecommit_flux_clone_url_ssh}" # Same repository for gitops components, could be sliptted
+  url: "${gitea_url}/admin/eks-saas-gitops.git" # Same repository for gitops components, could be sliptted
   ref:
     tag: "v0.0.1"
   secretRef:

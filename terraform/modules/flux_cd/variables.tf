@@ -22,6 +22,24 @@ variable "git_branch" {
 variable "git_url" {
   description = "Git URL to be used by Flux"
   type        = string
+  default = ""
+}
+
+variable "gitea_repo_url" {
+  description = "Gitea repository URL for Flux"
+  type        = string
+}
+
+variable "gitea_username" {
+  description = "Username for Gitea authentication"
+  type        = string
+  default     = "admin"
+}
+
+variable "gitea_token" {
+  description = "Token for Gitea authentication"
+  type        = string
+  sensitive   = true
 }
 
 variable "namespace" {
@@ -93,11 +111,5 @@ variable "flux2_version" {
   description = "Flux2 helm chart version"
   type        = string
   default     = "2.13.0"
-}
-
-variable "flux2_sync_secret_values" {
-  description = "Content of the flux-secrets.yaml file"
-  type        = string
-  default     = ""
 }
 

@@ -90,43 +90,6 @@ deploy_terraform_infra() {
         echo "ERROR: Could not determine Gitea private IP address. Please check if the Gitea instance is running."
         exit 1
     fi
-    
-    # Setup known_hosts file for Gitea
-    echo "Setting up known_hosts for Gitea server at ${GITEA_PRIVATE_IP} (private IP)..."
-    
-    # Create a known_hosts file
-    KNOWN_HOSTS_FILE="$(pwd)/known_hosts"
-    WORKFLOW_KNOWN_HOSTS_FILE="${REPO_ROOT}/workflow-scripts/known_hosts"
-    
-    # Make sure the file exists and is empty
-    > "${KNOWN_HOSTS_FILE}"
-    
-    # Add the Gitea server's SSH key to known_hosts using private IP
-    echo "Adding Gitea SSH key to known_hosts..."
-    ssh-keyscan -p 222 -H "${GITEA_PRIVATE_IP}" > "${KNOWN_HOSTS_FILE}" 2>/dev/null
-    
-    # Check if the key was added successfully
-    if [ ! -s "${KNOWN_HOSTS_FILE}" ]; then
-        echo "Warning: Could not retrieve SSH key from Gitea server. Waiting and trying again..."
-        sleep 30
-        ssh-keyscan -p 222 -H "${GITEA_PRIVATE_IP}" > "${KNOWN_HOSTS_FILE}" 2>/dev/null
-    fi
-    
-    # Check again and provide feedback
-    if [ -s "${KNOWN_HOSTS_FILE}" ]; then
-        echo "Successfully added Gitea server to known_hosts:"
-        cat "${KNOWN_HOSTS_FILE}"
-        
-        # Copy the known_hosts file to the workflow-scripts directory
-        echo "Copying known_hosts to workflow-scripts directory..."
-        cp "${KNOWN_HOSTS_FILE}" "${WORKFLOW_KNOWN_HOSTS_FILE}"
-        echo "known_hosts file copied to ${WORKFLOW_KNOWN_HOSTS_FILE}"
-    else
-        echo "ERROR: Could not add Gitea server to known_hosts. File is empty."
-        echo "Manual intervention required. Please run:"
-        echo "ssh-keyscan -p 222 -H ${GITEA_PRIVATE_IP} > ${KNOWN_HOSTS_FILE}"
-        exit 1
-    fi
         
     # Get the AWS region from Terraform or environment variable
     AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo ${AWS_REGION:-$(aws configure get region)})
@@ -204,7 +167,6 @@ print_setup_info() {
     echo "Gitea URL: http://${GITEA_PUBLIC_IP}:3000"
     echo "Gitea Admin Username: admin"
     echo "Gitea Admin Password: ${GITEA_PASSWORD}"
-    echo "Known hosts file created at: ${KNOWN_HOSTS_FILE}"
     echo ""
     echo "Your EKS cluster has been configured."
     echo "=============================="

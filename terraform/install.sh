@@ -69,17 +69,20 @@ deploy_terraform_infra() {
         --name '/eks-saas-gitops/gitea-admin-password' \
         --with-decryption \
         --query 'Parameter.Value' \
+        --region $(terraform output -raw aws_region) \
         --output text)
 
     # Get both public and private IPs - only for RUNNING instances
     GITEA_PUBLIC_IP=$(aws ec2 describe-instances \
         --filters "Name=tag:Name,Values=*gitea*" "Name=instance-state-name,Values=running" \
         --query 'Reservations[0].Instances[0].PublicIpAddress' \
+        --region $(terraform output -raw aws_region) \
         --output text)
 
     GITEA_PRIVATE_IP=$(aws ec2 describe-instances \
         --filters "Name=tag:Name,Values=*gitea*" "Name=instance-state-name,Values=running" \
         --query 'Reservations[0].Instances[0].PrivateIpAddress' \
+        --region $(terraform output -raw aws_region) \
         --output text)
 
     echo "Gitea server public IP: ${GITEA_PUBLIC_IP}"
@@ -102,41 +105,6 @@ deploy_terraform_infra() {
         echo "ERROR: Could not determine AWS region. Please set AWS_REGION environment variable."
         exit 1
     fi
-}
-
-# Setup SSH key for Gitea using basic authentication
-setup_gitea_ssh() {
-    echo "Setting up SSH key for Gitea..."
-    
-    # Get Gitea information - reusing variables from earlier in the script
-    GITEA_URL="http://${GITEA_PRIVATE_IP}:3000"
-    GITEA_USER="admin"
-    
-    echo "Using basic authentication to add SSH key..."
-    
-    # Use the specific SSH public key from the environment directory
-    SSH_PUBLIC_KEY_PATH="$HOME/environment/flux.pub"
-    if [ ! -f "$SSH_PUBLIC_KEY_PATH" ]; then
-        echo "ERROR: SSH public key not found at $SSH_PUBLIC_KEY_PATH"
-        exit 1
-    fi
-
-    # Add SSH public key to the admin user using basic authentication
-    PUBLIC_KEY=$(cat "$SSH_PUBLIC_KEY_PATH")
-    KEY_RESPONSE=$(curl -s -X POST \
-      "${GITEA_URL}/api/v1/user/keys" \
-      -H "Content-Type: application/json" \
-      -u "${GITEA_USER}:${GITEA_PASSWORD}" \
-      -d "{\"title\":\"flux-key\", \"key\":\"${PUBLIC_KEY}\"}")
-
-    if [[ "$KEY_RESPONSE" == *"id"* ]]; then
-        echo "Successfully added SSH key to Gitea admin user"
-    else
-        echo "Note: SSH key addition returned: $KEY_RESPONSE"
-        echo "Continuing with setup (key may already exist)..."
-    fi
-
-    echo "Gitea SSH setup completed successfully!"
 }
 
 # Create Gitea repositories
@@ -176,7 +144,6 @@ print_setup_info() {
 main() {
     check_prerequisites
     deploy_terraform_infra
-    setup_gitea_ssh  # Add SSH key to Gitea
     create_gitea_repositories  # Create Gitea repositories
     echo "Proceeding with Flux setup..."
     apply_flux

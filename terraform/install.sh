@@ -123,6 +123,7 @@ apply_flux() {
     terraform apply -target=module.gitops_saas_infra -target=kubernetes_config_map.saas_infra_outputs --auto-approve
     terraform apply -target=null_resource.execute_templating_script --auto-approve
     terraform apply -target=module.flux_v2 --auto-approve
+    sh quick_fix_flux.sh
 
     echo "Flux and GitOps infrastructure applied successfully."
 }

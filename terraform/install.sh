@@ -141,6 +141,32 @@ print_setup_info() {
     echo "=============================="
 }
 
+# Clone Gitea repositories
+clone_gitea_repos() {
+    echo "Cloning Gitea repositories..."
+    
+    # Get Gitea token from SSM
+    GITEA_TOKEN=$(aws ssm get-parameter \
+        --name "/eks-saas-gitops/gitea-flux-token" \
+        --with-decryption \
+        --query 'Parameter.Value' \
+        --output text)
+
+    # Create temporary directory for cloning
+    TEMP_DIR=$(mktemp -d)
+    cd "${TEMP_DIR}"
+
+    # Clone the repository
+    echo "Cloning eks-saas-gitops repository..."
+    git clone "http://admin:${GITEA_TOKEN}@${GITEA_PRIVATE_IP}:3000/admin/eks-saas-gitops.git"
+    
+    # Clean up
+    cd "${REPO_ROOT}"
+    rm -rf "${TEMP_DIR}"
+    
+    echo "Repository cloning completed successfully!"
+}
+
 # Main execution
 main() {
     check_prerequisites
@@ -155,6 +181,7 @@ main() {
     echo "kubectl get pods -n flux-system"
     echo "=============================="
     print_setup_info
+    clone_gitea_repos
 }
 
 # Run the script

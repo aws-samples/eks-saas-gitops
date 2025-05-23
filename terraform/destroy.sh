@@ -32,8 +32,25 @@ done
 # Get VPC and IGW information
 VPC_ID=$(terraform output -raw vpc_id 2>/dev/null || echo "")
 if [ -n "$VPC_ID" ]; then
+    # First terminate any EC2 instances in the VPC
+    echo "Finding and terminating EC2 instances in VPC $VPC_ID..."
+    INSTANCE_IDS=$(aws ec2 describe-instances \
+        --filters "Name=vpc-id,Values=$VPC_ID" "Name=instance-state-name,Values=running,stopped,pending,stopping" \
+        --query "Reservations[*].Instances[*].InstanceId" \
+        --output text \
+        --region $AWS_REGION)
+    
+    if [ -n "$INSTANCE_IDS" ]; then
+        echo "Terminating instances: $INSTANCE_IDS"
+        aws ec2 terminate-instances --instance-ids $INSTANCE_IDS --region $AWS_REGION
+        
+        echo "Waiting for instances to terminate..."
+        aws ec2 wait instance-terminated --instance-ids $INSTANCE_IDS --region $AWS_REGION
+    fi
+
+    # Then try to detach the IGW
     echo "Finding and detaching Internet Gateway from VPC $VPC_ID..."
-    IGW_ID=$(aws ecr describe-internet-gateways \
+    IGW_ID=$(aws ec2 describe-internet-gateways \
         --filters "Name=attachment.vpc-id,Values=$VPC_ID" \
         --query 'InternetGateways[0].InternetGatewayId' \
         --output text)

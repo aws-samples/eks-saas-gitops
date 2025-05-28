@@ -63,7 +63,7 @@ The motivation behind this project is to accelerate and simplify the process of 
 This repository is organized to facilitate a hands-on learning experience, structured as follows:
 
 - **`/gitops`**: Contains GitOps configurations and templates for setting up the application plane, clusters, control plane, and infrastructure necessary for the SaaS architecture.
-- **`/helpers`**: Includes CloudFormation templates to assist in setting up the required AWS resources. (Only used if want to deploy Cloud9 and run this architecture all in AWS)
+- **`/helpers`**: Includes CloudFormation templates to assist in setting up the required AWS resources. (Used for deploying a VSCode server instance needed for setup)
 - **`/helm-charts`**: Houses Helm chart definitions for deploying tenant-specific resources within the Kubernetes cluster and shared services resources.
 - **`/tenant-microservices`**: Contains the source code and Dockerfiles for the sample microservices used in the workshop (consumer, payments, producer).
 - **`/terraform`**: Features Terraform modules and scripts for provisioning the AWS infrastructure and Kubernetes resources. Detailed setup instructions are provided within this folder's README.md.
@@ -188,17 +188,42 @@ Before deploying this guidance, please ensure you have met the following prerequ
 
 1. **AWS Account and Permissions**: Ensure you have an active AWS account with appropriate permissions to create and manage AWS resources like Amazon EKS, EC2, IAM, and VPC.
 
-2. **AWS CLI and Terraform Installation**: Install and configure the [AWS CLI](https://aws.amazon.com/cli/) and [Terraform](https://www.terraform.io/downloads.html) tools on your local machine.
-
-3. **Git and GitHub Account**: You'll need Git installed locally and a GitHub account to manage the repositories created during the workshop.
-
-4. **kubectl and Helm**: Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) and [Helm](https://helm.sh/docs/intro/install/) for interacting with your Kubernetes cluster.
-
-5. **Flux CLI**: Install the [Flux CLI](https://fluxcd.io/docs/installation/) for GitOps operations.
+Note: All required tools (AWS CLI, Terraform, Git, kubectl, Helm, and Flux CLI) are pre-installed in the VSCode server instance that will be deployed as part of the setup process.
 
 ## Deployment Steps
 
-Begin your journey to deploying a SaaS architecture on Amazon EKS by closely following the detailed instructions provided in the [/terraform folder's README.](terraform/README.md) This guide is your starting point for setting up the AWS environment, configuring your Kubernetes cluster, and applying GitOps principles for efficient resource management.
+Follow these steps to deploy the EKS SaaS GitOps guidance:
+
+1. **Deploy the VSCode Server Instance**:
+   - Navigate to the AWS CloudFormation console in your AWS account
+   - Click "Create stack" and select "With new resources (standard)"
+   - Choose "Upload a template file" and upload the `helpers/vs-code-ec2.yaml` file from this repository
+   - Click "Next" and provide a stack name (e.g., "eks-saas-gitops-vscode")
+   - Configure any required parameters and click "Next"
+   - Review the configuration and click "Create stack"
+   - Wait for the CloudFormation stack to complete deployment (approximately 5-10 minutes)
+
+2. **Access the VSCode Server Instance**:
+   - Once the CloudFormation stack deployment is complete, go to the "Outputs" tab
+   - Find the "VSCodeURL" output value and click on the link
+   - This will open the VSCode web interface in your browser
+   - The repository will be automatically cloned and available in the VSCode workspace
+
+3. **Deploy the Infrastructure**:
+   - The infrastructure is deployed automatically as part of the VSCode server instance setup
+   - If you want to understand the infrastructure components or make customizations, you can review the terraform directory:
+     ```
+     cd terraform
+     ```
+   - For more detailed information about the infrastructure, refer to the [terraform/README.md](terraform/README.md) file
+   - The VSCode instance has all required tools pre-installed (AWS CLI, Terraform, Git, kubectl, Helm, and Flux CLI)
+
+4. **Explore the GitOps Implementation**:
+   - After the infrastructure deployment is complete, you can explore the GitOps implementation and tenant onboarding process
+   - The sample microservices and Helm charts are available in their respective directories
+   - Use the workflow scripts to automate tenant onboarding and application deployment
+
+For more detailed instructions and advanced configurations, refer to the [terraform/README.md](terraform/README.md) file.
 
 ## License
 

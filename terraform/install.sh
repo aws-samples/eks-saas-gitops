@@ -29,6 +29,7 @@ check_prerequisites() {
     
     # Define the repository root directory
     REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    export REPO_ROOT
     echo "Repository root: ${REPO_ROOT}"
 }
 
@@ -160,8 +161,11 @@ clone_gitea_repos() {
     echo "Cloning eks-saas-gitops repository..."
     git clone "http://admin:${GITEA_TOKEN}@${GITEA_PRIVATE_IP}:3000/admin/eks-saas-gitops.git"
     
-    # Clean up
+    
     cd "${REPO_ROOT}"
+    cp -r "${TEMP_DIR}/eks-saas-gitops" ./gitops-gitea-repo
+    
+    # Clean up
     rm -rf "${TEMP_DIR}"
     
     echo "Repository cloning completed successfully!"

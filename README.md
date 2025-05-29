@@ -104,7 +104,7 @@ This repository is organized to facilitate a hands-on learning experience, struc
 ## Cost
 
 You are responsible for the cost of the AWS services used while running this guidance. 
-As of May 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region is approximately **$353.97/month**.
+As of May 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region is approximately **$414.71/month**.
 
 We recommend creating a [budget](https://alpha-docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-create.html) through [AWS Cost Explorer](http://aws.amazon.com/aws-cost-management/aws-cost-explorer/) to help manage costs. Prices are subject to change. For full details, refer to the pricing webpage for each AWS service used in this guidance.
 
@@ -117,6 +117,7 @@ The following table provides a sample cost breakdown for deploying this guidance
 | Amazon EKS | 1 cluster | $73.00 |
 | Amazon VPC | 2 NAT Gateways | $65.78 |
 | Amazon EC2 | 2 m6g.large instances | $112.42 |
+| Amazon EC2 | 1 t3.large instance (VSCode Server) | $60.74 |
 | Amazon EC2 | 1 t2.micro instance (Gitea) | $8.47 |
 | Amazon ECR | Image storage and data transfer | $10.00 |
 | Amazon EBS | gp2 storage volumes and snapshots | $17.97 |
@@ -125,7 +126,7 @@ The following table provides a sample cost breakdown for deploying this guidance
 | AWS Key Management Service (KMS) | Keys and requests | $7.00 |
 | Amazon CloudWatch | Metrics | $3.00 |
 | AWS Systems Manager | Parameter Store and automation | $36.02 |
-| **TOTAL** |  | **$353.97/month** |
+| **TOTAL** |  | **$414.71/month** |
 
 For a more accurate estimate based on your specific configuration and usage patterns, we recommend using the [AWS Pricing Calculator](https://calculator.aws).
 

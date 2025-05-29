@@ -60,3 +60,8 @@ variable "gitea_admin_user" {
   description = "Gitea admin username"
   default     = "admin"
 }
+variable "github_username" {
+  description = "GitHub username for repository mirroring"
+  type        = string
+  default     = "lusoal"
+}

@@ -1,9 +1,13 @@
 #!/bin/bash
 set -e
 
+# Accept AWS region as parameter
+AWS_REGION=${1:-$(aws configure get region)}
+export AWS_REGION
+
 TERRAFORM_DIR="workshop"
 
-echo "Starting infrastructure-only installation..."
+echo "Starting infrastructure-only installation in region: ${AWS_REGION}..."
 
 # Check if required tools are installed
 check_prerequisites() {
@@ -39,7 +43,9 @@ deploy_terraform_infra() {
     echo "Initializing Terraform..."
     terraform init
 
-    echo "Planning Terraform deployment (infrastructure only)..."
+    echo "Planning Terraform deployment (infrastructure only) in region: ${AWS_REGION}..."
+    # Pass AWS region as a variable to Terraform
+    export TF_VAR_aws_region="${AWS_REGION}"
     terraform plan -target=module.vpc \
                   -target=module.ebs_csi_irsa_role \
                   -target=module.image_automation_irsa_role \
@@ -70,20 +76,20 @@ deploy_terraform_infra() {
         --name '/eks-saas-gitops/gitea-admin-password' \
         --with-decryption \
         --query 'Parameter.Value' \
-        --region $(terraform output -raw aws_region) \
+        --region "${AWS_REGION}" \
         --output text)
 
     # Get both public and private IPs - only for RUNNING instances
     GITEA_PUBLIC_IP=$(aws ec2 describe-instances \
         --filters "Name=tag:Name,Values=*gitea*" "Name=instance-state-name,Values=running" \
         --query 'Reservations[0].Instances[0].PublicIpAddress' \
-        --region $(terraform output -raw aws_region) \
+        --region "${AWS_REGION}" \
         --output text)
 
     GITEA_PRIVATE_IP=$(aws ec2 describe-instances \
         --filters "Name=tag:Name,Values=*gitea*" "Name=instance-state-name,Values=running" \
         --query 'Reservations[0].Instances[0].PrivateIpAddress' \
-        --region $(terraform output -raw aws_region) \
+        --region "${AWS_REGION}" \
         --output text)
 
     echo "Gitea server public IP: ${GITEA_PUBLIC_IP}"
@@ -95,17 +101,9 @@ deploy_terraform_infra() {
         exit 1
     fi
         
-    # Get the AWS region from Terraform or environment variable
-    AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo ${AWS_REGION:-$(aws configure get region)})
-    
     # Configure kubectl to connect to the new cluster with explicit region
-    if [ -n "$AWS_REGION" ]; then
-        echo "Configuring kubectl for region: $AWS_REGION"
-        aws eks update-kubeconfig --name eks-saas-gitops --region "$AWS_REGION"
-    else
-        echo "ERROR: Could not determine AWS region. Please set AWS_REGION environment variable."
-        exit 1
-    fi
+    echo "Configuring kubectl for region: $AWS_REGION"
+    aws eks update-kubeconfig --name eks-saas-gitops --region "$AWS_REGION"
 }
 
 # Create Gitea repositories
@@ -154,6 +152,7 @@ clone_gitea_repos() {
         --name "/eks-saas-gitops/gitea-flux-token" \
         --with-decryption \
         --query 'Parameter.Value' \
+        --region "${AWS_REGION}" \
         --output text)
 
     # Create temporary directory for cloning

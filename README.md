@@ -202,22 +202,23 @@ Follow these steps to deploy the EKS SaaS GitOps guidance:
    - Click "Next" and provide a stack name (e.g., "eks-saas-gitops-vscode")
    - Configure any required parameters and click "Next"
    - Review the configuration and click "Create stack"
-   - Wait for the CloudFormation stack to complete deployment (approximately 5-10 minutes)
+   - Wait for the CloudFormation stack to complete deployment (approximately 30 minutes)
+   - The Terraform infrastructure is deployed automatically as part of the VSCode server instance setup
+   - The VSCode instance has all required tools pre-installed (AWS CLI, Terraform, Git, kubectl, Helm, and Flux CLI)
 
 2. **Access the VSCode Server Instance**:
    - Once the CloudFormation stack deployment is complete, go to the "Outputs" tab
-   - Find the "VSCodeURL" output value and click on the link
+   - Find the `VsCodePassword` and click on the link, copy the password under `Value`
+   - Find the `VSCodeURL` output value and click on the link
    - This will open the VSCode web interface in your browser
-   - The repository will be automatically cloned and available in the VSCode workspace
-
-3. **Deploy the Infrastructure**:
-   - The infrastructure is deployed automatically as part of the VSCode server instance setup
+   - Input the password copied from `VsCodePassword`
+   - The repository connected to Flux and your Amazon EKS Cluster will be automatically cloned and available in the VSCode workspace on `/home/ec2-user/environment/gitops-gitea-repo`
    - If you want to understand the infrastructure components or make customizations, you can review the terraform directory:
      ```
-     cd terraform
+     cd /home/ec2-user/environment/eks-saas-gitops/terraform
      ```
+   - The `environment/eks-saas-gitops` is the repo used to create the entire Stack, the `environment/gitops-gitea-repo` is the Gitea repo connected to Flux and the EKS Cluster.
    - For more detailed information about the infrastructure, refer to the [terraform/README.md](terraform/README.md) file
-   - The VSCode instance has all required tools pre-installed (AWS CLI, Terraform, Git, kubectl, Helm, and Flux CLI)
 
 4. **Explore the GitOps Implementation**:
    - After the infrastructure deployment is complete, you can explore the GitOps implementation and tenant onboarding process

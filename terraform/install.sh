@@ -113,6 +113,7 @@ create_gitea_repositories() {
     echo "Creating Gitea repositories..."
     
     # Apply the Gitea repository resources
+    terraform apply -target=data.aws_ssm_parameter.gitea_token --auto-approve
     terraform apply -target=gitea_repository.eks-saas-gitops -target=gitea_repository.producer -target=gitea_repository.consumer -target=gitea_repository.payments --auto-approve
     
     echo "Gitea repositories created successfully!"
@@ -124,7 +125,8 @@ apply_flux() {
     terraform apply -target=module.gitops_saas_infra -target=kubernetes_config_map.saas_infra_outputs --auto-approve
     terraform apply -target=null_resource.execute_templating_script --auto-approve
     terraform apply -target=module.flux_v2 --auto-approve
-    sh quick_fix_flux.sh
+
+    bash quick_fix_flux.sh
 
     echo "Flux and GitOps infrastructure applied successfully."
 }
@@ -163,7 +165,7 @@ clone_gitea_repos() {
     
     
     cd "${REPO_ROOT}"
-    cp -r "${TEMP_DIR}/eks-saas-gitops" ./gitops-gitea-repo
+    cp -r "${TEMP_DIR}/eks-saas-gitops" ../gitops-gitea-repo
     
     # Clean up
     rm -rf "${TEMP_DIR}"

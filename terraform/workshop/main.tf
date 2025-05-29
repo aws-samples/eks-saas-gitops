@@ -221,7 +221,7 @@ resource "gitea_repository" "eks-saas-gitops" {
   description              = "GitOps SaaS Repository"
   private                  = false
   mirror                   = false
-  migration_clone_addresse = "https://github.com/lusoal/gitops-manifests-template.git"
+  migration_clone_addresse = "https://github.com/${var.github_username}/gitops-manifests-template.git"
   migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
@@ -234,7 +234,7 @@ resource "gitea_repository" "producer" {
   description              = "Producer microservice repository"
   private                  = false
   mirror                   = false
-  migration_clone_addresse = "https://github.com/lusoal/producer-template.git"
+  migration_clone_addresse = "https://github.com/${var.github_username}/producer-template.git"
   migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
@@ -246,7 +246,7 @@ resource "gitea_repository" "consumer" {
   description              = "Consumer microservice repository"
   private                  = false
   mirror                   = false
-  migration_clone_addresse = "https://github.com/lusoal/consumer-template.git"
+  migration_clone_addresse = "https://github.com/${var.github_username}/consumer-template.git"
   migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
@@ -258,7 +258,7 @@ resource "gitea_repository" "payments" {
   description              = "Payments microservice repository"
   private                  = false
   mirror                   = false
-  migration_clone_addresse = "https://github.com/lusoal/payments-template.git"
+  migration_clone_addresse = "https://github.com/${var.github_username}/payments-template.git"
   migration_service        = "git"
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]

@@ -50,3 +50,9 @@ variable "vscode_vpc_cidr" {
   type        = string
   default     = "10.0.0.0/16"
 }
+
+variable "allowed_ip" {
+  description = "Allowed IP address for accessing Gitea web interface (CIDR format)"
+  type        = string
+  default     = ""
+}

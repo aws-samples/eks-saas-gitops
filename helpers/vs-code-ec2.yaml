@@ -17,7 +17,7 @@ Parameters:
       - t3.xlarge
     ConstraintDescription: Must be a valid EC2 instance type
   AllowedIP:
-    Description: Allowed IP address for connecting to the VSCode server (CIDR)
+    Description: Allowed IP address for connecting to the VSCode server and Gitea (CIDR)
     AllowedPattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$
     ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
     Type: String
@@ -141,6 +141,11 @@ Resources:
       Content:
         schemaVersion: "2.2"
         description: Bootstrap VS Code Instance
+        parameters:
+          allowedIp:
+            type: String
+            description: Allowed IP address
+            default: ""
         mainSteps:
           - action: aws:runShellScript
             name: VSCodebootstrap
@@ -175,10 +180,11 @@ Resources:
                 - "yum -y install terraform"
                 - export TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds:60")
                 - export AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/') && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
-                - "git clone -b feat/gitea https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops"
+                - export ALLOWED_IP="{{allowedIp}}"
+                - "git clone -b feat/gitea_public_ip https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops"
                 - "chown -R ec2-user:ec2-user /home/ec2-user/environment"
                 - "sudo -u ec2-user nohup /usr/bin/code-server --port 8080 --host 0.0.0.0 > /dev/null 2>&1 &"
-                - "cd /home/ec2-user/environment/eks-saas-gitops/terraform && chmod +x install.sh && sudo -u ec2-user ./install.sh ${AWS_REGION} > /home/ec2-user/environment/terraform-install.log 2>&1"
+                - "cd /home/ec2-user/environment/eks-saas-gitops/terraform && chmod +x install.sh && sudo -u ec2-user ./install.sh ${AWS_REGION} \"{{allowedIp}}\" > /home/ec2-user/environment/terraform-install.log 2>&1"
                 - "export WAIT_HANDLE_URL=$(aws ssm get-parameter --name '/eks-saas-gitops/waitcondition-url' --query 'Parameter.Value' --output text --region $AWS_REGION)"
                 - 'curl -X PUT -H ''Content-Type: application/json'' --data-binary ''{"Status" : "SUCCESS", "Reason" : "Environment Completed", "UniqueId" : "123456", "Data" : "Complete"}'' "$WAIT_HANDLE_URL"'
 
@@ -186,6 +192,8 @@ Resources:
     Type: AWS::SSM::Association
     Properties:
       Name: !Ref SSMDocument
+      Parameters:
+        allowedIp: [!Ref AllowedIP]
       OutputLocation:
         S3Location:
           OutputS3BucketName: !Ref OutputBucket

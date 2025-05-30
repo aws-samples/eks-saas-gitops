@@ -59,8 +59,15 @@ variable "gitea_admin_user" {
   description = "Gitea admin username"
   default     = "admin"
 }
+
 variable "github_username" {
   description = "GitHub username for repository mirroring"
   type        = string
   default     = "lusoal"
+}
+
+variable "allowed_ip" {
+  description = "Allowed IP address for accessing Gitea web interface (CIDR format)"
+  type        = string
+  default     = ""
 }

@@ -218,7 +218,6 @@ Follow these steps to deploy the EKS SaaS GitOps guidance:
      cd /home/ec2-user/environment/eks-saas-gitops/terraform
      ```
    - The `environment/eks-saas-gitops` is the repo used to create the entire Stack, the `environment/gitops-gitea-repo` is the Gitea repo connected to Flux and the EKS Cluster.
-   - For more detailed information about the infrastructure, refer to the [terraform/README.md](terraform/README.md) file
 
 4. **Explore the GitOps Implementation**:
    - After the infrastructure deployment is complete, you can explore the GitOps implementation and tenant onboarding process

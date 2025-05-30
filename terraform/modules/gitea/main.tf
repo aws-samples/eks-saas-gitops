@@ -58,6 +58,7 @@ resource "aws_security_group" "gitea" {
     to_port     = var.gitea_port
     protocol    = "tcp"
     cidr_blocks = [var.vscode_vpc_cidr]
+    description = "Allow Gitea HTTP access from VS Code VPC"
   }
 
   # Allow access from VS Code VPC for Gitea SSH
@@ -66,6 +67,7 @@ resource "aws_security_group" "gitea" {
     to_port     = var.gitea_ssh_port
     protocol    = "tcp"
     cidr_blocks = [var.vscode_vpc_cidr]
+    description = "Allow Gitea SSH access from VS Code VPC"
   }
 
   # Allow access from EKS cluster (same VPC)
@@ -74,6 +76,19 @@ resource "aws_security_group" "gitea" {
     to_port         = var.gitea_port
     protocol        = "tcp"
     security_groups = [var.eks_security_group_id]
+    description     = "Allow Gitea HTTP access from EKS cluster"
+  }
+
+  # Allow access from specific IP for Gitea HTTP (if provided)
+  dynamic "ingress" {
+    for_each = var.allowed_ip != "" ? [1] : []
+    content {
+      from_port   = var.gitea_port
+      to_port     = var.gitea_port
+      protocol    = "tcp"
+      cidr_blocks = [var.allowed_ip]
+      description = "Allow Gitea HTTP access from specific IP"
+    }
   }
 
   egress {

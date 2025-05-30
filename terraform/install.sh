@@ -5,9 +5,14 @@ set -e
 AWS_REGION=${1:-$(aws configure get region)}
 export AWS_REGION
 
+# Get the allowed IP from CloudFormation parameter (if available)
+ALLOWED_IP=${2:-""}
+export ALLOWED_IP
+
 TERRAFORM_DIR="workshop"
 
 echo "Starting infrastructure-only installation in region: ${AWS_REGION}..."
+echo "Using allowed IP for Gitea access: ${ALLOWED_IP}"
 
 # Check if required tools are installed
 check_prerequisites() {
@@ -46,6 +51,8 @@ deploy_terraform_infra() {
     echo "Planning Terraform deployment (infrastructure only) in region: ${AWS_REGION}..."
     # Pass AWS region as a variable to Terraform
     export TF_VAR_aws_region="${AWS_REGION}"
+    export TF_VAR_allowed_ip="${ALLOWED_IP}"
+    
     terraform plan -target=module.vpc \
                   -target=module.ebs_csi_irsa_role \
                   -target=module.image_automation_irsa_role \

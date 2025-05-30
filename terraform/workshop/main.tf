@@ -160,6 +160,7 @@ module "gitea" {
   vpc_cidr        = local.vpc_cidr
   subnet_ids      = module.vpc.public_subnets
   vscode_vpc_cidr = data.aws_vpc.vscode.cidr_block
+  allowed_ip      = var.allowed_ip
 
   gitea_port            = var.gitea_port
   gitea_ssh_port        = var.gitea_ssh_port

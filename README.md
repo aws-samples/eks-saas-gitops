@@ -71,7 +71,7 @@ This repository is organized to facilitate a hands-on learning experience, struc
 
 ### Architecture Diagram
 
-![Repository Structure Diagram](./static/github-repo-template.png)
+![Repository Structure Diagram](./static/guidance-architecture.png)
 
 *Figure 1: EKS SaaS GitOps Repository Structure*
 

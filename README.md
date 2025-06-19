@@ -1,4 +1,4 @@
-# Guidance for EKS SaaS GitOps
+# Guidance for Building SaaS applications on Amazon EKS using GitOps
 
 ## Table of Contents
 
@@ -77,15 +77,19 @@ This repository is organized to facilitate a hands-on learning experience, struc
 
 ### Architecture Steps
 
-1. Admin/DevOps engineer sets up the initial infrastructure using Terraform scripts provided in the `/terraform` directory.
+1. DevOps engineer defines a per-environment Terraform variable file that control all of the environment-specific configuration. This configuration file is used in all steps of deployment process by all IaC configurations to create different EKS environments.
 
-2. The GitOps configurations in the `/gitops` directory are used to establish the continuous deployment pipeline.
+2. DevOps engineer applies the environment configuration using Terraform with AWS EKS Blueprints following the deployment process defined in the guidance.
 
-3. Helm charts from the `/helm-charts` directory are deployed to configure both shared services and tenant-specific resources.
+3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured with corresponding VPC Endpoints to provide access to resources deployed in private VPC.
 
-4. Sample microservices from the `/tenant-microservices` directory demonstrate the multi-tenant application architecture.
+4. User facing Identity and Access Management (IAM) roles (Cluster Admin, Karpenter Controller, Argo Workflow, Argo Events, LB Controller, TF Controller) are created for various access levels to EKS cluster resources, as recommended in Kubernetes security best practices.
 
-5. Tenant onboarding is automated using scripts from the `/workflow-scripts` directory, which create tenant-specific repositories and configurations.
+5. Amazon Elastic Kubernetes Service (EKS) cluster is provisioned with Managed Nodes Group that run critical cluster add-ons (CoreDNS, AWS Load Balancer Controller and Karpenter) on its compute node instances. Karpenter will manage compute capacity to other add-ons, as well as business applications that will be deployed by user while prioritizing provisioning Amazon EC2 Spot instances for the best price-performance.
+
+6. Other selected EKS add-ons are deployed based on the configurations defined in the per-environment Terraform configuration file (see Step1 above).
+
+7. Gitea source code repository running on Amazon EC2 instance can be accessed by Developers to change microservice source code.
 
 ### AWS services in this Guidance
 
@@ -104,7 +108,7 @@ This repository is organized to facilitate a hands-on learning experience, struc
 ## Cost
 
 You are responsible for the cost of the AWS services used while running this guidance. 
-As of May 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region is approximately **$414.71/month**.
+As of May 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region is approximately **$329.25/month**.
 
 We recommend creating a [budget](https://alpha-docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-create.html) through [AWS Cost Explorer](http://aws.amazon.com/aws-cost-management/aws-cost-explorer/) to help manage costs. Prices are subject to change. For full details, refer to the pricing webpage for each AWS service used in this guidance.
 
@@ -115,20 +119,17 @@ The following table provides a sample cost breakdown for deploying this guidance
 | **AWS service** | Dimensions | Cost, month [USD] |
 |-----------------|------------|-------------------|
 | Amazon EKS | 1 cluster | $73.00 |
-| Amazon VPC | 2 NAT Gateways | $65.78 |
-| Amazon EC2 | 2 m6g.large instances | $112.42 |
-| Amazon EC2 | 1 t3.large instance (VSCode Server) | $60.74 |
-| Amazon EC2 | 1 t2.micro instance (Gitea) | $8.47 |
-| Amazon ECR | Image storage and data transfer | $10.00 |
-| Amazon EBS | gp2 storage volumes and snapshots | $17.97 |
-| Application Load Balancer | 1 ALB for workloads | $16.66 |
-| Amazon VPC | Public IP addresses | $3.65 |
+| Amazon EC2 | 2 m6g.large instances | $57.81 |
+| Amazon EC2 | 1 t3.large instance (VSCode Server) | $64.74 |
+| Amazon EC2 | 1 t2.micro instance (Gitea) | $10.47 |
+| Amazon ECR | Image storage and data transfer | $25.00 |
+| Application Load Balancer | 1 ALB for workloads | $18.03 |
+| Amazon VPC | Public IP addresses, NAT Gateway | $70.20 |
 | AWS Key Management Service (KMS) | Keys and requests | $7.00 |
 | Amazon CloudWatch | Metrics | $3.00 |
-| AWS Systems Manager | Parameter Store and automation | $36.02 |
-| **TOTAL** |  | **$414.71/month** |
+| **TOTAL** |  | **$329.25/month** |
 
-For a more accurate estimate based on your specific configuration and usage patterns, we recommend using the [AWS Pricing Calculator](https://calculator.aws).
+For a more accurate estimate based on your specific configuration and usage patterns, we recommend using the [AWS Pricing Calculator](https://calculator.aws/#/estimate?id=44e4bfe114a562642dd1002fdc101c4c15433fe3).
 
 ## Supported AWS Regions
 
@@ -182,6 +183,50 @@ For specific implementation quotas, consider the following key components and se
 - **IAM Roles**: Verify that you have the necessary quota for IAM roles, as these are critical for securing your EKS clusters.
 - **AWS Systems Manager**: Review the quota for Systems Manager resources, which are used for operational insights and management.
 - **AWS Secrets Manager**: If you're using Secrets Manager for storing sensitive information, ensure your quota is adequate.
+
+## Security
+
+When you build systems on AWS infrastructure, security responsibilities are shared between you and AWS. This [shared responsibility model](https://aws.amazon.com/compliance/shared-responsibility-model/) reduces your operational burden because AWS operates, manages, and controls the components including the host operating system, the virtualization layer, and the physical security of the facilities in which the services operate. For more information about AWS security, visit [AWS Cloud Security](https://aws.amazon.com/security/).
+
+This guidance implements several security best practices and AWS services to enhance the security posture of your EKS SaaS GitOps environment. Here are the key security components and considerations:
+
+### Identity and Access Management (IAM)
+
+- **IAM Roles**: The architecture uses predefined IAM roles (Cluster Admin, Karpenter Controller, Argo Workflow, Argo Events, LB Controller, TF Controller) to manage access to the EKS cluster resources. This follows the principle of least privilege, ensuring users and services have only the permissions necessary to perform their tasks.
+
+- **EKS Managed Node Groups**: These use IAM roles with specific permissions required for nodes to join the cluster and for pods to interact with AWS services.
+
+- **RBAC Configuration**: Role-Based Access Control is implemented within Kubernetes to provide granular access management for cluster resources.
+
+### Network Security
+
+- **VPC Configuration**: The solution deploys resources into a Virtual Private Cloud with 3 Availability Zones (AZs) and corresponding VPC Endpoints to provide secure access to resources deployed in private VPC segments.
+
+- **Security Groups**: Security groups are configured to restrict traffic between components based on the principle of least privilege.
+
+- **Network Policies**: Kubernetes network policies are implemented to control pod-to-pod communication within the cluster.
+
+### Data Protection
+
+- **Encryption**: All data at rest and in transit is encrypted using AWS KMS customer managed keys (CMKs) and TLS, respectively.
+
+- **Secrets Management**: Sensitive information is stored securely using Kubernetes secrets and AWS Secrets Manager.
+
+### Monitoring and Logging
+
+- **CloudWatch Integration**: The solution integrates with Amazon CloudWatch for monitoring and logging of EKS cluster activities.
+
+- **Audit Logging**: Kubernetes audit logging is enabled to track actions performed within the cluster.
+
+### Tenant Isolation
+
+- **Multi-Tenancy Security**: The solution implements strong tenant isolation with separate namespaces, network policies, and resource quotas for each tenant.
+
+### Secure Deployment
+
+- **GitOps Approach**: The GitOps methodology ensures that all changes to the infrastructure and applications are version-controlled, reviewed, and auditable.
+
+- **Source Code Security**: Gitea source code repository running on Amazon EC2 instance provides secure access controls for developers changing microservice source code.
 
 ## Prerequisites
 

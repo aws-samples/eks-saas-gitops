@@ -15,7 +15,7 @@ locals {
 ################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 4.0"
+  version = "4.0.2"
 
   name = local.name
   cidr = local.vpc_cidr
@@ -78,7 +78,7 @@ module "image_automation_irsa_role" {
 ################################################################################
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.12"
+  version = "19.12"
 
   cluster_name                   = local.name
   cluster_version                = var.cluster_version

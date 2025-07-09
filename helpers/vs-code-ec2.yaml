@@ -76,7 +76,7 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-vscode-vpc # This is the tag Terraform will look for
+          Value: eks-saas-gitops-vscode-vpc # This is the tag Terraform will look for
         - Key: Environment
           Value: !Sub ${EnvironmentName}
 
@@ -263,7 +263,7 @@ Resources:
           CidrIp: !Ref AllowedIP
       Tags:
         - Key: Name
-          Value: !Sub ${EnvironmentName}-vscode-sg
+          Value: eks-saas-gitops-vscode-sg
         - Key: Environment
           Value: !Sub ${EnvironmentName}
 

@@ -205,66 +205,6 @@ resource "aws_route" "gitea_to_vscode" {
 # Kubernetes Resources
 ################################################################################
 
-# Get the Gitea token from SSM Parameter Store
-data "aws_ssm_parameter" "gitea_token" {
-  name            = "/eks-saas-gitops/gitea-flux-token"
-  with_decryption = true
-
-  # Add a depends_on to ensure the Gitea instance has had time to create the token
-  depends_on = [module.gitea]
-}
-
-# Clone main repo
-resource "gitea_repository" "eks-saas-gitops" {
-  username                 = var.gitea_admin_user
-  name                     = "eks-saas-gitops"
-  description              = "GitOps SaaS Repository"
-  private                  = false
-  mirror                   = false
-  migration_clone_addresse = "https://github.com/${var.github_username}/gitops-manifests-template.git"
-  migration_service        = "git"
-
-  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
-}
-
-# Create repositories for each microservice with mirroring
-resource "gitea_repository" "producer" {
-  username                 = var.gitea_admin_user
-  name                     = "producer"
-  description              = "Producer microservice repository"
-  private                  = false
-  mirror                   = false
-  migration_clone_addresse = "https://github.com/${var.github_username}/producer-template.git"
-  migration_service        = "git"
-
-  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
-}
-
-resource "gitea_repository" "consumer" {
-  username                 = var.gitea_admin_user
-  name                     = "consumer"
-  description              = "Consumer microservice repository"
-  private                  = false
-  mirror                   = false
-  migration_clone_addresse = "https://github.com/${var.github_username}/consumer-template.git"
-  migration_service        = "git"
-
-  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
-}
-
-resource "gitea_repository" "payments" {
-  username                 = var.gitea_admin_user
-  name                     = "payments"
-  description              = "Payments microservice repository"
-  private                  = false
-  mirror                   = false
-  migration_clone_addresse = "https://github.com/${var.github_username}/payments-template.git"
-  migration_service        = "git"
-
-  depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
-}
-
-
 # Create the flux-system namespace, needed for GitOps SaaS Infra ConfigMap
 resource "kubernetes_namespace" "flux_system" {
   metadata {
@@ -299,3 +239,4 @@ resource "gitea_repository" "eks-saas-gitops" {
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
+

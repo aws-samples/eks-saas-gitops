@@ -1,0 +1,58 @@
+# Gitea Actions workflow for building and pushing Docker images to Amazon ECR
+# This workflow uses the EC2 instance role for AWS authentication
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    # This runs on the Gitea runner we've set up on the EC2 instance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        # No need to provide AWS credentials as the runner inherits them from the EC2 instance role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install AWS CLI
+        run: |
+          apt-get update && apt-get install -y curl unzip
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
+          aws --version
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        run: |
+          # Use AWS CLI to get ECR login token and authenticate Docker
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ vars.REPOSITORY_URI }}
+
+      - name: Build, tag, and push image to Amazon ECR
+        run: |
+          echo "Build started on $(date)"
+          echo "Building the Docker image..."
+          docker build -t ${{ vars.REPOSITORY_URI }}:latest .
+          
+          # Create a timestamp-based tag for versioning
+          TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+          TAG="prd-$TIMESTAMP"
+          
+          echo "Tagging image as ${{ vars.REPOSITORY_URI }}:$TAG"
+          docker tag ${{ vars.REPOSITORY_URI }}:latest ${{ vars.REPOSITORY_URI }}:$TAG
+          
+          echo "Pushing the Docker image..."
+          docker push ${{ vars.REPOSITORY_URI }}:$TAG
+          docker push ${{ vars.REPOSITORY_URI }}:latest
+          
+          echo "Build completed on $(date)"

@@ -3,8 +3,6 @@ module "gitops_saas_infra" {
   name                      = var.name
   cluster_name              = module.eks.cluster_name
   cluster_oidc_provider_arn = module.eks.oidc_provider_arn
-  vpc_id                    = module.vpc.vpc_id
-  private_subnets           = module.vpc.private_subnets
 
   depends_on = [data.aws_availability_zones.available, data.aws_caller_identity.current, data.aws_region.current]
 }
@@ -15,6 +13,14 @@ resource "null_resource" "execute_templating_script" {
   }
 
   depends_on = [module.gitops_saas_infra]
+}
+
+resource "null_resource" "execute_setup_repos_script" {
+  provisioner "local-exec" {
+    command = "bash ${path.module}/setup-repos.sh"
+  }
+
+  depends_on = [null_resource.execute_templating_script]
 }
 
 # Create ConfigMap with important outputs from gitops_saas_infra module

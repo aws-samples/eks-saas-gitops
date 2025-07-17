@@ -119,7 +119,7 @@ create_gitea_repositories() {
     
     # Apply the Gitea repository resources
     terraform apply -target=data.aws_ssm_parameter.gitea_token --auto-approve
-    terraform apply -target=gitea_repository.eks-saas-gitops -target=gitea_repository.producer -target=gitea_repository.consumer -target=gitea_repository.payments --auto-approve
+    terraform apply -target=gitea_repository.eks-saas-gitops --auto-approve
     
     echo "Gitea repositories created successfully!"
 }
@@ -129,6 +129,7 @@ apply_flux() {
     echo "Applying GitOps infrastructure and Flux..."
     terraform apply -target=module.gitops_saas_infra -target=kubernetes_config_map.saas_infra_outputs --auto-approve
     terraform apply -target=null_resource.execute_templating_script --auto-approve
+    terraform apply -target=null_resource.execute_setup_repos_script --auto-approve
     terraform apply -target=module.flux_v2 --auto-approve
     
     sleep 120

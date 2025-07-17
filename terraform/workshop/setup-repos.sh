@@ -104,6 +104,7 @@ for SERVICE in "${!MICROSERVICES_ECR[@]}"; do
   # Initialize git repository and push
   cd "$SERVICE_DIR"
   git init
+  git checkout -b main
   git add .
   git config --local user.email "admin@example.com"
   git config --local user.name "Admin"
@@ -114,7 +115,7 @@ for SERVICE in "${!MICROSERVICES_ECR[@]}"; do
 
   # Push to Gitea
   echo "Pushing $SERVICE code to Gitea..."
-  git push -u origin main --force
+  git push origin main
   
   # Set repository variables
   echo "Setting repository variables for $SERVICE..."

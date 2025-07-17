@@ -15,6 +15,14 @@ resource "null_resource" "execute_templating_script" {
   depends_on = [module.gitops_saas_infra]
 }
 
+resource "null_resource" "execute_setup_repos_script" {
+  provisioner "local-exec" {
+    command = "bash ${path.module}/setup-repos.sh"
+  }
+
+  depends_on = [null_resource.execute_templating_script]
+}
+
 # Create ConfigMap with important outputs from gitops_saas_infra module
 resource "kubernetes_config_map" "saas_infra_outputs" {
   metadata {

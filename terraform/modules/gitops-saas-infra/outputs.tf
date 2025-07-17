@@ -62,47 +62,6 @@ output "argoworkflows_deployment_queue_url" {
   value       = aws_sqs_queue.argoworkflows_deployment_queue.url
 }
 
-# ##################
-# # Flux Repo
-# ##################
-# output "aws_codecommit_flux_clone_url_http" {
-#   description = "AWS CodeCommit HTTP based clone URL"
-#   value       = module.codecommit_flux.clone_url_http
-# }
-
-# output "aws_codecommit_flux_clone_url_ssh" {
-#   description = "AWS CodeCommit SSH based clone URL including the SSH public key ID for the Flux repository."
-#   value = replace(
-#     module.codecommit_flux.clone_url_ssh,
-#     "ssh://",
-#     format("ssh://%s@", aws_iam_user_ssh_key.codecommit_user.ssh_public_key_id)
-#   )
-# }
-
-
-# output "ssh_public_key_id" {
-#   description = "The SSH public key ID for the CodeCommit user"
-#   value       = aws_iam_user_ssh_key.codecommit_user.ssh_public_key_id
-# }
-
-##################
-# Applications
-##################
-# output "codecommit_repository_urls" {
-#   value = {
-#     for key, repo in module.codecommit : 
-#     key => replace(
-#       repo.clone_url_ssh,
-#       "ssh://",
-#       format("ssh://%s@", aws_iam_user_ssh_key.codecommit_user.ssh_public_key_id)
-#     )
-#   }
-#   description = "The SSH clone URLs of the CodeCommit repositories, including the SSH public key ID."
-# }
-
-
-
-
 output "ecr_repository_urls" {
   value = { for key, repo in aws_ecr_repository.microservice_container : key => repo.repository_url }
   description = "The URLs of the ECR repositories."

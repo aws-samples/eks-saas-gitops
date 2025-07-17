@@ -15,7 +15,7 @@ data "aws_ami" "amazon_linux_2" {
 
 resource "aws_instance" "gitea" {
   ami                         = data.aws_ami.amazon_linux_2.id
-  instance_type               = "t2.micro"
+  instance_type               = "m5.large"
   iam_instance_profile        = aws_iam_instance_profile.gitea.name
   subnet_id                   = var.subnet_ids[0]
   associate_public_ip_address = true
@@ -130,6 +130,31 @@ resource "aws_iam_role_policy" "ssm_access" {
           "ssm:PutParameter"
         ]
         Resource = ["arn:aws:ssm:*:*:parameter/eks-saas-gitops/*"]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ecr_access" {
+  name = "ecr-access"
+  role = aws_iam_role.gitea.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+        ]
+        Resource = "*"
       }
     ]
   })

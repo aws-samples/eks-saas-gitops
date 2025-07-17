@@ -8,10 +8,10 @@ command -v jq >/dev/null 2>&1 || { echo "Error: jq is required but not installed
 command -v aws >/dev/null 2>&1 || { echo "Error: aws CLI is required but not installed."; exit 1; }
 
 # Configuration
-GITEA_URL="http://13.220.18.182:3000"
+GITEA_URL=""
 GITEA_USER="admin"
-GITEA_PASSWORD="AdminPassword123!"
-AWS_REGION="us-east-1"
+GITEA_PASSWORD=""
+AWS_REGION=""
 MICROSERVICES=("producer" "consumer" "payments")
 REPO_DIR="$(pwd)/temp-repos"
 

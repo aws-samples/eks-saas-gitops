@@ -3,8 +3,6 @@ module "gitops_saas_infra" {
   name                      = var.name
   cluster_name              = module.eks.cluster_name
   cluster_oidc_provider_arn = module.eks.oidc_provider_arn
-  vpc_id                    = module.vpc.vpc_id
-  private_subnets           = module.vpc.private_subnets
 
   depends_on = [data.aws_availability_zones.available, data.aws_caller_identity.current, data.aws_region.current]
 }

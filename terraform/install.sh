@@ -179,6 +179,11 @@ clone_gitea_repos() {
     rm -rf "${TEMP_DIR}"
     
     echo "Repository cloning completed successfully!"
+
+    echo "Moving eks-saas-gitops up one level"
+    cd "${REPO_ROOT}/.."
+    mv eks-saas-gitops ../
+    
 }
 
 # Main execution

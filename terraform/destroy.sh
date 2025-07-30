@@ -61,6 +61,12 @@ terraform destroy -target=module.eks -auto-approve || true
 echo "Destroying VPC and related resources..."
 terraform destroy -target=module.vpc -auto-approve || true
 
+# Clean up IAM roles that might prevent reprovisioning
+echo "Destroying IAM roles..."
+terraform destroy -target=module.ebs_csi_irsa_role -auto-approve || true
+terraform destroy -target=module.image_automation_irsa_role -auto-approve || true
+terraform destroy -target=module.gitops_saas_infra -auto-approve || true
+
 # Finally, attempt to destroy everything else
 echo "Running final terraform destroy..."
 terraform destroy -auto-approve

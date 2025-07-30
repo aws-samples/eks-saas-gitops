@@ -183,6 +183,9 @@ clone_gitea_repos() {
     echo "Moving eks-saas-gitops up one level"
     cd "${REPO_ROOT}/.."
     mv eks-saas-gitops ../
+
+    echo "Move values.yaml from /home/ec2-user/eks-saas-gitops/helm-charts/helm-tenant-chart/values.yaml to /home/ec2-user/environment/gitops-gitea-repo/helm-charts/helm-tenant-chart"
+    cp /home/ec2-user/eks-saas-gitops/helm-charts/helm-tenant-chart/values.yaml /home/ec2-user/environment/gitops-gitea-repo/helm-charts/helm-tenant-chart/
     
 }
 

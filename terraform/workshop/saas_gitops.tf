@@ -66,8 +66,9 @@ resource "kubernetes_config_map" "saas_infra_outputs" {
     ecr_onboarding_service_url = lookup(module.gitops_saas_infra.ecr_repository_urls, "onboarding_service", "")
 
     # Gitea information
-    gitea_url = "http://${module.gitea.private_ip}:3000"
-    gitea_token = data.aws_ssm_parameter.gitea_flux_token.value
+    gitea_url        = module.gitea.private_ip
+    gitea_public_url = "http://${module.gitea.public_ip}:3000"
+    gitea_token      = data.aws_ssm_parameter.gitea_flux_token.value
   }
 
   depends_on = [module.gitops_saas_infra, kubernetes_namespace.flux_system]

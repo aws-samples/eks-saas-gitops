@@ -1,12 +1,19 @@
 #!/bin/bash
 set -e
 
+# Accept AWS region as parameter
+AWS_REGION=${1:-$(aws configure get region)}
+export AWS_REGION
+
 TERRAFORM_DIR="workshop"
 
-echo "Starting infrastructure destruction..."
+echo "Starting infrastructure destruction in region: ${AWS_REGION}..."
 
 # Change to the terraform workshop directory
 cd "$TERRAFORM_DIR"
+
+# Set terraform variables
+export TF_VAR_aws_region="${AWS_REGION}"
 
 # First, ensure the Gitea token is available in Terraform state
 echo "Retrieving Gitea token into Terraform state..."
@@ -14,9 +21,6 @@ terraform apply --target data.aws_ssm_parameter.gitea_token --auto-approve
 
 # Skip provider verification since Gitea server will be destroyed
 export TF_SKIP_PROVIDER_VERIFY=1
-
-# Get AWS region
-AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo ${AWS_REGION:-$(aws configure get region)})
 
 # Force remove flux-system namespace if it's stuck
 echo "Checking for stuck flux-system namespace..."

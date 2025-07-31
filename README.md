@@ -257,19 +257,47 @@ Follow these steps to deploy the EKS SaaS GitOps guidance:
    - Find the `VSCodeURL` output value and click on the link
    - This will open the VSCode web interface in your browser
    - Input the password copied from `VsCodePassword`
-   - The repository connected to Flux and your Amazon EKS Cluster will be automatically cloned and available in the VSCode workspace on `/home/ec2-user/environment/gitops-gitea-repo`
+   - The initial guidance repository (this repository) will be available at `/home/ec2-user/eks-saas-gitops`
+   - The repository connected to Flux and your Amazon EKS Cluster will be automatically cloned and available in the VSCode workspace at `/home/ec2-user/environment/gitops-gitea-repo`
    - If you want to understand the infrastructure components or make customizations, you can review the terraform directory:
      ```
-     cd /home/ec2-user/environment/eks-saas-gitops/terraform
+     cd /home/ec2-user/eks-saas-gitops/terraform
      ```
-   - The `environment/eks-saas-gitops` is the repo used to create the entire Stack, the `environment/gitops-gitea-repo` is the Gitea repo connected to Flux and the EKS Cluster.
+   - The `/home/ec2-user/eks-saas-gitops` is the initial guidance repo used to create the entire Stack, while `/home/ec2-user/environment/gitops-gitea-repo` is the Gitea repo connected to Flux and the EKS Cluster.
 
 4. **Explore the GitOps Implementation**:
    - After the infrastructure deployment is complete, you can explore the GitOps implementation and tenant onboarding process
    - The sample microservices and Helm charts are available in their respective directories
    - Use the workflow scripts to automate tenant onboarding and application deployment
 
-For more detailed instructions and advanced configurations, refer to the [terraform/README.md](terraform/README.md) file.
+## Cleanup and Destruction
+
+When you're finished with the workshop or need to clean up the resources to avoid ongoing costs, you can use the provided destruction script.
+
+### Running the Destroy Script
+
+Navigate to the terraform directory and run the destroy script with your desired AWS region as a parameter:
+
+```bash
+cd terraform
+./destroy.sh <AWS_REGION>
+```
+
+**Example:**
+
+```bash
+# Destroy resources in us-east-1
+./destroy.sh us-east-1
+```
+
+The destroy script will:
+- Clean up ECR repositories and their images
+- Remove EKS node groups and cluster resources
+- Destroy VPC and networking components
+- Clean up IAM roles and policies
+- Remove all other infrastructure components created during deployment
+
+**Important:** The destruction process may take 15-20 minutes to complete. Ensure you have the necessary AWS permissions to delete all the resources that were created during the initial deployment.
 
 ## License
 

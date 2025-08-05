@@ -80,7 +80,8 @@ resource "aws_iam_instance_profile" "karpenter_instance_profile" {
 ################################################################################
 # SQS Queue to Trigger ArgoWorkflows
 resource "aws_sqs_queue" "karpenter_interruption_queue" {
-  name = local.name
+  name                    = local.name
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_iam_policy" "karpenter_sqs_policy" {
@@ -251,13 +252,18 @@ resource "aws_s3_bucket" "argo_artifacts" {
 
 # SQS Queue to Trigger ArgoWorkflows
 resource "aws_sqs_queue" "argoworkflows_onboarding_queue" {
-  name = "argoworkflows-onboarding-queue"
+  name                    = "argoworkflows-onboarding-queue"
+  sqs_managed_sse_enabled = true
 }
+
 resource "aws_sqs_queue" "argoworkflows_offboarding_queue" {
-  name = "argoworkflows-offboarding-queue"
+  name                    = "argoworkflows-offboarding-queue"
+  sqs_managed_sse_enabled = true
 }
+
 resource "aws_sqs_queue" "argoworkflows_deployment_queue" {
-  name = "argoworkflows-deployment-queue"
+  name                    = "argoworkflows-deployment-queue"
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_iam_policy" "argosensor-policy" {

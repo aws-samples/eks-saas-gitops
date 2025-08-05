@@ -75,15 +75,15 @@ resource "aws_ssm_parameter" "gitea_admin_password" {
 module "gitea" {
   source = "../modules/gitea"
 
-  name               = "${var.name}-gitea"
-  vpc_id             = aws_vpc.gitea_vpc.id
-  vpc_cidr           = var.vpc_cidr
-  subnet_ids         = [aws_subnet.gitea_subnet.id]
-  vscode_vpc_cidr    = var.vpc_cidr
-  gitea_port         = 3000
-  gitea_ssh_port     = 222
-  allowed_ip         = var.allowed_ip
-  gitea_admin_password = var.gitea_admin_password
+  name                  = "${var.name}-gitea"
+  vpc_id                = aws_vpc.gitea_vpc.id
+  vpc_cidr              = var.vpc_cidr
+  subnet_ids            = [aws_subnet.gitea_subnet.id]
+  vscode_vpc_cidr       = var.vpc_cidr
+  gitea_port            = 3000
+  gitea_ssh_port        = 222
+  allowed_ip            = var.allowed_ip
+  gitea_admin_password  = var.gitea_admin_password
   eks_security_group_id = aws_security_group.dummy_sg.id # Dummy SG for testing
 }
 
@@ -138,6 +138,6 @@ output "gitea_url" {
 }
 
 output "ecr_repository_urls" {
-  value = { for key, repo in aws_ecr_repository.microservice_container : key => repo.repository_url }
+  value       = { for key, repo in aws_ecr_repository.microservice_container : key => repo.repository_url }
   description = "The URLs of the ECR repositories."
 }

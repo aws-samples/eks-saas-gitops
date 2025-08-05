@@ -120,8 +120,9 @@ module "consumer_irsa_role" {
 }
 
 resource "aws_sqs_queue" "consumer_sqs" {
-  count = var.enable_consumer == true ? 1 : 0
-  name  = "consumer-${var.tenant_id}-${random_string.random_suffix.result}"
+  count                   = var.enable_consumer == true ? 1 : 0
+  name                    = "consumer-${var.tenant_id}-${random_string.random_suffix.result}"
+  sqs_managed_sse_enabled = true
 
   tags = {
     Name = var.tenant_id
@@ -148,6 +149,11 @@ resource "aws_dynamodb_table" "consumer_ddb" {
   hash_key     = "tenant_id"
   range_key    = "message_id"
   billing_mode = "PAY_PER_REQUEST"
+
+  point_in_time_recovery {
+    enabled                 = true
+    recovery_period_in_days = 1
+  }
 
   attribute {
     name = "tenant_id"

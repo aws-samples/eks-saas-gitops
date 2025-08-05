@@ -4,17 +4,17 @@ output "karpenter_node_role_arn" {
 
 output "tf_controller_irsa" {
   description = "IAM Role for TF Controller Service Account"
-  value = module.tf_controller_irsa_role.iam_role_arn
+  value       = module.tf_controller_irsa_role.iam_role_arn
 }
 
 output "lb_controller_irsa" {
   description = "IAM Role for LB Controller Service Account"
-  value = module.lb_controller_irsa.iam_role_arn
+  value       = module.lb_controller_irsa.iam_role_arn
 }
 
 output "karpenter_irsa" {
   description = "IAM Role for Karpenter Service Account"
-  value = module.karpenter_irsa_role.iam_role_arn
+  value       = module.karpenter_irsa_role.iam_role_arn
 }
 
 output "argo_workflows_irsa" {
@@ -63,7 +63,7 @@ output "argoworkflows_deployment_queue_url" {
 }
 
 output "ecr_repository_urls" {
-  value = { for key, repo in aws_ecr_repository.microservice_container : key => repo.repository_url }
+  value       = { for key, repo in aws_ecr_repository.microservice_container : key => repo.repository_url }
   description = "The URLs of the ECR repositories."
 }
 

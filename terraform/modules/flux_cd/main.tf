@@ -29,9 +29,9 @@ resource "local_file" "flux_instance_manifest" {
       name      = "flux"
       namespace = "flux-system"
       annotations = {
-        "fluxcd.controlplane.io/reconcileEvery"        = "1h"
+        "fluxcd.controlplane.io/reconcileEvery"         = "1h"
         "fluxcd.controlplane.io/reconcileArtifactEvery" = "10m"
-        "fluxcd.controlplane.io/reconcileTimeout"      = "5m"
+        "fluxcd.controlplane.io/reconcileTimeout"       = "5m"
       }
     }
     spec = {
@@ -56,10 +56,10 @@ resource "local_file" "flux_instance_manifest" {
         "image-automation-controller"
       ]
       cluster = {
-        type         = "kubernetes"
-        multitenant  = false
+        type          = "kubernetes"
+        multitenant   = false
         networkPolicy = true
-        domain       = "cluster.local"
+        domain        = "cluster.local"
       }
       kustomize = {
         patches = [
@@ -88,8 +88,8 @@ resource "local_file" "flux_instance_manifest" {
             }
             patch = yamlencode([
               {
-                op    = "add"
-                path  = "/metadata/annotations"
+                op   = "add"
+                path = "/metadata/annotations"
                 value = {
                   "eks.amazonaws.com/role-arn" = var.image_automation_controller_sa_annotations
                 }
@@ -103,8 +103,8 @@ resource "local_file" "flux_instance_manifest" {
             }
             patch = yamlencode([
               {
-                op    = "add"
-                path  = "/metadata/annotations"
+                op   = "add"
+                path = "/metadata/annotations"
                 value = {
                   "eks.amazonaws.com/role-arn" = var.image_reflection_controller_sa_annotations
                 }

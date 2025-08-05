@@ -22,7 +22,7 @@ variable "git_branch" {
 variable "git_url" {
   description = "Git URL to be used by Flux"
   type        = string
-  default = ""
+  default     = ""
 }
 
 variable "gitea_repo_url" {

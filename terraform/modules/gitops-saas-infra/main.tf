@@ -261,7 +261,7 @@ resource "aws_s3_bucket" "argo_artifacts" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "example" {
+resource "aws_s3_bucket_public_access_block" "argo_artifacts" {
   bucket = aws_s3_bucket.argo_artifacts.id
 
   block_public_acls       = true

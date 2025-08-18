@@ -46,8 +46,19 @@ resource "aws_ecr_repository" "argoworkflow_container" {
 resource "random_uuid" "this" {}
 
 resource "aws_s3_bucket" "codeartifacts" {
+  # checkov:skip=CKV2_AWS_61: This S3 bucket has no lifecycle requirements
+  # checkov:skip=CKV2_AWS_62: This S3 bucket has no notification requirements
   bucket        = "codestack-artifacts-bucket-${random_uuid.this.result}"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_public_access_block" "example" {
+  bucket = aws_s3_bucket.codeartifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_ecr_repository" "microservice_container" {

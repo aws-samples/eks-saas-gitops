@@ -3,28 +3,40 @@
 ################################################################################
 resource "aws_ecr_repository" "tenant_helm_chart" {
   name                 = var.tenant_helm_chart_repo
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
   }
 }
 
 resource "aws_ecr_repository" "application_helm_chart" {
   name                 = var.application_helm_chart_repo
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
   }
 }
 
 resource "aws_ecr_repository" "argoworkflow_container" {
   name                 = var.argoworkflow_container_repo
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
   }
 }
 
@@ -42,10 +54,14 @@ resource "aws_ecr_repository" "microservice_container" {
   for_each = var.microservices
 
   name                 = each.key
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
   }
 
   tags = {

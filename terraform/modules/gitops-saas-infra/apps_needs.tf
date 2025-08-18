@@ -56,7 +56,7 @@ resource "aws_s3_bucket" "codeartifacts" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_public_access_block" "example" {
+resource "aws_s3_bucket_public_access_block" "codeartifacts" {
   bucket = aws_s3_bucket.codeartifacts.id
 
   block_public_acls       = true

@@ -14,6 +14,7 @@ data "aws_ami" "amazon_linux_2" {
 }
 
 resource "aws_instance" "gitea" {
+  # checkov:skip=CKV_AWS_88: Public IP is required for this instance
   ami                         = data.aws_ami.amazon_linux_2.id
   instance_type               = "m5.large"
   iam_instance_profile        = aws_iam_instance_profile.gitea.name
@@ -26,14 +27,20 @@ resource "aws_instance" "gitea" {
 
   user_data                   = base64encode(file("${path.module}/userdata.sh"))
   user_data_replace_on_change = true
-  tags = {
-    Name = var.name
+
+  metadata_options {
+    http_tokens = "required"
   }
+
   root_block_device {
     encrypted = true
   }
-  depends_on = [
 
+  tags = {
+    Name = var.name
+  }
+
+  depends_on = [
     aws_security_group.gitea
   ]
 }

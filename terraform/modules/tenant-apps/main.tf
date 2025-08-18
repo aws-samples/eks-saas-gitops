@@ -131,6 +131,7 @@ resource "aws_sqs_queue" "consumer_sqs" {
 
 resource "aws_ssm_parameter" "dedicated_consumer_sqs" {
   # checkov:skip=CKV2_AWS_34: Not using sensitive information
+  # checkov:skip=CKV2_AWS_337: Not using sensitive information
   count = var.enable_consumer == true ? 1 : 0
   name  = "/${var.tenant_id}/consumer_sqs"
   type  = "String"
@@ -139,6 +140,7 @@ resource "aws_ssm_parameter" "dedicated_consumer_sqs" {
 
 resource "aws_ssm_parameter" "shared_consumer_sqs" {
   # checkov:skip=CKV2_AWS_34: Not using sensitive information
+  # checkov:skip=CKV2_AWS_337: Not using sensitive information
   count = var.enable_consumer == false ? 1 : 0
   name  = "/${var.tenant_id}/consumer_sqs"
   type  = "String"
@@ -174,6 +176,7 @@ resource "aws_dynamodb_table" "consumer_ddb" {
 
 resource "aws_ssm_parameter" "dedicated_consumer_ddb" {
   # checkov:skip=CKV2_AWS_34: Not using sensitive information
+  # checkov:skip=CKV2_AWS_337: Not using sensitive information
   count = var.enable_consumer == true ? 1 : 0
   name  = "/${var.tenant_id}/consumer_ddb"
   type  = "String"

@@ -161,9 +161,14 @@ resource "aws_iam_policy" "karpenter-policy" {
     Statement = [
       {
         "Action" : [
-          "iam:*",
-          "ssm:GetParameter",
+          "iam:AddRoleToInstanceProfile",
+          "iam:CreateInstanceProfile",
+          "iam:DeleteInstanceProfile",
+          "iam:GetInstanceProfile",
+          "iam:RemoveRoleFromInstanceProfile",
+          "iam:TagInstanceProfile",
           "iam:PassRole",
+          "ssm:GetParameter",
           "ec2:DescribeImages",
           "ec2:RunInstances",
           "ec2:DescribeSubnets",
@@ -243,11 +248,22 @@ resource "random_uuid" "uuid" {}
 
 # To store argo artifacts
 resource "aws_s3_bucket" "argo_artifacts" {
+  # checkov:skip=CKV2_AWS_61: This S3 bucket has no lifecycle requirements
+  # checkov:skip=CKV2_AWS_62: This S3 bucket has no notification requirements
   bucket = "saasgitops-argo-${random_uuid.uuid.result}"
 
   tags = {
     Blueprint = var.name
   }
+}
+
+resource "aws_s3_bucket_public_access_block" "example" {
+  bucket = aws_s3_bucket.argo_artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 # SQS Queue to Trigger ArgoWorkflows

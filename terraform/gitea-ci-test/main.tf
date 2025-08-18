@@ -89,6 +89,7 @@ module "gitea" {
 
 # Dummy security group to simulate EKS cluster SG
 resource "aws_security_group" "dummy_sg" {
+  # checkov:skip=CKV2_AWS_5: Security group is attached to gitea module.
   name        = "${var.name}-dummy-sg"
   description = "Dummy security group to simulate EKS cluster"
   vpc_id      = aws_vpc.gitea_vpc.id

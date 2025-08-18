@@ -130,6 +130,7 @@ resource "aws_sqs_queue" "consumer_sqs" {
 }
 
 resource "aws_ssm_parameter" "dedicated_consumer_sqs" {
+  # checkov:skip=CKV2_AWS_34: Not using sensitive information
   count = var.enable_consumer == true ? 1 : 0
   name  = "/${var.tenant_id}/consumer_sqs"
   type  = "String"
@@ -137,6 +138,7 @@ resource "aws_ssm_parameter" "dedicated_consumer_sqs" {
 }
 
 resource "aws_ssm_parameter" "shared_consumer_sqs" {
+  # checkov:skip=CKV2_AWS_34: Not using sensitive information
   count = var.enable_consumer == false ? 1 : 0
   name  = "/${var.tenant_id}/consumer_sqs"
   type  = "String"
@@ -151,8 +153,7 @@ resource "aws_dynamodb_table" "consumer_ddb" {
   billing_mode = "PAY_PER_REQUEST"
 
   point_in_time_recovery {
-    enabled                 = true
-    recovery_period_in_days = 1
+    enabled = true
   }
 
   attribute {
@@ -171,6 +172,7 @@ resource "aws_dynamodb_table" "consumer_ddb" {
 }
 
 resource "aws_ssm_parameter" "dedicated_consumer_ddb" {
+  # checkov:skip=CKV2_AWS_34: Not using sensitive information
   count = var.enable_consumer == true ? 1 : 0
   name  = "/${var.tenant_id}/consumer_ddb"
   type  = "String"
@@ -178,6 +180,7 @@ resource "aws_ssm_parameter" "dedicated_consumer_ddb" {
 }
 
 resource "aws_ssm_parameter" "shared_consumer_ddb" {
+  # checkov:skip=CKV2_AWS_34: Not using sensitive information
   count = var.enable_consumer == false ? 1 : 0
   name  = "/${var.tenant_id}/consumer_ddb"
   type  = "String"

@@ -4,6 +4,9 @@ metadata:
   name: tenant-deployment-template
   namespace: argo-workflows
 spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 8737
   serviceAccountName: argoworkflows-sa # SA with IRSA permissions
   templates:
     - name: clone-repository

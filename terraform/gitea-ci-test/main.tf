@@ -112,10 +112,14 @@ resource "aws_ecr_repository" "microservice_container" {
   for_each = var.microservices
 
   name                 = each.key
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
   }
 
   tags = {

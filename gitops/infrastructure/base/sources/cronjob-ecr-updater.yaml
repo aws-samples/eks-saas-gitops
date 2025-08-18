@@ -40,6 +40,8 @@ kind: CronJob
 metadata:
   name: ecr-credentials-sync
   namespace: flux-system
+  annotations:
+    checkov.io/skip1: CKV_K8S_15=This CronJob's image is immutable (digest-based), making 'Always' pull unnecessary.
 spec:
   suspend: false
   schedule: "*/5 * * * *" # Runs every 5 minutes
@@ -50,13 +52,17 @@ spec:
       template:
         spec:
           serviceAccountName: ecr-credentials-sync
+          automountServiceAccountToken: false
+          securityContext: 
+            runAsNonRoot: true
+            runAsUser: 1001
           restartPolicy: Never
           volumes:
           - name: token
             emptyDir:
               medium: Memory
           initContainers:
-          - image: amazon/aws-cli
+          - image: public.ecr.aws/aws-cli/aws-cli:2.28.12
             name: get-token
             imagePullPolicy: IfNotPresent
             # You will need to set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables if not using
@@ -70,10 +76,22 @@ spec:
             volumeMounts:
             - mountPath: /token
               name: token
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "100m"
+              limits:
+                memory: "128Mi"
+                cpu: "200m"
             command:
             - /bin/sh
             - -ce
             - aws ecr get-login-password --region $REGION > /token/ecr-token
+            securityContext: 
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
           containers:
           - image: ghcr.io/fluxcd/flux-cli:v0.25.2
             name: create-secret
@@ -86,6 +104,18 @@ spec:
             volumeMounts:
             - mountPath: /token
               name: token
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "200m"
+              limits:
+                memory: "256Mi"
+                cpu: "500m"
+            securityContext: 
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
             command:
             - /bin/sh
             - -ce

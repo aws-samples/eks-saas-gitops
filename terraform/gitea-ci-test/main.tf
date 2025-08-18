@@ -19,6 +19,7 @@ resource "aws_vpc" "gitea_vpc" {
 }
 
 resource "aws_subnet" "gitea_subnet" {
+  #checkov:skip=CKV_AWS_130: This subnet requires Public IPs to be assigned. 
   vpc_id                  = aws_vpc.gitea_vpc.id
   cidr_block              = var.subnet_cidr
   map_public_ip_on_launch = true
@@ -95,6 +96,7 @@ resource "aws_security_group" "dummy_sg" {
   vpc_id      = aws_vpc.gitea_vpc.id
 
   egress {
+    description = "Allow all egress"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"

@@ -146,6 +146,7 @@ resource "aws_ssm_parameter" "shared_consumer_sqs" {
 }
 
 resource "aws_dynamodb_table" "consumer_ddb" {
+  # checkov:skip=CKV2_AWS_119: Not using sensitive information
   count        = var.enable_consumer == true ? 1 : 0
   name         = "consumer-${var.tenant_id}-${random_string.random_suffix.result}"
   hash_key     = "tenant_id"

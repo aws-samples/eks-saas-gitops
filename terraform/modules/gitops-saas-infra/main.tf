@@ -248,8 +248,12 @@ resource "random_uuid" "uuid" {}
 
 # To store argo artifacts
 resource "aws_s3_bucket" "argo_artifacts" {
+  # checkov:skip=CKV2_AWS_18: Access logging not required here
+  # checkov:skip=CKV2_AWS_21: Versioning is not meeded at this time
   # checkov:skip=CKV2_AWS_61: This S3 bucket has no lifecycle requirements
   # checkov:skip=CKV2_AWS_62: This S3 bucket has no notification requirements
+  # checkov:skip=CKV2_AWS_144: Cross region is not required at this time
+  # checkov:skip=CKV2_AWS_145: This S3 bucket does not required a KMS Encryption
   bucket = "saasgitops-argo-${random_uuid.uuid.result}"
 
   tags = {

@@ -19,6 +19,8 @@ resource "aws_instance" "gitea" {
   iam_instance_profile        = aws_iam_instance_profile.gitea.name
   subnet_id                   = var.subnet_ids[0]
   associate_public_ip_address = true
+  ebs_optimized               = true
+  monitoring                  = true
 
   vpc_security_group_ids = [aws_security_group.gitea.id]
 
@@ -30,9 +32,8 @@ resource "aws_instance" "gitea" {
   root_block_device {
     encrypted = true
   }
-  monitoring = true
-
   depends_on = [
+
     aws_security_group.gitea
   ]
 }
@@ -96,6 +97,7 @@ resource "aws_security_group" "gitea" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all egress"
   }
 }
 

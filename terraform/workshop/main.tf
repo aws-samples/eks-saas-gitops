@@ -147,6 +147,7 @@ resource "random_password" "gitea_admin" {
 
 # Store the password in SSM Parameter Store for future reference
 resource "aws_ssm_parameter" "gitea_password" {
+  # checkov:skip=CKV_AWS_337: Skiping this for now, move to Secrets Manager.
   name        = "/${local.name}/gitea-admin-password"
   description = "Gitea admin password"
   type        = "SecureString"

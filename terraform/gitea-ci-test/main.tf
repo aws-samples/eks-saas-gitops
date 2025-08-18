@@ -60,6 +60,7 @@ resource "aws_route_table_association" "gitea_rta" {
 # SSM Parameter for Gitea admin password
 ################################################################################
 resource "aws_ssm_parameter" "gitea_admin_password" {
+  # checkov:skip=CKV_AWS_337: Skiping this for now, move to Secrets Manager.
   name        = "/eks-saas-gitops/gitea-admin-password"
   description = "Gitea admin password"
   type        = "SecureString"

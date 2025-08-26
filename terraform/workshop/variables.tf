@@ -71,3 +71,9 @@ variable "allowed_ip" {
   type        = string
   default     = ""
 }
+
+variable "workshop_studio" {
+  description = "Define if the stack is set to deploy on a Workshop Studio Account"
+  type        = bool
+  default     = false
+}

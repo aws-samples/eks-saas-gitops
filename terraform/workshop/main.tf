@@ -14,15 +14,19 @@ locals {
 # Adding guidance solution ID via AWS CloudFormation resource
 ################################################################################
 resource "random_bytes" "this" {
+  count = var.workshop_studio ? 1 : 0
   length = 2
 }
+
 resource "aws_cloudformation_stack" "guidance_deployment_metrics" {
-  name          = "tracking-stack-${random_bytes.this.hex}"
+  count = var.workshop_studio ? 1 : 0
+
+  name          = "tracking-stack-${random_bytes.this[0].hex}"
   on_failure    = "DO_NOTHING"
   template_body = <<STACK
     {
         "AWSTemplateFormatVersion": "2010-09-09",
-        "Description": "This is a CFN stack for Guidance for a Cell-Based Architecture for Amazon EKS on AWS (SO9303)",
+        "Description": "This is a CFN stack for Solution Guidace on Building SaaS applications on Amazon EKS using GitOps (SID TBD))",
         "Resources": {
             "EmptyResource": {
                 "Type": "AWS::CloudFormation::WaitConditionHandle"

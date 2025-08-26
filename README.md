@@ -278,10 +278,11 @@ When you're finished with the workshop or need to clean up the resources to avoi
 ### Running the Destroy Script
 
 Navigate to the terraform directory and run the destroy script with your desired AWS region as a parameter:
-
 ```bash
-cd terraform
-./destroy.sh <AWS_REGION>
+cd /home/ec2-user/eks-saas-gitops/terraform
+```
+```bash
+sh destroy.sh <AWS_REGION>
 ```
 
 **Example:**

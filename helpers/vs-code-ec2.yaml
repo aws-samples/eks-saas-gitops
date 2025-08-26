@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: This stack creates an EC2 instance with VS Code server environment.
+Description: This stack creates an EC2 instance with VS Code server environment for Guidance for Building SaaS Applications on Amazon EKS using GitOps (PLACEHOLDER).
 
 Parameters:
   EnvironmentName:
@@ -222,16 +222,6 @@ Resources:
       Name: !Sub /${EnvironmentName}/waitcondition-url
       Type: "String"
       Value: !Ref WaitHandle
-
-  ################## GUIDANCE TRACKING ##################
-  GuidanceTrackingResource:
-    Type: AWS::CloudFormation::WaitConditionHandle
-    Properties:
-      Tags:
-        - Key: "AWSSolution"
-          Value: "guidance-for-building-saas-applications-on-amazon-eks-using-gitops"
-        - Key: "GithubRepo"
-          Value: "https://github.com/aws-solutions-library-samples/"
 
   ################## Instance Profile ##################
   EC2InstanceProfile:

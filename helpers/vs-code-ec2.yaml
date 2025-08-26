@@ -186,7 +186,7 @@ Resources:
                 - "git clone -b feat/gitea https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops"
                 - "chown -R ec2-user:ec2-user /home/ec2-user/environment"
                 - "sudo -u ec2-user nohup /usr/bin/code-server --port 8080 --host 0.0.0.0 > /dev/null 2>&1 &"
-                - "cd /home/ec2-user/environment/eks-saas-gitops/terraform && chmod +x install.sh && sudo -u ec2-user ./install.sh ${AWS_REGION} \"{{allowedIp}}\" > /home/ec2-user/environment/terraform-install.log 2>&1"
+                - 'cd /home/ec2-user/environment/eks-saas-gitops/terraform && chmod +x install.sh && sudo -u ec2-user ./install.sh ${AWS_REGION} "{{allowedIp}}" > /home/ec2-user/environment/terraform-install.log 2>&1'
                 - "export WAIT_HANDLE_URL=$(aws ssm get-parameter --name '/eks-saas-gitops/waitcondition-url' --query 'Parameter.Value' --output text --region $AWS_REGION)"
                 - 'curl -X PUT -H ''Content-Type: application/json'' --data-binary ''{"Status" : "SUCCESS", "Reason" : "Environment Completed", "UniqueId" : "123456", "Data" : "Complete"}'' "$WAIT_HANDLE_URL"'
 
@@ -222,6 +222,16 @@ Resources:
       Name: !Sub /${EnvironmentName}/waitcondition-url
       Type: "String"
       Value: !Ref WaitHandle
+
+  ################## GUIDANCE TRACKING ##################
+  GuidanceTrackingResource:
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Properties:
+      Tags:
+        - Key: "AWSSolution"
+          Value: "guidance-for-building-saas-applications-on-amazon-eks-using-gitops"
+        - Key: "GithubRepo"
+          Value: "https://github.com/aws-solutions-library-samples/"
 
   ################## Instance Profile ##################
   EC2InstanceProfile:

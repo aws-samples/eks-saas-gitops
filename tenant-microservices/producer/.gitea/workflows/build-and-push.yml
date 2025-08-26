@@ -45,6 +45,5 @@ jobs:
           
           echo "Pushing the Docker image..."
           docker push ${{ vars.REPOSITORY_URI }}:$TAG
-          docker push ${{ vars.REPOSITORY_URI }}:latest
           
           echo "Build completed on $(date)"

@@ -13,11 +13,15 @@ spec:
       container:
         image: "${ecr_argoworkflow_container}:0.1"
         command: ["/bin/sh","-c"]
-        args: ['./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_TOKEN}} && cp -r eks-saas-gitops /mnt/vol/eks-saas-gitops'] 
+        args: ['./01-tenant-clone-repo.sh "$REPO_URL" "$GIT_BRANCH" "$GIT_USERNAME" "$GIT_TOKEN" && cp -r eks-saas-gitops /mnt/vol/eks-saas-gitops'] 
         volumeMounts:
         - name: workdir
           mountPath: /mnt/vol
         env:
+          - name: REPO_URL
+            value: "{{workflow.parameters.REPO_URL}}"
+          - name: GIT_BRANCH
+            value: "{{workflow.parameters.GIT_BRANCH}}"
           - name: GIT_USERNAME
             value: "{{workflow.parameters.GIT_USERNAME}}"
           - name: GIT_TOKEN
@@ -26,13 +30,21 @@ spec:
       container:
         image: "${ecr_argoworkflow_container}:0.1"
         command: ["/bin/sh","-c"]
-        args: ['./03-tenant-deployment.sh {{workflow.parameters.RELEASE_VERSION}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}} {{workflow.parameters.GIT_TOKEN}}'] 
+        args: ['./03-tenant-deployment.sh "$RELEASE_VERSION" "$TENANT_TIER" "$GIT_USER_EMAIL" "$GIT_USERNAME" "$GIT_BRANCH" "$GIT_TOKEN"'] 
         volumeMounts:
         - name: workdir
           mountPath: /mnt/vol
         env:
+          - name: RELEASE_VERSION
+            value: "{{workflow.parameters.RELEASE_VERSION}}"
+          - name: TENANT_TIER
+            value: "{{workflow.parameters.TENANT_TIER}}"
+          - name: GIT_USER_EMAIL
+            value: "{{workflow.parameters.GIT_USER_EMAIL}}"
           - name: GIT_USERNAME
             value: "{{workflow.parameters.GIT_USERNAME}}"
+          - name: GIT_BRANCH
+            value: "{{workflow.parameters.GIT_BRANCH}}"
           - name: GIT_TOKEN
             value: "{{workflow.parameters.GIT_TOKEN}}"
   volumeClaimTemplates:

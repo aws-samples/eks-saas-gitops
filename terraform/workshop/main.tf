@@ -239,4 +239,3 @@ resource "gitea_repository" "eks-saas-gitops" {
 
   depends_on = [module.gitea, data.aws_ssm_parameter.gitea_token]
 }
-

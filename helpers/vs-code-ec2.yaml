@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: This stack creates an EC2 instance with VS Code server environment.
+Description: This stack creates an EC2 instance with VS Code server environment for the Solution Guidace on Building SaaS applications on Amazon EKS using GitOps (SID TBD)"
 
 Parameters:
   EnvironmentName:

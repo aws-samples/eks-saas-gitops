@@ -11,6 +11,28 @@ locals {
 }
 
 ################################################################################
+# Adding guidance solution ID via AWS CloudFormation resource
+################################################################################
+resource "random_bytes" "this" {
+  length = 2
+}
+resource "aws_cloudformation_stack" "guidance_deployment_metrics" {
+  name          = "tracking-stack-${random_bytes.this.hex}"
+  on_failure    = "DO_NOTHING"
+  template_body = <<STACK
+    {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "This is a CFN stack for Guidance for a Cell-Based Architecture for Amazon EKS on AWS (SO9303)",
+        "Resources": {
+            "EmptyResource": {
+                "Type": "AWS::CloudFormation::WaitConditionHandle"
+            }
+        }
+    }
+    STACK
+}
+
+################################################################################
 # VPC and Roles
 ################################################################################
 module "vpc" {

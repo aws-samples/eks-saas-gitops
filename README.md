@@ -246,6 +246,7 @@ Follow these steps to deploy the EKS SaaS GitOps guidance:
    - Choose "Upload a template file" and upload the `helpers/vs-code-ec2.yaml` file from this repository
    - Click "Next" and provide a stack name (e.g., "eks-saas-gitops-vscode")
    - Configure any required parameters and click "Next"
+   - **Note**: The default allowed IPs is set to 0.0.0.0/0 (all IP addresses). For production deployments, consider restricting this to specific IP ranges for enhanced security.
    - Review the configuration and click "Create stack"
    - Wait for the CloudFormation stack to complete deployment (approximately 30 minutes)
    - The Terraform infrastructure is deployed automatically as part of the VSCode server instance setup

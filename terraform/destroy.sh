@@ -19,13 +19,33 @@ export TF_VAR_aws_region="${AWS_REGION}"
 echo "Removing Gitea provider and resources from Terraform configuration..."
 cp providers.tf providers.tf.backup
 cp main.tf main.tf.backup
+cp versions.tf versions.tf.backup
+cp saas_gitops.tf saas_gitops.tf.backup
 
 # Remove Gitea provider from providers.tf
 sed -i '/^provider "gitea"/,/^}/d' providers.tf
+# Remove gitea from required_providers block in versions.tf
+sed -i '/gitea = {/,/}/d' versions.tf
 
 # Remove Gitea resources from main.tf (gitea_repository and related data sources)
-sed -i '/^resource "gitea_repository"/,/^}/d' main.tf
+sed -i '/^resource "gitea_repository" "eks-saas-gitops"/,/^}/d' main.tf
 sed -i '/^data "aws_ssm_parameter" "gitea_token"/,/^}/d' main.tf
+
+# Comment out the entire flux module and gitea data source in saas_gitops.tf
+sed -i '/^data "aws_ssm_parameter" "gitea_flux_token"/,/^}/s/^/# /' saas_gitops.tf
+sed -i '/^module "flux_v2"/,/^}/s/^/# /' saas_gitops.tf
+# Also comment out gitea references in the configmap
+sed -i '/gitea_token.*=/s/^/    # /' saas_gitops.tf
+
+# Remove gitea resources from terraform state
+echo "Removing gitea resources from terraform state..."
+terraform state rm 'gitea_repository.eks-saas-gitops' 2>/dev/null || true
+terraform state rm 'data.aws_ssm_parameter.gitea_token' 2>/dev/null || true
+
+# Reinitialize terraform without gitea provider
+echo "Reinitializing terraform without gitea provider..."
+rm -f .terraform.lock.hcl
+terraform init
 
 # Skip provider verification since Gitea server will be destroyed
 export TF_SKIP_PROVIDER_VERIFY=1
@@ -93,5 +113,7 @@ terraform destroy -auto-approve
 echo "Restoring original Terraform files..."
 mv providers.tf.backup providers.tf
 mv main.tf.backup main.tf
+mv versions.tf.backup versions.tf
+mv saas_gitops.tf.backup saas_gitops.tf
 
 echo "Infrastructure destruction completed."

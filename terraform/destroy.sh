@@ -15,9 +15,17 @@ cd "$TERRAFORM_DIR"
 # Set terraform variables
 export TF_VAR_aws_region="${AWS_REGION}"
 
-# First, ensure the Gitea token is available in Terraform state
-echo "Retrieving Gitea token into Terraform state..."
-terraform apply --target data.aws_ssm_parameter.gitea_token --auto-approve
+# Backup and remove Gitea provider and resources
+echo "Removing Gitea provider and resources from Terraform configuration..."
+cp providers.tf providers.tf.backup
+cp main.tf main.tf.backup
+
+# Remove Gitea provider from providers.tf
+sed -i '/^provider "gitea"/,/^}/d' providers.tf
+
+# Remove Gitea resources from main.tf (gitea_repository and related data sources)
+sed -i '/^resource "gitea_repository"/,/^}/d' main.tf
+sed -i '/^data "aws_ssm_parameter" "gitea_token"/,/^}/d' main.tf
 
 # Skip provider verification since Gitea server will be destroyed
 export TF_SKIP_PROVIDER_VERIFY=1
@@ -33,46 +41,57 @@ fi
 
 # Clean up ECR repositories
 echo "Cleaning up ECR repositories..."
-for repo in $(aws ecr describe-repositories --region $AWS_REGION --query 'repositories[].repositoryName' --output text); do
-    echo "Deleting images from $repo..."
-    aws ecr batch-delete-image \
-        --repository-name "$repo" \
-        --image-ids "$(aws ecr list-images --repository-name "$repo" --query 'imageIds[*]' --output json)" \
-        --region $AWS_REGION || true
+for repo in $(aws ecr describe-repositories --region $AWS_REGION --query 'repositories[].repositoryName' --output text 2>/dev/null || echo ""); do
+    if [ -n "$repo" ]; then
+        echo "Deleting images from $repo..."
+        aws ecr batch-delete-image \
+            --repository-name "$repo" \
+            --image-ids "$(aws ecr list-images --repository-name "$repo" --query 'imageIds[*]' --output json)" \
+            --region $AWS_REGION || true
+    fi
 done
 
-echo "Destroying resources in specific order..."
-
-# First destroy EKS node groups with multiple attempts
-echo "Destroying EKS node groups..."
-for i in {1..3}; do
-    echo "Attempt $i to destroy EKS node groups..."
-    terraform destroy -target=module.eks.aws_eks_node_group.managed_ng -auto-approve && break || {
-        echo "Node group destroy failed, waiting 60 seconds before retry..."
-        sleep 60
-    }
+# Clean up load balancers with eks-saas-gitops tag
+echo "Cleaning up load balancers with eks-saas-gitops tag..."
+# Clean up Application/Network Load Balancers (ELBv2)
+for lb_arn in $(aws elbv2 describe-load-balancers --region $AWS_REGION --query 'LoadBalancers[].LoadBalancerArn' --output text 2>/dev/null || echo ""); do
+    if [ -n "$lb_arn" ] && aws elbv2 describe-tags --resource-arns "$lb_arn" --region $AWS_REGION --query 'TagDescriptions[0].Tags[?contains(Key, `eks-saas-gitops`) || contains(Value, `eks-saas-gitops`) || Key == `kubernetes.io/cluster/eks-saas-gitops`]' --output text | grep -q .; then
+        echo "Deleting ALB/NLB: $lb_arn"
+        aws elbv2 delete-load-balancer --load-balancer-arn "$lb_arn" --region $AWS_REGION || true
+    fi
+done
+# Clean up Classic Load Balancers (ELB)
+for lb_name in $(aws elb describe-load-balancers --region $AWS_REGION --query 'LoadBalancerDescriptions[].LoadBalancerName' --output text 2>/dev/null || echo ""); do
+    if [ -n "$lb_name" ] && aws elb describe-tags --load-balancer-names "$lb_name" --region $AWS_REGION --query 'TagDescriptions[0].Tags[?Key==`kubernetes.io/cluster/eks-saas-gitops`]' --output text | grep -q .; then
+        echo "Deleting classic load balancer: $lb_name"
+        aws elb delete-load-balancer --load-balancer-name "$lb_name" --region $AWS_REGION || true
+    fi
 done
 
-# Wait for node groups to be fully deleted
-echo "Waiting for node groups to be fully deleted..."
-sleep 60
+# Clean up remaining ENIs in VPC
+echo "Cleaning up remaining ENIs..."
+for vpc_id in $(aws ec2 describe-vpcs --region $AWS_REGION --filters "Name=tag:Name,Values=eks-saas-gitops" --query 'Vpcs[].VpcId' --output text 2>/dev/null || echo ""); do
+    if [ -n "$vpc_id" ]; then
+        for eni_id in $(aws ec2 describe-network-interfaces --region $AWS_REGION --filters "Name=vpc-id,Values=$vpc_id" --query 'NetworkInterfaces[?Status==`available`].NetworkInterfaceId' --output text 2>/dev/null || echo ""); do
+            if [ -n "$eni_id" ]; then
+                echo "Deleting ENI: $eni_id"
+                aws ec2 delete-network-interface --network-interface-id "$eni_id" --region $AWS_REGION || true
+            fi
+        done
+    fi
+done
 
-# Then destroy EKS cluster
-echo "Destroying EKS cluster..."
-terraform destroy -target=module.eks -auto-approve || true
+# Wait for cleanup
+echo "Waiting for cleanup to complete..."
+sleep 30
 
-# Then destroy VPC
-echo "Destroying VPC and related resources..."
-terraform destroy -target=module.vpc -auto-approve || true
-
-# Clean up IAM roles that might prevent reprovisioning
-echo "Destroying IAM roles..."
-terraform destroy -target=module.ebs_csi_irsa_role -auto-approve || true
-terraform destroy -target=module.image_automation_irsa_role -auto-approve || true
-terraform destroy -target=module.gitops_saas_infra -auto-approve || true
-
-# Finally, attempt to destroy everything else
-echo "Running final terraform destroy..."
+# Run single terraform destroy
+echo "Running terraform destroy..."
 terraform destroy -auto-approve
+
+# Restore original files
+echo "Restoring original Terraform files..."
+mv providers.tf.backup providers.tf
+mv main.tf.backup main.tf
 
 echo "Infrastructure destruction completed."

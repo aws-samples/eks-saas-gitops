@@ -93,6 +93,19 @@ for vpc_id in $(aws ec2 describe-vpcs --region $AWS_REGION --filters "Name=tag:N
     fi
 done
 
+# Clean up security groups in VPC (except default)
+echo "Cleaning up security groups..."
+for vpc_id in $(aws ec2 describe-vpcs --region $AWS_REGION --filters "Name=tag:Name,Values=eks-saas-gitops" --query 'Vpcs[].VpcId' --output text 2>/dev/null || echo ""); do
+    if [ -n "$vpc_id" ]; then
+        for sg_id in $(aws ec2 describe-security-groups --region $AWS_REGION --filters "Name=vpc-id,Values=$vpc_id" --query 'SecurityGroups[?GroupName!=`default`].GroupId' --output text 2>/dev/null || echo ""); do
+            if [ -n "$sg_id" ]; then
+                echo "Deleting security group: $sg_id"
+                aws ec2 delete-security-group --group-id "$sg_id" --region $AWS_REGION || true
+            fi
+        done
+    fi
+done
+
 # Wait for cleanup
 echo "Waiting for cleanup to complete..."
 sleep 30

@@ -37,10 +37,11 @@ sed -i '/^module "flux_v2"/,/^}/s/^/# /' saas_gitops.tf
 # Also comment out gitea references in the configmap
 sed -i '/gitea_token.*=/s/^/    # /' saas_gitops.tf
 
-# Remove gitea resources from terraform state
-echo "Removing gitea resources from terraform state..."
+# Remove gitea and flux resources from terraform state
+echo "Removing gitea and flux resources from terraform state..."
 terraform state rm 'gitea_repository.eks-saas-gitops' 2>/dev/null || true
 terraform state rm 'data.aws_ssm_parameter.gitea_token' 2>/dev/null || true
+terraform state rm 'kubernetes_namespace.flux_system' 2>/dev/null || true
 
 # Reinitialize terraform without gitea provider
 echo "Reinitializing terraform without gitea provider..."
@@ -49,15 +50,6 @@ terraform init
 
 # Skip provider verification since Gitea server will be destroyed
 export TF_SKIP_PROVIDER_VERIFY=1
-
-# Force remove flux-system namespace if it's stuck
-echo "Checking for stuck flux-system namespace..."
-if kubectl get namespace flux-system 2>/dev/null; then
-    echo "Removing finalizers from flux-system namespace..."
-    kubectl get namespace flux-system -o json | jq '.spec.finalizers = []' | kubectl replace --raw "/api/v1/namespaces/flux-system/finalize" -f - || true
-    echo "Waiting for namespace cleanup..."
-    sleep 30
-fi
 
 # Clean up ECR repositories
 echo "Cleaning up ECR repositories..."

@@ -72,8 +72,8 @@ variable "allowed_ip" {
   default     = ""
 }
 
-variable "workshop_studio" {
-  description = "Define if the stack is set to deploy on a Workshop Studio Account"
+variable "solution" {
+  description = "Define if the stack is set to deploy on a Solution Guidance"
   type        = bool
   default     = false
 }

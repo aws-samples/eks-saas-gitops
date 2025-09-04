@@ -110,9 +110,33 @@ done
 echo "Waiting for cleanup to complete..."
 sleep 30
 
-# Run single terraform destroy
-echo "Running terraform destroy..."
-terraform destroy -auto-approve
+# Loop terraform destroy with security group cleanup
+for i in {1..2}; do
+    echo "Destroy attempt $i..."
+    
+    # Run terraform destroy
+    if terraform destroy -auto-approve; then
+        echo "Terraform destroy completed successfully"
+        break
+    else
+        echo "Terraform destroy failed, cleaning up security groups again..."
+        
+        # Clean up security groups in VPC (except default)
+        for vpc_id in $(aws ec2 describe-vpcs --region $AWS_REGION --filters "Name=tag:Name,Values=eks-saas-gitops" --query 'Vpcs[].VpcId' --output text 2>/dev/null || echo ""); do
+            if [ -n "$vpc_id" ]; then
+                for sg_id in $(aws ec2 describe-security-groups --region $AWS_REGION --filters "Name=vpc-id,Values=$vpc_id" --query 'SecurityGroups[?GroupName!=`default`].GroupId' --output text 2>/dev/null || echo ""); do
+                    if [ -n "$sg_id" ]; then
+                        echo "Deleting security group: $sg_id"
+                        aws ec2 delete-security-group --group-id "$sg_id" --region $AWS_REGION || true
+                    fi
+                done
+            fi
+        done
+        
+        echo "Waiting before retry..."
+        sleep 30
+    fi
+done
 
 # Restore original files
 echo "Restoring original Terraform files..."

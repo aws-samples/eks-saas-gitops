@@ -14,7 +14,7 @@ locals {
 # Adding guidance solution ID via AWS CloudFormation resource
 ################################################################################
 resource "random_bytes" "this" {
-  count = var.solution ? 1 : 0
+  count  = var.solution ? 1 : 0
   length = 2
 }
 

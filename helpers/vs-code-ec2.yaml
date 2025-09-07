@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: This stack creates an EC2 instance with VS Code server environment for the Solution Guidace on Building SaaS applications on Amazon EKS using GitOps (SID TBD)"
+Description: This stack creates an EC2 instance with VS Code server environment for the Solution Guidace on Building SaaS applications on Amazon EKS using GitOps"
 
 Parameters:
   EnvironmentName:
@@ -183,7 +183,7 @@ Resources:
                 - export TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds:60")
                 - export AWS_REGION=$(curl -H "X-aws-ec2-metadata-token:${TOKEN}" -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/\(.*\)[a-z]/\1/') && echo "export AWS_REGION=${AWS_REGION}" >> /home/ec2-user/.bashrc
                 - export ALLOWED_IP="{{allowedIp}}"
-                - "git clone -b feat/gitea https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops"
+                - "git clone -b feat/tracking https://github.com/aws-samples/eks-saas-gitops.git /home/ec2-user/environment/eks-saas-gitops; echo 'solution=true' > /home/ec2-user/environment/eks-saas-gitops/terraform/workshop/terraform.tfvars"
                 - "chown -R ec2-user:ec2-user /home/ec2-user/environment"
                 - "sudo -u ec2-user nohup /usr/bin/code-server --port 8080 --host 0.0.0.0 > /dev/null 2>&1 &"
                 - 'cd /home/ec2-user/environment/eks-saas-gitops/terraform && chmod +x install.sh && sudo -u ec2-user ./install.sh ${AWS_REGION} "{{allowedIp}}" > /home/ec2-user/environment/terraform-install.log 2>&1'

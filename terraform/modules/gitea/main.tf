@@ -169,10 +169,10 @@ resource "aws_iam_role_policy" "ecr_access" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ssm_instance_connect" {
-  role       = aws_iam_role.gitea.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
+# resource "aws_iam_role_policy_attachment" "ssm_instance_connect" {
+#   role       = aws_iam_role.gitea.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+# }
 
 resource "aws_iam_instance_profile" "gitea" {
   name = "${var.name}-profile"

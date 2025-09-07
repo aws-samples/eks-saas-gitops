@@ -138,6 +138,15 @@ apply_flux() {
     echo "Flux and GitOps infrastructure applied successfully."
 }
 
+# Apply remaining Terraform resources
+apply_remaining_resources() {
+    echo "Applying remaining Terraform resources..."
+    terraform apply --auto-approve
+
+    echo "All Terraform resources created successfully."
+}
+
+
 # Print the setup information
 print_setup_info() {
     echo "=============================="
@@ -196,6 +205,7 @@ main() {
     create_gitea_repositories  # Create Gitea repositories
     echo "Proceeding with Flux setup..."
     apply_flux
+    apply_remaining_resources
     echo "=============================="
     echo "Flux Setup Complete!"
     echo "=============================="

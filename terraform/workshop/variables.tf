@@ -71,3 +71,9 @@ variable "allowed_ip" {
   type        = string
   default     = ""
 }
+
+variable "solution" {
+  description = "Define if the stack is set to deploy on a Solution Guidance"
+  type        = bool
+  default     = false
+}

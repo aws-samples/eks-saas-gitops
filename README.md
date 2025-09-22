@@ -10,7 +10,7 @@
    - [Cost](#cost)
 2. [Prerequisites](#prerequisites)
    - [Supported AWS Regions](#supported-aws-regions)
-   - [Quotas](#quotas)
+   - [Service Quotas](#service-quotas)
 3. [Deployment Steps](#deployment-steps)
 4. [License](#license)
 
@@ -71,9 +71,10 @@ This repository is organized to facilitate a hands-on learning experience, struc
 
 ### Architecture Diagram
 
-![Repository Structure Diagram](./static/guidance-architecture.png)
+<!-- ![Repository Structure Diagram](./static/guidance-architecture.png) -->
+![Repository Structure Diagram](./static/reference_architecture_part1.jpg)
 
-*Figure 1: EKS SaaS GitOps Repository Structure*
+*Figure 1: EKS SaaS GitOps Reference Architecture*
 
 ### Architecture Steps
 
@@ -108,7 +109,7 @@ This repository is organized to facilitate a hands-on learning experience, struc
 ## Cost
 
 You are responsible for the cost of the AWS services used while running this guidance. 
-As of May 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region is approximately **$329.25/month**.
+As of September 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region `us-east-1` is approximately **$329.25/month**.
 
 We recommend creating a [budget](https://alpha-docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-create.html) through [AWS Cost Explorer](http://aws.amazon.com/aws-cost-management/aws-cost-explorer/) to help manage costs. Prices are subject to change. For full details, refer to the pricing webpage for each AWS service used in this guidance.
 
@@ -163,7 +164,7 @@ For the most current availability of AWS services by Region, refer to the [AWS R
 
 Note: If you deploy this guidance into a region where AMP and/or AMG are not available, you can disable the OSS observability tooling during deployment. This allows you to use the core components of the guidance without built-in observability features.
 
-### Quotas
+### Service Quotas
 
 **NOTICE**
 Service quotas, also referred to as limits, are the maximum number of service resources or operations for your AWS account.

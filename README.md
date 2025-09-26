@@ -10,13 +10,13 @@
    - [Cost](#cost)
 2. [Prerequisites](#prerequisites)
    - [Supported AWS Regions](#supported-aws-regions)
-   - [Quotas](#quotas)
+   - [Service Quotas](#service-quotas)
 3. [Deployment Steps](#deployment-steps)
 4. [License](#license)
 
 ## Overview
 
-The EKS SaaS GitOps Workshop provides a comprehensive template for implementing GitOps practices in a multi-tenant SaaS environment using Amazon EKS. This repository serves as a foundation to generate multiple component repositories, enabling a hands-on GitOps experience. It provides all the necessary patterns, configurations, and scripts to deploy a scalable SaaS application.
+The "Building SaaS applications on Amazon EKS using GitOps" workshop and guidance provide a comprehensive template for implementing GitOps practices in a multi-tenant SaaS environment using Amazon Elastic Kubernetes Service (EKS). This repository serves as a foundation to generate multiple component repositories, enabling a hands-on GitOps experience. It contains all the necessary patterns, configurations, and scripts to deploy a scalable Software-as-a-Service (SaaS) application.
 
 This guidance addresses the following key points:
 
@@ -60,7 +60,7 @@ The motivation behind this project is to accelerate and simplify the process of 
 
 ## Architecture Overview
 
-This repository is organized to facilitate a hands-on learning experience, structured as follows:
+This repository is organized to facilitate a hands-on deploymemt and learning experience, structured as follows:
 
 - **`/gitops`**: Contains GitOps configurations and templates for setting up the application plane, clusters, control plane, and infrastructure necessary for the SaaS architecture.
 - **`/helpers`**: Includes CloudFormation templates to assist in setting up the required AWS resources. (Used for deploying a VSCode server instance needed for setup)
@@ -71,17 +71,18 @@ This repository is organized to facilitate a hands-on learning experience, struc
 
 ### Architecture Diagram
 
-![Repository Structure Diagram](./static/guidance-architecture.png)
+<!-- ![Repository Structure Diagram](./static/guidance-architecture.png) -->
+![Repository Structure Diagram](./static/reference_architecture_part1.jpg)
 
-*Figure 1: EKS SaaS GitOps Repository Structure*
+*Figure 1: SaaS applications on Amazon EKS using GitOps - Reference Architecture*
 
 ### Architecture Steps
-
+<!--
 1. DevOps engineer defines a per-environment Terraform variable file that control all of the environment-specific configuration. This configuration file is used in all steps of deployment process by all IaC configurations to create different EKS environments.
 
 2. DevOps engineer applies the environment configuration using Terraform with AWS EKS Blueprints following the deployment process defined in the guidance.
 
-3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured with corresponding VPC Endpoints to provide access to resources deployed in private VPC.
+3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured for high availability of deployed resources.
 
 4. User facing Identity and Access Management (IAM) roles (Cluster Admin, Karpenter Controller, Argo Workflow, Argo Events, LB Controller, TF Controller) are created for various access levels to EKS cluster resources, as recommended in Kubernetes security best practices.
 
@@ -90,11 +91,35 @@ This repository is organized to facilitate a hands-on learning experience, struc
 6. Other selected EKS add-ons are deployed based on the configurations defined in the per-environment Terraform configuration file (see Step1 above).
 
 7. Gitea source code repository running on Amazon EC2 instance can be accessed by Developers to change microservice source code.
+-->
+1. DevOps engineer defines a per-environment Terraform variable file that controls environment-specific configuration. This configuration file is used in all steps of deployment process by various configurations to provision different EKS environments.
+2. DevOps engineer applies the environment configuration using Amazon CloudFormation which deploys a Amazon EC2 Instance with a VSCode IDE that is used to apply Terraform.
+3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured for deployed resources.
+4. User facing Identity and Access Management (IAM) roles (Cluster Admin, Karpenter Controller, Argo Workflow, Argo Events, LB Controller, TF Controller) are created for various EKS cluster resources access levels , per Kubernetes security best practices.
+5. Amazon Elastic Kubernetes Service (EKS) cluster is provisioned with Managed Nodes Group (MNG) that run critical cluster add-ons (CoreDNS, AWS Load Balancer Controller and Karpenter) on its compute node instances. Karpenter will manage compute capacity to other add-ons, as well as business applications that will be deployed by user while prioritizing provisioning Amazon EC2 Spot instances for the best price-performance. 
+6. Other important EKS add-ons (Flux controller etc.) are deployed based on the configurations defined in the per-environment Terraform configuration file (see Step 1 above).
+7. Gitea source code repositories running on Amazon EC2 can be accessed by Developer users to update microservices source code.
 
-### AWS services in this Guidance
+### AWS Services in this Guidance
 
 | **AWS Service** | **Role** | **Description** |
 |-----------------|----------|-----------------|
+|[Amazon Elastic Kubernetes Service](https://aws.amazon.com/eks/) ( EKS) | Core service | Manages the Kubernetes control plane and worker nodes for container orchestration. |
+| [Amazon Elastic Compute Cloud](https://aws.amazon.com/ec2/) (EC2) | Core service | Provides the compute instances for EKS worker nodes and runs containerized applications. |
+| [Amazon Virtual Private Cloud](https://aws.amazon.com/vpc/) (VPC) | Core Service | Creates an isolated network environment with public and private subnets across multiple Availability Zones. |
+| [Amazon Elastic Container Registry](http://aws.amazon.com/ecr/) (ECR) | Supporting service | Stores and manages Docker container images for EKS deployments. |
+| [Amazon Elastic Load Balancing](https://aws.amazon.com/elasticloadbalancing/) (ELB) | Supporting service | Distributes incoming traffic across multiple targets in the EKS cluster. |
+| [AWS Identity and Access Management](https://aws.amazon.com/iam/) (IAM) | Supporting service | Manages access to AWS services and resources securely, including EKS cluster access. |
+| [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) (ACM) | Security service | Manages SSL/TLS certificates for secure communication within the cluster. |
+| [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/) | Monitoring service | Collects and tracks metrics, logs, and events from EKS and other AWS resources provisoned in the guidance |
+| [AWS Systems Manager](https://aws.amazon.com/systems-manager/) | Management service | Provides operational insights and takes action on AWS resources. |
+| [AWS Key Management Service](https://aws.amazon.com/kms/) (KMS) | Security service | Manages encryption keys for securing data in EKS and other AWS services. |
+| [AWS CodeBuild](https://aws.amazon.com/codebuild/) | CI/CD service | Compiles/builds source code, runs tests, and produces software packages ready for deployment. |
+| [AWS CodePipeline](https://aws.amazon.com/codepipeline/) | CI/CD service | Automates the build, test, and deployment phases of release process. |
+[Amazon Managed Grafana](https://aws.amazon.com/grafana/) (AMG) | Observability service | Provides fully managed  service for metrics visualization and monitoring. |
+| [Amazon Managed Service for Prometheus](https://aws.amazon.com/prometheus/) (AMP) | Observability service | Offers managed Prometheus-compatible monitoring for container metrics. |
+
+<!--
 | Amazon EKS | Core service | Manages the Kubernetes control plane and worker nodes for container orchestration. |
 | Amazon EC2 | Core service | Provides the compute instances for EKS worker nodes and runs containerized applications. |
 | Amazon VPC | Core Service | Creates an isolated network environment with public and private subnets across multiple Availability Zones. |
@@ -104,11 +129,11 @@ This repository is organized to facilitate a hands-on learning experience, struc
 | AWS CodePipeline | CI/CD service | Automates the build, test, and deployment phases of your release process. |
 | AWS Systems Manager | Management service | Provides operational insights and takes action on AWS resources. |
 | AWS Key Management Service | Security service | Manages encryption keys for securing data in EKS and other AWS services. |
-
+-->
 ## Cost
 
 You are responsible for the cost of the AWS services used while running this guidance. 
-As of May 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region is approximately **$329.25/month**.
+As of September 2025, the cost for running this guidance with the default settings in the US East (N. Virginia) Region `us-east-1` is approximately **$329.25/month**.
 
 We recommend creating a [budget](https://alpha-docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/budgets-create.html) through [AWS Cost Explorer](http://aws.amazon.com/aws-cost-management/aws-cost-explorer/) to help manage costs. Prices are subject to change. For full details, refer to the pricing webpage for each AWS service used in this guidance.
 
@@ -150,23 +175,21 @@ The observability components of this guidance use Amazon Managed Service for Pro
 | Europe (Frankfurt) | eu-central-1 |
 | Europe (Ireland) | eu-west-1 |
 | Europe (London) | eu-west-2 |
-| Europe (Paris) | eu-west-3 |
 | Europe (Stockholm) | eu-north-1 |
 | South America (São Paulo) | sa-east-1 |
 
 
 ### Regions Supporting Core Components Only
 
-The core components of this Guidance can be deployed in any AWS Region where Amazon EKS is available. This includes all commercial AWS Regions except for the China Regions and the AWS GovCloud (US) Regions.
+The core components of this guidance can be deployed in any AWS Region where Amazon EKS is available. This includes all commercial AWS Regions except for the Greater China Regions and the AWS GovCloud (US) Regions.
 
 For the most current availability of AWS services by Region, refer to the [AWS Regional Services List](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/).
 
-Note: If you deploy this guidance into a region where AMP and/or AMG are not available, you can disable the OSS observability tooling during deployment. This allows you to use the core components of the guidance without built-in observability features.
+>Note: If you deploy this guidance into a region where AMP and/or AMG are not available, you can disable the OSS observability tooling during deployment. This allows you to use the core components of the guidance without built-in observability features.
 
-### Quotas
+### Service Quotas
 
-**NOTICE**
-Service quotas, also referred to as limits, are the maximum number of service resources or operations for your AWS account.
+>Note: AWS Service quotas, also referred to as limits, are the maximum number of service resources or operations enabled for your AWS account.
 
 ### Quotas for AWS services in this Guidance
 
@@ -200,8 +223,8 @@ This guidance implements several security best practices and AWS services to enh
 
 ### Network Security
 
-- **VPC Configuration**: The solution deploys resources into a Virtual Private Cloud with 3 Availability Zones (AZs) and corresponding VPC Endpoints to provide secure access to resources deployed in private VPC segments.
-
+- **VPC Configuration**: The solution deploys resources into a Virtual Private Cloud with 3 Availability Zones (AZs) for secured network isolation
+-  
 - **Security Groups**: Security groups are configured to restrict traffic between components based on the principle of least privilege.
 
 - **Network Policies**: Kubernetes network policies are implemented to control pod-to-pod communication within the cluster.
@@ -271,9 +294,12 @@ Follow these steps to deploy the EKS SaaS GitOps guidance:
    - The sample microservices and Helm charts are available in their respective directories
    - Use the workflow scripts to automate tenant onboarding and application deployment
 
+**TODO: update to live IG link when available and comment out the steps above**
+Please refer to detailed deployment instructions in the detailed guidance [Implementation Guide](https://implementationguides.kits.eventoutfitters.aws.dev/saas-eks-0307/compute/building-saas-applications-on-amazon-eks-using-gitops.html#deploy-the-guidance)
+
 ## Cleanup and Destruction
 
-When you're finished with the workshop or need to clean up the resources to avoid ongoing costs, you can use the provided destruction script.
+When you're finished with the workshop/guidance use or need to clean up the resources to avoid ongoing costs, you can use the provided destruction script.
 
 ### Running the Destroy Script
 
@@ -299,14 +325,17 @@ The destroy script will:
 - Clean up IAM roles and policies
 - Remove all other infrastructure components created during deployment
 
+**TODO: update to live IG link when available comment out the steps above**
+Please refer to detailed guidance cleanup instructions in the detailed guidance [Implementation Guide](https://implementationguides.kits.eventoutfitters.aws.dev/saas-eks-0307/compute/building-saas-applications-on-amazon-eks-using-gitops.html#uninstall-the-guidance)
+
 **Important:** The destruction process may take 15-20 minutes to complete. Ensure you have the necessary AWS permissions to delete all the resources that were created during the initial deployment.
 
 ## License
 
-This project is licensed under the terms of the [MIT license](LICENSE).
+This project is licensed under the terms of the [MIT-0 license](LICENSE).
 
 ## Contributing
 
-Your contributions are welcome! If you'd like to improve the workshop or suggest changes, please feel free to submit issues or pull requests.
+Your contributions are welcome! If you'd like to improve the workshop/guidance or suggest changes, please feel free to submit issues or pull requests.
 
 We value your input and contributions! Please review our [Code of Conduct](CODE_OF_CONDUCT.md) and [Contributing Guidelines](CONTRIBUTING.md) for how to participate in making this project better.

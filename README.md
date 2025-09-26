@@ -82,7 +82,7 @@ This repository is organized to facilitate a hands-on deploymemt and learning ex
 
 2. DevOps engineer applies the environment configuration using Terraform with AWS EKS Blueprints following the deployment process defined in the guidance.
 
-3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured with corresponding VPC Endpoints to provide access to resources deployed in private VPC.
+3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured for high availability of deployed resources.
 
 4. User facing Identity and Access Management (IAM) roles (Cluster Admin, Karpenter Controller, Argo Workflow, Argo Events, LB Controller, TF Controller) are created for various access levels to EKS cluster resources, as recommended in Kubernetes security best practices.
 
@@ -94,7 +94,7 @@ This repository is organized to facilitate a hands-on deploymemt and learning ex
 -->
 1. DevOps engineer defines a per-environment Terraform variable file that controls environment-specific configuration. This configuration file is used in all steps of deployment process by various configurations to provision different EKS environments.
 2. DevOps engineer applies the environment configuration using Amazon CloudFormation which deploys a Amazon EC2 Instance with a VSCode IDE that is used to apply Terraform.
-3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured with corresponding VPC Endpoints to provide access to resources deployed in private VPC and other VPC connected by VPC Peering .
+3. An Amazon Virtual Private Network (VPC) is provisioned and configured based on specified configuration. According to best practices for Reliability, 3 Availability zones (AZs) are configured for deployed resources.
 4. User facing Identity and Access Management (IAM) roles (Cluster Admin, Karpenter Controller, Argo Workflow, Argo Events, LB Controller, TF Controller) are created for various EKS cluster resources access levels , per Kubernetes security best practices.
 5. Amazon Elastic Kubernetes Service (EKS) cluster is provisioned with Managed Nodes Group (MNG) that run critical cluster add-ons (CoreDNS, AWS Load Balancer Controller and Karpenter) on its compute node instances. Karpenter will manage compute capacity to other add-ons, as well as business applications that will be deployed by user while prioritizing provisioning Amazon EC2 Spot instances for the best price-performance. 
 6. Other important EKS add-ons (Flux controller etc.) are deployed based on the configurations defined in the per-environment Terraform configuration file (see Step 1 above).
@@ -189,8 +189,7 @@ For the most current availability of AWS services by Region, refer to the [AWS R
 
 ### Service Quotas
 
-**NOTICE**
-Service quotas, also referred to as limits, are the maximum number of service resources or operations for your AWS account.
+>Note: AWS Service quotas, also referred to as limits, are the maximum number of service resources or operations enabled for your AWS account.
 
 ### Quotas for AWS services in this Guidance
 
@@ -224,8 +223,8 @@ This guidance implements several security best practices and AWS services to enh
 
 ### Network Security
 
-- **VPC Configuration**: The solution deploys resources into a Virtual Private Cloud with 3 Availability Zones (AZs) and corresponding VPC Endpoints to provide secure access to resources deployed in private VPC segments.
-
+- **VPC Configuration**: The solution deploys resources into a Virtual Private Cloud with 3 Availability Zones (AZs) for secured network isolation
+-  
 - **Security Groups**: Security groups are configured to restrict traffic between components based on the principle of least privilege.
 
 - **Network Policies**: Kubernetes network policies are implemented to control pod-to-pod communication within the cluster.
